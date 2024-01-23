@@ -39,3 +39,8 @@ version = {file = "version.txt"}
 Homepage = "https://github.com/alpaka-group/bashi"
 Repository = "https://github.com/alpaka-group/bashi"
 Issues = "https://github.com/alpaka-group/bashi/issues"
+
+[tool.coverage.run]
+command_line = "-m unittest discover -s tests/"
+branch = true
+source = ["bashi"]

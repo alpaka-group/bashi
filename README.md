@@ -20,10 +20,6 @@ If the example works correctly, a `job.yml` will be created in the current direc
 
 Now the library is available in the environment. Therefore you can easily use the library in your own projects via `import bashi`.
 
-## Formatting the source code
-
-The source code is formatted using the [black](https://pypi.org/project/black/) formatter and the default style guide. You must install it and run `black /path/to/file` to format a file. A CI job checks that all files are formatted correctly. If the job fails, a PR cannot be merged.
-
 ## Contribution
 
 This section contains some hints for developing new functions. The hints are mainly for people who have no experience with `setuptools` and building `pip` packages.
@@ -31,3 +27,11 @@ This section contains some hints for developing new functions. The hints are mai
 * The `pip install --editable .` command installs the source code files as a symbolic link. This means that changes in the source code of the Python files in the `src/bashi` folder are directly available without any additional installation step (only a restart of the Python process/interpreter is required).
 * The software requirements are defined in `pyproject.toml` and not in an additional `requirements.txt`.
 * It is necessary to increase the version number in `version.txt` before a new feature can be merged in the master branch. Otherwise the upload to pypy.org will fail because existing versions cannot be changed.
+
+## Formatting the Source Code
+
+The source code is formatted using the [black](https://pypi.org/project/black/) formatter and the default style guide. You must install it and run `black /path/to/file` to format a file. A CI job checks that all files are formatted correctly. If the job fails, a PR cannot be merged.
+
+## Check Code Coverage locally
+
+The project supports code coverage with [coverage.py](https://coverage.readthedocs.io). To create a coverage report locally, you must first install the package via `pip install coverage`. Then run `coverage run` in the project folder to calculate the coverage and `coverage report` to display the result.
