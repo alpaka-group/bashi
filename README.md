@@ -4,6 +4,8 @@ This project will be the successor to the [alpaka-job-matrix-library](https://gi
 
 # bashi
 
+[![codecov](https://codecov.io/github/alpaka-group/bashi/graph/badge.svg?token=QEF8G02ZST)](https://codecov.io/github/alpaka-group/bashi)
+
 A library to provide a job generator for CI's for alpaka based projects.
 
 # Developing
