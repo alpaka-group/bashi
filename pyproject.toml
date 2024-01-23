@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bashi"
+maintainers = [
+    {name = "Simeon Ehrig", email = "s.ehrig@hzdr.de"}, 
+]
+authors = [
+    {name = "Simeon Ehrig", email = "s.ehrig@hzdr.de"}, 
+    {name = "Jan Stephan", email = "j.stephan@hzdr.de"}, 
+]
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+description = "The library provides everything needed to generate a sparse combination matrix for alpaka-based projects, including a set of general-purpose combination rules."
+dynamic = ["version"]
+keywords = ["alpaka", "testing", "pair-wise generator"]
+classifiers= [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "allpairspy == 2.5.1",
+    "typeguard"
+]
+
+[project.scripts]
+bashi-validate = "bashi.validate:main"
+
+[tool.setuptools.dynamic]
+version = {file = "version.txt"}
+
+[project.urls]
+Homepage = "https://github.com/alpaka-group/bashi"
+Repository = "https://github.com/alpaka-group/bashi"
+Issues = "https://github.com/alpaka-group/bashi/issues"
