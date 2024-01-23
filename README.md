@@ -1,4 +1,9 @@
+# ⚠️ Disclaimer ⚠️
+
+This project will be the successor to the [alpaka-job-matrix-library](https://github.com/alpaka-group/alpaka-job-matrix-library). We have decided that several fundamental changes are needed in the [alpaka-job-matrix-library](https://github.com/alpaka-group/alpaka-job-matrix-library), including renaming. Therefore, rewriting large parts of the code base would be necessary. Based on this, we have decided that a new project means less work. Until this project is officially released, please use the [alpaka-job-matrix-library](https://github.com/alpaka-group/alpaka-job-matrix-library). The project is already public due to the use of CI features.
+
 # bashi
+
 A library to provide a job generator for CI's for alpaka based projects.
 
 # Developing
