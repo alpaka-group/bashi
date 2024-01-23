@@ -28,6 +28,8 @@ dependencies = [
 ]
 
 [project.scripts]
+# creates a python script named bashi-validate
+# in principal, the script does the following: from bashi.validate import main; main()
 bashi-validate = "bashi.validate:main"
 
 [tool.setuptools.dynamic]
