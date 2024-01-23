@@ -8,6 +8,8 @@ __pycache__
 ####################
 dist/
 bashi.egg-info
+# user created python environment
+env
 
 ####################
 # IDE files
