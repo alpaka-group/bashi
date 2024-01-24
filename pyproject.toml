@@ -12,7 +12,7 @@ authors = [
     {name = "Jan Stephan", email = "j.stephan@hzdr.de"}, 
 ]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = {file = "LICENSE"}
 description = "The library provides everything needed to generate a sparse combination matrix for alpaka-based projects, including a set of general-purpose combination rules."
 dynamic = ["version"]
@@ -24,7 +24,8 @@ classifiers= [
 ]
 dependencies = [
     "allpairspy == 2.5.1",
-    "typeguard"
+    "typeguard",
+    "packaging"
 ]
 
 [project.scripts]
@@ -44,3 +45,6 @@ Issues = "https://github.com/alpaka-group/bashi/issues"
 command_line = "-m unittest discover -s tests/"
 branch = true
 source = ["bashi"]
+
+[tool.black]
+line-length = 100
