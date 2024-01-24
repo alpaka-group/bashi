@@ -24,7 +24,8 @@ classifiers= [
 ]
 dependencies = [
     "allpairspy == 2.5.1",
-    "typeguard"
+    "typeguard",
+    "packaging"
 ]
 
 [project.scripts]
@@ -44,3 +45,6 @@ Issues = "https://github.com/alpaka-group/bashi/issues"
 command_line = "-m unittest discover -s tests/"
 branch = true
 source = ["bashi"]
+
+[tool.black]
+line-length = 100
