@@ -5,13 +5,14 @@ from collections import OrderedDict
 from packaging.version import Version
 import packaging.version as pkv
 from typeguard import typechecked
+from bashi.types import ParameterValueTuple, ParameterValue
 from bashi.utils import FilterAdapter
 
 
 class TestFilterAdapterDataSet1(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.param_val_tuple: OrderedDict[str, Tuple[str, Version]] = OrderedDict()
+        cls.param_val_tuple: ParameterValueTuple = OrderedDict()
         cls.param_val_tuple["param1"] = ("param-val-name1", pkv.parse("1"))
         cls.param_val_tuple["param2"] = ("param-val-name2", pkv.parse("2"))
         cls.param_val_tuple["param3"] = ("param-val-name3", pkv.parse("3"))
@@ -20,7 +21,7 @@ class TestFilterAdapterDataSet1(unittest.TestCase):
         for index, param_name in enumerate(cls.param_val_tuple.keys()):
             cls.param_map[index] = param_name
 
-        cls.test_row: List[Tuple[str, Version]] = []
+        cls.test_row: List[ParameterValue] = []
         for param_val in cls.param_val_tuple.values():
             cls.test_row.append(param_val)
 
@@ -29,13 +30,13 @@ class TestFilterAdapterDataSet1(unittest.TestCase):
     # isinstance() does not verify the key and value type
     def test_function_type(self):
         @typechecked
-        def filter_function(row: OrderedDict[str, Tuple[str, Version]]) -> bool:
+        def filter_function(row: ParameterValueTuple) -> bool:
             if len(row.keys()) < 1:
                 raise AssertionError("There is no element in row.")
 
             # typechecked does not check the types of Tuple, therefore I "unwrap" it
             @typechecked
-            def check_param_value_type(_: Tuple[str, Version]):
+            def check_param_value_type(_: ParameterValue):
                 pass
 
             check_param_value_type(next(iter(row.values())))
@@ -46,7 +47,7 @@ class TestFilterAdapterDataSet1(unittest.TestCase):
         self.assertTrue(filter_adapter(self.test_row))
 
     def test_function_length(self):
-        def filter_function(row: OrderedDict[str, Tuple[str, Version]]) -> bool:
+        def filter_function(row: ParameterValueTuple) -> bool:
             if len(row) != 3:
                 raise AssertionError(f"Size of test_row is {len(row)}. Expected is 3.")
 
@@ -56,7 +57,7 @@ class TestFilterAdapterDataSet1(unittest.TestCase):
         self.assertTrue(filter_adapter(self.test_row))
 
     def test_function_row_order(self):
-        def filter_function(row: OrderedDict[str, Tuple[str, Version]]) -> bool:
+        def filter_function(row: ParameterValueTuple) -> bool:
             excepted_param_order = ["param1", "param2", "param3"]
             if len(excepted_param_order) != len(row):
                 raise AssertionError(
@@ -104,7 +105,7 @@ class TestFilterAdapterDataSet1(unittest.TestCase):
 class TestFilterAdapterDataSet2(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.param_val_tuple: OrderedDict[str, Tuple[str, Version]] = OrderedDict()
+        cls.param_val_tuple: ParameterValueTuple = OrderedDict()
         cls.param_val_tuple["param6b"] = ("param-val-name1", pkv.parse("3.21.2"))
         cls.param_val_tuple["param231a"] = ("param-val-name67asd", pkv.parse("2.4"))
         cls.param_val_tuple["param234s"] = ("param-val-678", pkv.parse("3"))
@@ -119,8 +120,8 @@ class TestFilterAdapterDataSet2(unittest.TestCase):
         for param_val in cls.param_val_tuple.values():
             cls.test_row.append(param_val)
 
-    def test_function_row_lenght_order(self):
-        def filter_function(row: OrderedDict[str, Tuple[str, Version]]) -> bool:
+    def test_function_row_length_order(self):
+        def filter_function(row: ParameterValueTuple) -> bool:
             excepted_param_order = ["param6b", "param231a", "param234s", "foo", "bar"]
             if len(excepted_param_order) != len(row):
                 raise AssertionError(

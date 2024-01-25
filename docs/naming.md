@@ -1,0 +1,19 @@
+# Naming
+
+The [pair-wise testing](https://en.wikipedia.org/wiki/All-pairs_testing) takes amount of input values grouped by a specific meaning and creates many combinations of the values with specific rules. The following guide give the input and output values specific names, which will be used for documentation purpose and also naming variables and parameters in the source code. All names has the Python-like data type in brackets.
+
+The real Python types are implemented in [types.py](../bashi/types.py)
+
+- **parameter** (`str`): A `parameter` represents a software component like the host compiler or a specific software like `CMake` or `Boost`. A `parameter` names a list of `parameter-values` and expresses how a `parameter-value` is used. 
+- **parameter-value** (`Tuple[value-name: str, value-version: packaging.version.Version]`): A `parameter-value` represents of a specific version of a `parameter`, for example `GCC 10`, `nvcc 12.2` or `CMake 3.28`. The pair wise generator takes on `parameter-value` of each `parameter` for is combinatorics.
+- **value-name** (`str`): The `value-name` is the first part of the `parameter-value`. It names a specific software component, like `GCC` or `CMake`. If the `parameter` names a specific software, `parameter` and `value-name` are equal.
+- **value-version** (`packaging.version.Version`): The `value-version` is the second part of the `parameter-value`. It defines a specific version of a software component such like `12.2` or `3.12`.
+- **parameter-value-list** (`parameter: str = List[parameter-value: Tuple[value-name: str, value-version: packaging.version.Version]]`): A `parameter-value-list` is a list of `parameter-values` assigned to a `parameter`. For example: 
+    - `HOST_COMPILER=[(GCC, 10), (GCC, 11), (CLANG, 16), (CLANG, 17)]`
+    - `DEVICE_COMPILER=[(GCC, 10), (GCC, 11), (CLANG, 16), (CLANG, 17), (NVCC, 11.2), (NVCC, 12.0)]`
+    - `CMAKE=[(CMAKE, 3.22), (CMAKE, 3.23), (CMAKE, 3.24)]`
+- **parameter-value-matrix** (`OrderedDict[parameter: str, List[parameter-value: Tuple[value-name: str, value-version: packaging.version.Version]]]`): The `parameter-value-matrix` is a list of `parameter-value-list`s. The `parameter-value-matrix` is used as input for the pair-wise generator. The data type is `OrderedDict` because the order of `parameters` is important.
+- **parameter-value-tuple** (`OrderedList[parameter: str, parameter-value: Tuple[value-name: str, value-version: packaging.version.Version]]`): A `parameter-value-tuple` is a list of one ore more `parameter-value`s. The `parameter-value-tuple` is created from a `parameter-value-matrix` and each `parameter-value` is assigned to a different `parameter`. This means, each `parameter-value` is from a different `parameter-value-list` in a `parameter-value-matrix`. The `parameter-value-tuple` has the same or a smaller number of entries as the number of `parameters` in a `parameter-value-matrix`.
+- **combination** (`OrderedList[parameter: str, parameter-value: Tuple[value-name: str, value-version: packaging.version.Version]]`): A `combination` is a `parameter-value-tuple` with the same number of `parameter-value`s as the number of input `parameters`.
+- **combination-list** (`List[OrderedList[parameter : str, parameter-value: Tuple[value-name: str, value-version: packaging.version.Version]]]`): A `combination-list` is a list of `combination`s an the result of the pair-wise generator.
+- **parameter-value-pair** (`OrderedList[parameter: str, parameter-value: Tuple[value-name: str, value-version: packaging.version.Version]]`): A `parameter-value-pair` is a `parameter-value-tuple` with exact two `parameter-values`. The pair-wise generator guaranties that each `parameter-value-pair`, which can be created by the given `parameter-value-matrix` exists at least in one `combination` of the `combination-list`. The only exception is, if a `parameter-value-pair` is forbidden by a filter rule.

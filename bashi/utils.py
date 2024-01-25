@@ -1,9 +1,10 @@
 """Different helper functions for bashi"""
 
-from typing import Dict, Callable, Tuple, List
+from typing import Dict, Tuple, List
 from collections import OrderedDict
 from packaging.version import Version
 from typeguard import typechecked
+from bashi.types import FilterFunction, ParameterValueTuple
 
 
 class FilterAdapter:
@@ -40,7 +41,7 @@ class FilterAdapter:
     def __init__(
         self,
         param_map: Dict[int, str],
-        filter_func: Callable[[OrderedDict[str, Tuple[str, Version]]], bool],
+        filter_func: FilterFunction,
     ):
         """Create a new FilterAdapter, see class doc string.
 
@@ -67,7 +68,7 @@ class FilterAdapter:
         Returns:
             bool: Returns True, if the parameter-value-tuple is valid
         """
-        ordered_row: OrderedDict[str, Tuple[str, Version]] = OrderedDict()
+        ordered_row: ParameterValueTuple = OrderedDict()
         for index, param_name in enumerate(row):
             ordered_row[self.param_map[index]] = param_name
         return self.filter_func(ordered_row)
