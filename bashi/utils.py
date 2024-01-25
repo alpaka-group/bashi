@@ -2,11 +2,12 @@
 
 from typing import Dict, Tuple, List
 from collections import OrderedDict
+import dataclasses
 from packaging.version import Version
-from typeguard import typechecked
 from bashi.types import FilterFunction, ParameterValueTuple
 
 
+@dataclasses.dataclass
 class FilterAdapter:
     """
     An adapter for the filter functions used by allpairspy to provide a better filter function
@@ -35,17 +36,8 @@ class FilterAdapter:
         ):
             return False
         return True
-    """
 
-    @typechecked
-    def __init__(
-        self,
-        param_map: Dict[int, str],
-        filter_func: FilterFunction,
-    ):
-        """Create a new FilterAdapter, see class doc string.
-
-        Args:
+    Args:
             param_map (Dict[int, str]): The param_map maps the index position of a parameter to the
                 parameter name. Assuming the parameter-value-matrix has the following keys:
                 ["param1", "param2", "param3"], the param_map should look like this:
@@ -53,9 +45,10 @@ class FilterAdapter:
 
             filter_func (Callable[[OrderedDict[str, Tuple[str, Version]]], bool]): The filter
                 function used by allpairspy, see class doc string.
-        """
-        self.param_map = param_map
-        self.filter_func = filter_func
+    """
+
+    param_map: Dict[int, str]
+    filter_func: FilterFunction
 
     def __call__(self, row: List[Tuple[str, Version]]) -> bool:
         """The expected interface of allpairspy filter rule.
