@@ -1,9 +1,5 @@
 """This module contains constants used in the bashi library."""
 
-# index positions of the parameter-value
-NAME: int = 0
-VERSION: int = 1
-
 # parameter key names, whit special meaning
 HOST_COMPILER: str = "host_compiler"
 DEVICE_COMPILER: str = "device_compiler"

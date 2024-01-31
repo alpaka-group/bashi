@@ -1,8 +1,7 @@
 # pylint: disable=missing-docstring
 import unittest
-from typing import Tuple, Dict, List
+from typing import Dict, List
 from collections import OrderedDict
-from packaging.version import Version
 import packaging.version as pkv
 from typeguard import typechecked
 from bashi.types import ParameterValueTuple, ParameterValue
@@ -13,9 +12,9 @@ class TestFilterAdapterDataSet1(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.param_val_tuple: ParameterValueTuple = OrderedDict()
-        cls.param_val_tuple["param1"] = ("param-val-name1", pkv.parse("1"))
-        cls.param_val_tuple["param2"] = ("param-val-name2", pkv.parse("2"))
-        cls.param_val_tuple["param3"] = ("param-val-name3", pkv.parse("3"))
+        cls.param_val_tuple["param1"] = ParameterValue("param-val-name1", pkv.parse("1"))
+        cls.param_val_tuple["param2"] = ParameterValue("param-val-name2", pkv.parse("2"))
+        cls.param_val_tuple["param3"] = ParameterValue("param-val-name3", pkv.parse("3"))
 
         cls.param_map: Dict[int, str] = {}
         for index, param_name in enumerate(cls.param_val_tuple.keys()):
@@ -73,17 +72,15 @@ class TestFilterAdapterDataSet1(unittest.TestCase):
                     )
 
             expected_param_value_order = [
-                ("param-val-name1", pkv.parse("1")),
-                ("param-val-name2", pkv.parse("2")),
-                ("param-val-name3", pkv.parse("3")),
+                ParameterValue("param-val-name1", pkv.parse("1")),
+                ParameterValue("param-val-name2", pkv.parse("2")),
+                ParameterValue("param-val-name3", pkv.parse("3")),
             ]
 
             for index, param_value in enumerate(row.values()):
-                expected_value_name = expected_param_value_order[index][0]
-                expected_value_version = expected_param_value_order[index][1]
                 if (
-                    expected_value_name != param_value[0]
-                    or expected_value_version != param_value[1]
+                    expected_param_value_order[index].name != param_value.name
+                    or expected_param_value_order[index].version != param_value.version
                 ):
                     raise AssertionError(
                         f"The {index}. parameter-value is not the expected parameter-value\n"
@@ -106,17 +103,17 @@ class TestFilterAdapterDataSet2(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.param_val_tuple: ParameterValueTuple = OrderedDict()
-        cls.param_val_tuple["param6b"] = ("param-val-name1", pkv.parse("3.21.2"))
-        cls.param_val_tuple["param231a"] = ("param-val-name67asd", pkv.parse("2.4"))
-        cls.param_val_tuple["param234s"] = ("param-val-678", pkv.parse("3"))
-        cls.param_val_tuple["foo"] = ("foo", pkv.parse("12.3"))
-        cls.param_val_tuple["bar"] = ("bar", pkv.parse("3"))
+        cls.param_val_tuple["param6b"] = ParameterValue("param-val-name1", pkv.parse("3.21.2"))
+        cls.param_val_tuple["param231a"] = ParameterValue("param-val-name67asd", pkv.parse("2.4"))
+        cls.param_val_tuple["param234s"] = ParameterValue("param-val-678", pkv.parse("3"))
+        cls.param_val_tuple["foo"] = ParameterValue("foo", pkv.parse("12.3"))
+        cls.param_val_tuple["bar"] = ParameterValue("bar", pkv.parse("3"))
 
         cls.param_map: Dict[int, str] = {}
         for index, param_name in enumerate(cls.param_val_tuple.keys()):
             cls.param_map[index] = param_name
 
-        cls.test_row: List[Tuple[str, Version]] = []
+        cls.test_row: List[ParameterValue] = []
         for param_val in cls.param_val_tuple.values():
             cls.test_row.append(param_val)
 
@@ -137,19 +134,17 @@ class TestFilterAdapterDataSet2(unittest.TestCase):
                     )
 
             expected_param_value_order = [
-                ("param-val-name1", pkv.parse("3.21.2")),
-                ("param-val-name67asd", pkv.parse("2.4")),
-                ("param-val-678", pkv.parse("3")),
-                ("foo", pkv.parse("12.3")),
-                ("bar", pkv.parse("3")),
+                ParameterValue("param-val-name1", pkv.parse("3.21.2")),
+                ParameterValue("param-val-name67asd", pkv.parse("2.4")),
+                ParameterValue("param-val-678", pkv.parse("3")),
+                ParameterValue("foo", pkv.parse("12.3")),
+                ParameterValue("bar", pkv.parse("3")),
             ]
 
             for index, param_value in enumerate(row.values()):
-                expected_value_name = expected_param_value_order[index][0]
-                expected_value_version = expected_param_value_order[index][1]
                 if (
-                    expected_value_name != param_value[0]
-                    or expected_value_version != param_value[1]
+                    expected_param_value_order[index].name != param_value.name
+                    or expected_param_value_order[index].version != param_value.version
                 ):
                     raise AssertionError(
                         f"The {index}. parameter-value is not the expected parameter-value\n"
