@@ -129,8 +129,8 @@ def _loop_over_parameter_values(
     for v1_name, v1_version in parameters[v1_parameter]:
         for v2_name, v2_version in parameters[v2_parameter]:
             param_val_pair: ParameterValuePair = OrderedDict()
-            param_val_pair[v1_parameter] = (v1_name, v1_version)
-            param_val_pair[v2_parameter] = (v2_name, v2_version)
+            param_val_pair[v1_parameter] = ParameterValue(v1_name, v1_version)
+            param_val_pair[v2_parameter] = ParameterValue(v2_name, v2_version)
             expected_pairs.append(param_val_pair)
 
 

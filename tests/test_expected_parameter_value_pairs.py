@@ -25,7 +25,7 @@ from bashi.utils import (
 
 def parse_param_val(param_val: Tuple[ValueName, Union[str, int, float]]) -> ParameterValue:
     val_name, val_version = param_val
-    return (val_name, pkv.parse(str(val_version)))
+    return ParameterValue(val_name, pkv.parse(str(val_version)))
 
 
 def parse_param_vals(
@@ -155,24 +155,24 @@ class TestExpectedValuePairs(unittest.TestCase):
                 {
                     HOST_COMPILER: ppv((GCC, 10)),
                     DEVICE_COMPILER: ppv((NVCC, 11.2)),
-                    CMAKE: ppv((CMAKE, "3.22")),
-                    BOOST: ppv((BOOST, "1.81")),
+                    CMAKE: ppv((CMAKE, 3.22)),
+                    BOOST: ppv((BOOST, 1.81)),
                 }
             ),
             OD(
                 {
                     HOST_COMPILER: ppv((GCC, 10)),
                     DEVICE_COMPILER: ppv((NVCC, 12.0)),
-                    CMAKE: ppv((CMAKE, "3.22")),
-                    BOOST: ppv((BOOST, "1.82")),
+                    CMAKE: ppv((CMAKE, 3.22)),
+                    BOOST: ppv((BOOST, 1.82)),
                 }
             ),
             OD(
                 {
                     HOST_COMPILER: ppv((CLANG, 16)),
                     DEVICE_COMPILER: ppv((CLANG, 16)),
-                    CMAKE: ppv((CMAKE, "3.23")),
-                    BOOST: ppv((BOOST, "1.83")),
+                    CMAKE: ppv((CMAKE, 3.23)),
+                    BOOST: ppv((BOOST, 1.83)),
                 }
             ),
         ]
