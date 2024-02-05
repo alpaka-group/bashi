@@ -20,6 +20,7 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.utils import (
     get_expected_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
+    remove_parameter_value_pair,
 )
 
 
@@ -376,4 +377,121 @@ class TestExpectedValuePairs(unittest.TestCase):
 
         self.assertTrue(
             check_parameter_value_pair_in_combination_list(comb_list, self.expected_param_val_pairs)
+        )
+
+
+class TestRemoveExpectedParameterValuePair(unittest.TestCase):
+    def test_remove_two_entry_parameter_value_pair(self):
+        OD = OrderedDict
+        ppv = parse_param_val
+
+        expected_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+            ]
+        )
+        original_length = len(expected_param_value_pairs)
+
+        # expects one or two entries
+        self.assertRaises(
+            RuntimeError,
+            remove_parameter_value_pair,
+            OD(),
+            expected_param_value_pairs,
+        )
+        self.assertRaises(
+            RuntimeError,
+            remove_parameter_value_pair,
+            OD(
+                {
+                    HOST_COMPILER: ppv((GCC, 9)),
+                    DEVICE_COMPILER: ppv((NVCC, 11.2)),
+                    CMAKE: ppv((CMAKE, 3.23)),
+                }
+            ),
+            expected_param_value_pairs,
+        )
+
+        self.assertFalse(
+            remove_parameter_value_pair(
+                OD({HOST_COMPILER: ppv((GCC, 9)), DEVICE_COMPILER: ppv((NVCC, 11.2))}),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length)
+
+        self.assertTrue(
+            remove_parameter_value_pair(
+                OD({HOST_COMPILER: ppv((GCC, 10)), DEVICE_COMPILER: ppv((NVCC, 12.0))}),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length - 1)
+
+        self.assertTrue(
+            remove_parameter_value_pair(
+                OD({CMAKE: ppv((CMAKE, 3.23)), BOOST: ppv((BOOST, 1.83))}),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length - 2)
+
+    def test_remove_single_entry_parameter_value_pair(self):
+        OD = OrderedDict
+        ppv = parse_param_val
+
+        expected_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+            ]
+        )
+        original_length = len(expected_param_value_pairs)
+
+        self.assertFalse(
+            remove_parameter_value_pair(
+                OD({HOST_COMPILER: ppv((GCC, 12))}),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length)
+
+        self.assertFalse(
+            remove_parameter_value_pair(
+                OD({HOST_COMPILER: ppv((CLANG, 12))}),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length)
+
+        self.assertFalse(
+            remove_parameter_value_pair(
+                OD({UBUNTU: ppv((UBUNTU, 20.04))}),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length)
+
+        self.assertTrue(
+            remove_parameter_value_pair(
+                OD({HOST_COMPILER: ppv((GCC, 9))}),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length - 2)
+        self.assertEqual(
+            expected_param_value_pairs,
+            parse_expected_val_pairs(
+                [
+                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ]
+            ),
         )

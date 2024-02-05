@@ -162,6 +162,56 @@ def _loop_over_parameter_values(
             expected_pairs.append(param_val_pair)
 
 
+@typechecked
+def remove_parameter_value_pair(
+    to_remove: ParameterValuePair, parameter_value_pairs: List[ParameterValuePair]
+) -> bool:
+    """Removes a parameter-value pair with one or two entries from the parameter-value-pair list. If
+    the parameter-value-pair only has one parameter value, all parameter-value-pairs that contain
+    the parameter value are removed.
+
+    Args:
+        to_remove (ParameterValuePair): Parameter-value-pair to remove
+        param_val_pairs (List[ParameterValuePair]): List of parameter-value-pairs. Will be modified.
+
+    Raises:
+        RuntimeError: If `to_remove` 0 or more than 2 entries.
+
+    Returns:
+        bool: True if entry was removed from parameter_value_pairs
+    """
+    if len(to_remove) == 1:
+        return _remove_single_entry_parameter_value_pair(to_remove, parameter_value_pairs)
+
+    if len(to_remove) == 0 or len(to_remove) > 2:
+        raise RuntimeError("More than two parameter-values are not allowed")
+
+    try:
+        parameter_value_pairs.remove(to_remove)
+        return True
+    except ValueError:
+        return False
+
+
+@typechecked
+def _remove_single_entry_parameter_value_pair(
+    to_remove: ParameterValuePair, param_val_pairs: List[ParameterValuePair]
+) -> bool:
+    val_name, val_version = next(iter(to_remove.items()))
+
+    len_before = len(param_val_pairs)
+
+    def filter_function(param_val_pair: ParameterValuePair) -> bool:
+        if val_name in param_val_pair and param_val_pair[val_name] == val_version:
+            return False
+        return True
+
+    param_val_pairs[:] = list(filter(filter_function, param_val_pairs))
+
+    return len_before != len(param_val_pairs)
+
+
+@typechecked
 def check_parameter_value_pair_in_combination_list(
     combination_list: CombinationList,
     parameter_value_pairs: List[ParameterValuePair],
