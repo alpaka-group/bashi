@@ -6,9 +6,11 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - uses: actions/checkout@v4
-        - uses: rickstaa/action-black@v1
+        - uses: psf/black@stable
           with:
-            black_args: ". --check"
+            options: "--check --verbose"
+            src: "./"
+            version: "~= 24.0"
 
     unit-tests:
         runs-on: ubuntu-latest
