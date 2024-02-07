@@ -10,7 +10,13 @@ ValueVersion: TypeAlias = Version
 ParameterValue = NamedTuple("ParameterValue", [("name", ValueName), ("version", ValueVersion)])
 ParameterValueList: TypeAlias = List[ParameterValue]
 ParameterValueMatrix: TypeAlias = OrderedDict[Parameter, ParameterValueList]
-ParameterValuePair: TypeAlias = OrderedDict[Parameter, ParameterValue]
+ParameterValueSingle = NamedTuple(
+    "ParameterValueSingle", [("parameter", Parameter), ("parameterValue", ParameterValue)]
+)
+ParameterValuePair = NamedTuple(
+    "ParameterValuePair",
+    [("first", ParameterValueSingle), ("second", ParameterValueSingle)],
+)
 ParameterValueTuple: TypeAlias = OrderedDict[Parameter, ParameterValue]
 Combination: TypeAlias = OrderedDict[Parameter, ParameterValue]
 CombinationList: TypeAlias = List[Combination]

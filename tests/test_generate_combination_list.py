@@ -11,9 +11,11 @@ from bashi.utils import (
     get_expected_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
     remove_parameter_value_pair,
+    create_parameter_value_pair,
 )
 from bashi.types import (
     ParameterValue,
+    ParameterValueSingle,
     ParameterValuePair,
     ParameterValueTuple,
     ParameterValueMatrix,
@@ -35,9 +37,9 @@ class TestGeneratorTestData(unittest.TestCase):
         cls.param_matrix[CMAKE] = parse_param_vals([(CMAKE, 3.22), (CMAKE, 3.23)])
         cls.param_matrix[BOOST] = parse_param_vals([(BOOST, 1.81), (BOOST, 1.82), (BOOST, 1.83)])
 
-        cls.generated_parameter_value_pairs: List[
-            ParameterValuePair
-        ] = get_expected_parameter_value_pairs(cls.param_matrix)
+        cls.generated_parameter_value_pairs: List[ParameterValuePair] = (
+            get_expected_parameter_value_pairs(cls.param_matrix)
+        )
 
     def test_generator_without_custom_filter(self):
         comb_list = generate_combination_list(self.param_matrix)
@@ -143,8 +145,8 @@ class TestGeneratorTestData(unittest.TestCase):
             if device_compiler.name == NVCC:
                 self.assertTrue(
                     remove_parameter_value_pair(
-                        OrderedDict(
-                            {DEVICE_COMPILER: ParameterValue(NVCC, device_compiler.version)}
+                        ParameterValueSingle(
+                            DEVICE_COMPILER, ParameterValue(NVCC, device_compiler.version)
                         ),
                         reduced_expected_param_val_pairs,
                     )
@@ -152,11 +154,13 @@ class TestGeneratorTestData(unittest.TestCase):
 
         self.assertTrue(
             remove_parameter_value_pair(
-                OrderedDict(
-                    {
-                        CMAKE: ParameterValue(CMAKE, pkv.parse("3.23")),
-                        BOOST: ParameterValue(BOOST, pkv.parse("1.82")),
-                    },
+                create_parameter_value_pair(
+                    CMAKE,
+                    CMAKE,
+                    "3.23",
+                    BOOST,
+                    BOOST,
+                    "1.82",
                 ),
                 reduced_expected_param_val_pairs,
             )
@@ -213,12 +217,7 @@ class TestGeneratorRealData(unittest.TestCase):
 
         self.assertTrue(
             remove_parameter_value_pair(
-                OrderedDict(
-                    {
-                        CMAKE: ParameterValue(CMAKE, pkv.parse("3.23")),
-                        BOOST: ParameterValue(BOOST, pkv.parse("1.82")),
-                    },
-                ),
+                create_parameter_value_pair(CMAKE, CMAKE, "3.23", BOOST, BOOST, "1.82"),
                 reduced_expected_param_val_pairs,
             )
         )
