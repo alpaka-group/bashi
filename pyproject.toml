@@ -23,7 +23,7 @@ classifiers= [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "allpairspy == 2.5.1",
+    "covertable == 2.1.0",
     "typeguard",
     "packaging"
 ]

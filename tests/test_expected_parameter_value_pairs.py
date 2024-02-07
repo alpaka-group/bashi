@@ -1,56 +1,179 @@
 # pylint: disable=missing-docstring
 import unittest
-from typing import List, Union, Tuple
+from typing import List, Dict
 from collections import OrderedDict
 import io
 import packaging.version as pkv
 
-# allpairspy has no type hints
-from allpairspy import AllPairs  # type: ignore
+from utils_test import parse_param_val, parse_param_vals, parse_expected_val_pairs
+from covertable import make
 from bashi.types import (
     Parameter,
     ParameterValue,
-    ValueName,
+    ParameterValueSingle,
     ParameterValuePair,
     ParameterValueMatrix,
-    Combination,
     CombinationList,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.utils import (
     get_expected_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
+    remove_parameter_value_pair,
+    create_parameter_value_pair,
 )
 
 
-def parse_param_val(param_val: Tuple[ValueName, Union[str, int, float]]) -> ParameterValue:
-    val_name, val_version = param_val
-    return ParameterValue(val_name, pkv.parse(str(val_version)))
+class TestCreateParameterValuePair(unittest.TestCase):
+    def test_create_parameter_value_pair_type_str(self):
+        param1 = "param1"
+        param2 = "param2"
+        name1 = "name1"
+        name2 = "name2"
+        ver1 = "1.0"
+        ver2 = "2.0"
 
+        created_param_val_pair = create_parameter_value_pair(
+            param1, name1, ver1, param2, name2, ver2
+        )
 
-def parse_param_vals(
-    param_vals: List[Tuple[ValueName, Union[str, int, float]]]
-) -> List[ParameterValue]:
-    parsed_list: List[ParameterValue] = []
+        expected_param_val_pair = ParameterValuePair(
+            ParameterValueSingle(
+                param1,
+                ParameterValue(name1, pkv.parse(ver1)),
+            ),
+            ParameterValueSingle(
+                param2,
+                ParameterValue(name2, pkv.parse(ver2)),
+            ),
+        )
 
-    for param_val in param_vals:
-        parsed_list.append(parse_param_val(param_val))
+        self.assertEqual(type(created_param_val_pair), type(expected_param_val_pair))
 
-    return parsed_list
+        self.assertEqual(
+            created_param_val_pair,
+            expected_param_val_pair,
+        )
 
+    def test_create_parameter_value_pair_type_float(self):
+        param1 = "param1"
+        param2 = "param2"
+        name1 = "name1"
+        name2 = "name2"
+        ver1 = 1.0
+        ver2 = 2.0
 
-def parse_expected_val_pairs(
-    input_list: List[OrderedDict[Parameter, Tuple[ValueName, Union[str, int, float]]]]
-) -> List[ParameterValuePair]:
-    expected_val_pairs: List[ParameterValuePair] = []
+        created_param_val_pair = create_parameter_value_pair(
+            param1, name1, ver1, param2, name2, ver2
+        )
 
-    for param_val_pair in input_list:
-        tmp_entry: ParameterValuePair = OrderedDict()
-        for param in param_val_pair:
-            tmp_entry[param] = parse_param_val(param_val_pair[param])
-        expected_val_pairs.append(tmp_entry)
+        expected_param_val_pair = ParameterValuePair(
+            ParameterValueSingle(
+                param1,
+                ParameterValue(name1, pkv.parse(str(ver1))),
+            ),
+            ParameterValueSingle(
+                param2,
+                ParameterValue(name2, pkv.parse(str(ver2))),
+            ),
+        )
 
-    return expected_val_pairs
+        self.assertEqual(type(created_param_val_pair), type(expected_param_val_pair))
+
+        self.assertEqual(
+            created_param_val_pair,
+            expected_param_val_pair,
+        )
+
+    def test_create_parameter_value_pair_type_int(self):
+        param1 = "param1"
+        param2 = "param2"
+        name1 = "name1"
+        name2 = "name2"
+        ver1 = 1
+        ver2 = 2
+
+        created_param_val_pair = create_parameter_value_pair(
+            param1, name1, ver1, param2, name2, ver2
+        )
+
+        expected_param_val_pair = ParameterValuePair(
+            ParameterValueSingle(
+                param1,
+                ParameterValue(name1, pkv.parse(str(ver1))),
+            ),
+            ParameterValueSingle(
+                param2,
+                ParameterValue(name2, pkv.parse(str(ver2))),
+            ),
+        )
+
+        self.assertEqual(type(created_param_val_pair), type(expected_param_val_pair))
+
+        self.assertEqual(
+            created_param_val_pair,
+            expected_param_val_pair,
+        )
+
+    def test_create_parameter_value_pair_type_version(self):
+        param1 = "param1"
+        param2 = "param2"
+        name1 = "name1"
+        name2 = "name2"
+        ver1 = pkv.parse("1.0")
+        ver2 = pkv.parse("2.0")
+
+        created_param_val_pair = create_parameter_value_pair(
+            param1, name1, ver1, param2, name2, ver2
+        )
+
+        expected_param_val_pair = ParameterValuePair(
+            ParameterValueSingle(
+                param1,
+                ParameterValue(name1, ver1),
+            ),
+            ParameterValueSingle(
+                param2,
+                ParameterValue(name2, ver2),
+            ),
+        )
+
+        self.assertEqual(type(created_param_val_pair), type(expected_param_val_pair))
+
+        self.assertEqual(
+            created_param_val_pair,
+            expected_param_val_pair,
+        )
+
+    def test_create_parameter_value_pair_type_mixed(self):
+        param1 = "param1"
+        param2 = "param2"
+        name1 = "name1"
+        name2 = "name2"
+        ver1 = pkv.parse("1.0")
+        ver2 = "2.0"
+
+        created_param_val_pair = create_parameter_value_pair(
+            param1, name1, ver1, param2, name2, ver2
+        )
+
+        expected_param_val_pair = ParameterValuePair(
+            ParameterValueSingle(
+                param1,
+                ParameterValue(name1, ver1),
+            ),
+            ParameterValueSingle(
+                param2,
+                ParameterValue(name2, pkv.parse(ver2)),
+            ),
+        )
+
+        self.assertEqual(type(created_param_val_pair), type(expected_param_val_pair))
+
+        self.assertEqual(
+            created_param_val_pair,
+            expected_param_val_pair,
+        )
 
 
 class TestExpectedValuePairs(unittest.TestCase):
@@ -67,9 +190,9 @@ class TestExpectedValuePairs(unittest.TestCase):
         cls.param_matrix[CMAKE] = parse_param_vals([(CMAKE, 3.22), (CMAKE, 3.23)])
         cls.param_matrix[BOOST] = parse_param_vals([(BOOST, 1.81), (BOOST, 1.82), (BOOST, 1.83)])
 
-        cls.generated_parameter_value_pairs: List[
-            ParameterValuePair
-        ] = get_expected_parameter_value_pairs(cls.param_matrix)
+        cls.generated_parameter_value_pairs: List[ParameterValuePair] = (
+            get_expected_parameter_value_pairs(cls.param_matrix)
+        )
 
         OD = OrderedDict
 
@@ -364,16 +487,262 @@ class TestExpectedValuePairs(unittest.TestCase):
 
         self.assertEqual(output_wrong_many_pairs_list, expected_output_many_wrong_pairs_list)
 
-    def test_unrestricted_allpairspy_generator(self):
+    def test_unrestricted_covertable_generator(self):
         comb_list: CombinationList = []
         # pylance shows a warning, because it cannot determine the concrete type of a namedtuple,
         # which is returned by AllPairs
-        for all_pair in AllPairs(parameters=self.param_matrix):  # type: ignore
-            comb: Combination = OrderedDict()
-            for index, param in enumerate(all_pair._fields):  # type: ignore
-                comb[param] = all_pair[index]  # type: ignore
-            comb_list.append(comb)
+        all_pairs: List[Dict[Parameter, ParameterValue]] = make(
+            factors=self.param_matrix
+        )  # type: ignore
+
+        for all_pair in all_pairs:
+            comb_list.append(OrderedDict(all_pair))
 
         self.assertTrue(
             check_parameter_value_pair_in_combination_list(comb_list, self.expected_param_val_pairs)
         )
+
+
+class TestRemoveExpectedParameterValuePair(unittest.TestCase):
+    def test_remove_parameter_value_pair(self):
+        OD = OrderedDict
+
+        expected_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+            ]
+        )
+        original_length = len(expected_param_value_pairs)
+
+        self.assertFalse(
+            remove_parameter_value_pair(
+                create_parameter_value_pair(HOST_COMPILER, GCC, 9, DEVICE_COMPILER, NVCC, 11.2),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length)
+
+        self.assertTrue(
+            remove_parameter_value_pair(
+                create_parameter_value_pair(HOST_COMPILER, GCC, 10, DEVICE_COMPILER, NVCC, 12.0),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length - 1)
+
+        self.assertTrue(
+            remove_parameter_value_pair(
+                create_parameter_value_pair(CMAKE, CMAKE, 3.23, BOOST, BOOST, 1.83),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length - 2)
+
+    def test_remove_parameter_value_single(self):
+        OD = OrderedDict
+        ppv = parse_param_val
+
+        expected_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+            ]
+        )
+        original_length = len(expected_param_value_pairs)
+
+        # all_versions=True is not support for ParameterValueSingle
+        self.assertRaises(
+            RuntimeError,
+            remove_parameter_value_pair,
+            ParameterValueSingle(HOST_COMPILER, ppv((GCC, 12))),
+            expected_param_value_pairs,
+            True,
+        )
+
+        self.assertFalse(
+            remove_parameter_value_pair(
+                ParameterValueSingle(HOST_COMPILER, ppv((GCC, 12))),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length)
+
+        self.assertFalse(
+            remove_parameter_value_pair(
+                ParameterValueSingle(HOST_COMPILER, ppv((CLANG, 12))),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length)
+
+        self.assertFalse(
+            remove_parameter_value_pair(
+                ParameterValueSingle(UBUNTU, ppv((UBUNTU, 20.04))),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length)
+
+        self.assertTrue(
+            remove_parameter_value_pair(
+                ParameterValueSingle(HOST_COMPILER, ppv((GCC, 9))),
+                expected_param_value_pairs,
+            )
+        )
+        self.assertEqual(len(expected_param_value_pairs), original_length - 2)
+        self.assertEqual(
+            expected_param_value_pairs,
+            parse_expected_val_pairs(
+                [
+                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ]
+            ),
+        )
+
+    def test_remove_parameter_value_pair_all_versions(self):
+        versions = {
+            GCC: [9, 10, 11, 12, 13],
+            CLANG: [13, 14, 15, 16, 17],
+            NVCC: [11.0, 11.1, 11.2, 11.3, 11.4],
+            HIPCC: [5.0, 5.1, 5.2, 5.3],
+            CMAKE: [3.22, 3.23, 3.24],
+            BOOST: [1.80, 1.81, 1.82],
+        }
+
+        param_val_matrix: ParameterValueMatrix = OrderedDict()
+        for compiler in [HOST_COMPILER, DEVICE_COMPILER]:
+            param_val_matrix[compiler] = []
+            for compiler_name in [GCC, CLANG, NVCC, HIPCC]:
+                for compiler_version in versions[compiler_name]:
+                    param_val_matrix[compiler].append(
+                        ParameterValue(compiler_name, pkv.parse(str(compiler_version)))
+                    )
+
+        for sw in [CMAKE, BOOST]:
+            param_val_matrix[sw] = []
+            for version in versions[sw]:
+                param_val_matrix[sw].append(ParameterValue(sw, pkv.parse(str(version))))
+
+        reduced_param_value_pairs = get_expected_parameter_value_pairs(param_val_matrix)
+
+        expected_number_of_reduced_pairs = len(reduced_param_value_pairs)
+
+        expected_reduced_param_value_pairs = reduced_param_value_pairs.copy()
+
+        # remove single value to verify that default flag is working
+        example_single_pair = create_parameter_value_pair(
+            HOST_COMPILER,
+            NVCC,
+            11.0,
+            DEVICE_COMPILER,
+            NVCC,
+            11.3,
+        )
+
+        expected_reduced_param_value_pairs.remove(example_single_pair)
+
+        self.assertTrue(
+            remove_parameter_value_pair(
+                to_remove=example_single_pair,
+                parameter_value_pairs=reduced_param_value_pairs,
+            )
+        )
+
+        # remove single entry
+        expected_number_of_reduced_pairs -= 1
+        self.assertEqual(len(reduced_param_value_pairs), expected_number_of_reduced_pairs)
+
+        reduced_param_value_pairs.sort()
+        expected_reduced_param_value_pairs.sort()
+        self.assertEqual(reduced_param_value_pairs, expected_reduced_param_value_pairs)
+
+        # remove all expected tuples, where host and device compiler is nvcc
+        def filter_function1(param_val_pair: ParameterValuePair) -> bool:
+            if (
+                param_val_pair.first.parameter == HOST_COMPILER
+                and param_val_pair.second.parameter == DEVICE_COMPILER
+            ):
+                if (
+                    param_val_pair.first.parameterValue.name == NVCC
+                    and param_val_pair.second.parameterValue.name == NVCC
+                ):
+                    return False
+
+            return True
+
+        expected_reduced_param_value_pairs[:] = list(
+            filter(filter_function1, expected_reduced_param_value_pairs)
+        )
+
+        self.assertTrue(
+            remove_parameter_value_pair(
+                to_remove=create_parameter_value_pair(
+                    HOST_COMPILER,
+                    NVCC,
+                    0,
+                    DEVICE_COMPILER,
+                    NVCC,
+                    0,
+                ),
+                parameter_value_pairs=reduced_param_value_pairs,
+                all_versions=True,
+            )
+        )
+
+        # remove number of pairs, where host and device compiler is nvcc
+        # -1 because we removed already a combination manually before
+        expected_number_of_reduced_pairs -= len(versions[NVCC]) * len(versions[NVCC]) - 1
+        self.assertEqual(len(reduced_param_value_pairs), expected_number_of_reduced_pairs)
+
+        reduced_param_value_pairs.sort()
+        expected_reduced_param_value_pairs.sort()
+        self.assertEqual(reduced_param_value_pairs, expected_reduced_param_value_pairs)
+
+        # remove all combinations where HIPCC is the host compiler and nvcc the device compiler
+        def filter_function2(param_val_pair: ParameterValuePair) -> bool:
+            if (
+                param_val_pair.first.parameter == HOST_COMPILER
+                and param_val_pair.second.parameter == DEVICE_COMPILER
+            ):
+                if (
+                    param_val_pair.first.parameterValue.name == HIPCC
+                    and param_val_pair.second.parameterValue.name == NVCC
+                ):
+                    return False
+
+            return True
+
+        expected_reduced_param_value_pairs[:] = list(
+            filter(filter_function2, expected_reduced_param_value_pairs)
+        )
+
+        self.assertTrue(
+            remove_parameter_value_pair(
+                to_remove=create_parameter_value_pair(
+                    HOST_COMPILER,
+                    HIPCC,
+                    0,
+                    DEVICE_COMPILER,
+                    NVCC,
+                    0,
+                ),
+                parameter_value_pairs=reduced_param_value_pairs,
+                all_versions=True,
+            )
+        )
+
+        # remove number pairs, where host compiler is HIPCC and device compiler is nvcc
+        expected_number_of_reduced_pairs -= len(versions[HIPCC]) * len(versions[NVCC])
+        self.assertEqual(len(reduced_param_value_pairs), expected_number_of_reduced_pairs)
+
+        reduced_param_value_pairs.sort()
+        expected_reduced_param_value_pairs.sort()
+        self.assertEqual(reduced_param_value_pairs, expected_reduced_param_value_pairs)

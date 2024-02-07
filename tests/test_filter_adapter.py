@@ -6,6 +6,10 @@ import packaging.version as pkv
 from typeguard import typechecked
 from bashi.types import ParameterValueTuple, ParameterValue
 from bashi.utils import FilterAdapter
+from bashi.filter_compiler_name import compiler_name_filter
+from bashi.filter_compiler_version import compiler_version_filter
+from bashi.filter_backend import backend_filter
+from bashi.filter_software_dependency import software_dependency_filter
 
 
 class TestFilterAdapterDataSet1(unittest.TestCase):
@@ -96,6 +100,23 @@ class TestFilterAdapterDataSet1(unittest.TestCase):
     def test_lambda(self):
         filter_adapter = FilterAdapter(self.param_map, lambda row: len(row) == 3)
         self.assertTrue(filter_adapter(self.test_row), "row has not the length of 3")
+
+    # interface test with production filter
+    def test_compiler_name_filter(self):
+        error_msg = (
+            "the filter should return true every time, "
+            "because the test data should no trigger any rule"
+        )
+        self.assertTrue(
+            FilterAdapter(self.param_map, compiler_name_filter)(self.test_row), error_msg
+        )
+        self.assertTrue(
+            FilterAdapter(self.param_map, compiler_version_filter)(self.test_row), error_msg
+        )
+        self.assertTrue(FilterAdapter(self.param_map, backend_filter)(self.test_row), error_msg)
+        self.assertTrue(
+            FilterAdapter(self.param_map, software_dependency_filter)(self.test_row), error_msg
+        )
 
 
 # do a complex test with a different data set
