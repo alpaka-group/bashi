@@ -1,18 +1,19 @@
 """Functions to generate the combination-list"""
 
-from typing import Dict
+from typing import Dict, List
 from collections import OrderedDict
 
-from allpairspy import AllPairs
+from covertable import make
 
 from bashi.types import (
     Parameter,
+    ParameterValue,
     ParameterValueMatrix,
     FilterFunction,
     Combination,
     CombinationList,
 )
-from bashi.utils import get_default_filter_chain, FilterAdapter
+from bashi.utils import get_default_filter_chain
 
 
 def generate_combination_list(
@@ -32,20 +33,21 @@ def generate_combination_list(
     """
     filter_chain = get_default_filter_chain(custom_filter)
 
-    param_map: Dict[int, Parameter] = {}
-    for index, key in enumerate(parameter_value_matrix.keys()):
-        param_map[index] = key
-    filter_adapter = FilterAdapter(param_map, filter_chain)
-
     comb_list: CombinationList = []
 
-    # convert List[Pair] to CombinationList
-    for all_pair in AllPairs(  # type: ignore
-        parameters=parameter_value_matrix, n=2, filter_func=filter_adapter
-    ):
-        comb: Combination = OrderedDict()
-        for index, param in enumerate(all_pair._fields):  # type: ignore
-            comb[param] = all_pair[index]  # type: ignore
-        comb_list.append(comb)
+    all_pairs: List[Dict[Parameter, ParameterValue]] = make(
+        factors=parameter_value_matrix,
+        length=2,
+        pre_filter=filter_chain,
+    )  # type: ignore
+
+    # convert List[Dict[Parameter, ParameterValue]] to CombinationList
+    for all_pair in all_pairs:
+        tmp_comb: Combination = OrderedDict()
+        # covertable does not keep the ordering of the parameters
+        # therefore we sort it
+        for param in parameter_value_matrix.keys():
+            tmp_comb[param] = all_pair[param]
+        comb_list.append(tmp_comb)
 
     return comb_list

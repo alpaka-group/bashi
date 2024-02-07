@@ -5,9 +5,8 @@ from collections import OrderedDict
 import io
 import packaging.version as pkv
 
-# allpairspy has no type hints
-from allpairspy import AllPairs  # type: ignore
 from utils_test import parse_param_val, parse_param_vals, parse_expected_val_pairs
+from covertable import make
 from bashi.types import (
     Parameter,
     ParameterValue,
@@ -488,15 +487,16 @@ class TestExpectedValuePairs(unittest.TestCase):
 
         self.assertEqual(output_wrong_many_pairs_list, expected_output_many_wrong_pairs_list)
 
-    def test_unrestricted_allpairspy_generator(self):
+    def test_unrestricted_covertable_generator(self):
         comb_list: CombinationList = []
         # pylance shows a warning, because it cannot determine the concrete type of a namedtuple,
         # which is returned by AllPairs
-        for all_pair in AllPairs(parameters=self.param_matrix):  # type: ignore
-            comb: Combination = OrderedDict()
-            for index, param in enumerate(all_pair._fields):  # type: ignore
-                comb[param] = all_pair[index]  # type: ignore
-            comb_list.append(comb)
+        all_pairs: List[Dict[Parameter, ParameterValue]] = make(
+            factors=self.param_matrix
+        )  # type: ignore
+
+        for all_pair in all_pairs:
+            comb_list.append(OrderedDict(all_pair))
 
         self.assertTrue(
             check_parameter_value_pair_in_combination_list(comb_list, self.expected_param_val_pairs)

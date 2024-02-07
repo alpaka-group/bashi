@@ -50,9 +50,6 @@ class TestGeneratorTestData(unittest.TestCase):
             )
         )
 
-    # TODO(SimeonEhrig): remove expectedFailure, if this PR was merged:
-    # https://github.com/thombashi/allpairspy/pull/10
-    @unittest.expectedFailure
     def test_generator_with_custom_filter(self):
         def custom_filter(row: ParameterValueTuple) -> bool:
             if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
@@ -168,7 +165,6 @@ class TestGeneratorTestData(unittest.TestCase):
 
         missing_combinations = io.StringIO()
 
-        # because of a bug in the allpairspy library, valid pairs are missing.
         try:
             self.assertTrue(
                 check_parameter_value_pair_in_combination_list(
@@ -177,7 +173,7 @@ class TestGeneratorTestData(unittest.TestCase):
             )
         except AssertionError as e:
             # remove comment to print missing, valid pairs
-            # print(f"\n{missing_combinations.getvalue()}")
+            print(f"\n{missing_combinations.getvalue()}")
             raise e
 
 
@@ -194,14 +190,8 @@ class TestGeneratorRealData(unittest.TestCase):
             check_parameter_value_pair_in_combination_list(comb_list, expected_param_val_pairs)
         )
 
-    # TODO(SimeonEhrig): remove expectedFailure, if this PR was merged:
-    # https://github.com/thombashi/allpairspy/pull/10
-    @unittest.expectedFailure
     def test_generator_with_custom_filter(self):
         def custom_filter(row: ParameterValueTuple) -> bool:
-            if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
-                return False
-
             if (
                 CMAKE in row
                 and row[CMAKE].version == pkv.parse("3.23")
@@ -236,7 +226,8 @@ class TestGeneratorRealData(unittest.TestCase):
             )
         except AssertionError as e:
             # remove comment to display missing combinations
-            # missing_combinations_str = missing_combinations.getvalue()
-            # print(f"\nnumber of missing combinations: {len(missing_combinations_str.split('\n'))}")
-            # print(f"\n{missing_combinations_str}")
+            missing_combinations_str = missing_combinations.getvalue()
+            print(f"\n{missing_combinations_str}")
+            number_of_combs = len(missing_combinations_str.split("\n"))
+            print(f"\nnumber of missing combinations: {number_of_combs}")
             raise e
