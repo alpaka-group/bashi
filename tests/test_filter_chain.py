@@ -4,7 +4,8 @@ from typing import Dict, List
 from collections import OrderedDict
 import packaging.version as pkv
 from bashi.types import ParameterValue, ParameterValueTuple, FilterFunction
-from bashi.utils import get_default_filter_chain, FilterAdapter
+from bashi.utils import FilterAdapter
+from bashi.filter_chain import get_default_filter_chain
 
 
 class TestFilterChain(unittest.TestCase):

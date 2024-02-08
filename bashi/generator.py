@@ -13,7 +13,7 @@ from bashi.types import (
     Combination,
     CombinationList,
 )
-from bashi.utils import get_default_filter_chain
+from bashi.filter_chain import get_default_filter_chain
 
 
 def generate_combination_list(

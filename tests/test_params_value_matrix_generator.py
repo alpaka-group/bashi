@@ -26,12 +26,16 @@ class TestParameterValueGenerator(unittest.TestCase):
     def test_number_host_device_compiler(self):
         extended_versions = VERSIONS.copy()
         extended_versions[CLANG_CUDA] = extended_versions[CLANG]
-        number_of_compilers = 0
+        number_of_host_compilers = 0
         for compiler in COMPILERS:
-            number_of_compilers += len(extended_versions[compiler])
+            if compiler != NVCC:
+                number_of_host_compilers += len(extended_versions[compiler])
 
-        self.assertEqual(len(self.param_val_matrix[HOST_COMPILER]), number_of_compilers)
-        self.assertEqual(len(self.param_val_matrix[DEVICE_COMPILER]), number_of_compilers)
+        # NVCC is only as device compiler added
+        number_of_device_compilers = number_of_host_compilers + len(extended_versions[NVCC])
+
+        self.assertEqual(len(self.param_val_matrix[HOST_COMPILER]), number_of_host_compilers)
+        self.assertEqual(len(self.param_val_matrix[DEVICE_COMPILER]), number_of_device_compilers)
 
     def test_number_of_backends(self):
         for backend in BACKENDS:
