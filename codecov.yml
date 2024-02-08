@@ -1,0 +1,3 @@
+ignore:
+  # is a application which is hard to test
+  - "bashi/validate.py"
