@@ -2,9 +2,10 @@
 
 from typing import Dict, List, Union
 from collections import OrderedDict
+from typeguard import typechecked
 import packaging.version as pkv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.types import ParameterValue, ParameterValueMatrix
+from bashi.types import ValueName, ValueVersion, ParameterValue, ParameterValueMatrix
 
 VERSIONS: Dict[str, List[Union[str, int, float]]] = {
     GCC: [6, 7, 8, 9, 10, 11, 12, 13],
@@ -91,3 +92,41 @@ def get_parameter_value_matrix() -> ParameterValueMatrix:
                 param_val_matrix[other].append(ParameterValue(other, pkv.parse(str(version))))
 
     return param_val_matrix
+
+
+@typechecked
+def is_supported_version(name: ValueName, version: ValueVersion) -> bool:
+    """Check if a specific software version is supported by the bashi library.
+
+    Args:
+        name (ValueName): Name of the software, e.g. gcc, boost or ubuntu.
+        version (ValueVersion): Version of the software.
+
+    Raises:
+        ValueError: If the name of the software is not known.
+
+    Returns:
+        bool: True if supported otherwise False.
+    """
+    known_names: List[ValueName] = list(VERSIONS.keys()) + [CLANG_CUDA] + BACKENDS
+
+    if name not in known_names:
+        raise ValueError(f"Unknown software name: {name}")
+
+    local_versions = VERSIONS.copy()
+
+    off: str = "0.0.0"
+    on: str = "1.0.0"
+
+    local_versions[CLANG_CUDA] = local_versions[CLANG]
+    local_versions[ALPAKA_ACC_GPU_CUDA_ENABLE] = [off] + VERSIONS[NVCC]
+
+    for backend_name in BACKENDS:
+        if backend_name != ALPAKA_ACC_GPU_CUDA_ENABLE:
+            local_versions[backend_name] = [off, on]
+
+    for ver in local_versions[name]:
+        if pkv.parse(str(ver)) == version:
+            return True
+
+    return False

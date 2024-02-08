@@ -8,9 +8,30 @@ which rule.
 """
 
 from typing import Optional, IO
-from bashi.types import ParameterValueTuple
+from typeguard import typechecked
+from bashi.types import Parameter, ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.utils import reason
+
+
+def get_required_parameters() -> List[Parameter]:
+    """Return list of parameters which will be checked in the filter.
+
+    Returns:
+        List[Parameter]: list of checked parameters
+    """
+    return [HOST_COMPILER]
+
+
+@typechecked
+def compiler_name_filter_typechecked(
+    row: ParameterValueTuple,
+    output: Optional[IO[str]] = None,
+) -> bool:
+    """Type-checked version of compiler_name_filter(). Type checking has a big performance cost,
+    which is why the non type-checked version is used for the pairwise generator.
+    """
+    return compiler_name_filter(row, output)
 
 
 def compiler_name_filter(
