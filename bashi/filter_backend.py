@@ -1,4 +1,11 @@
-"""Filter rules basing on backend names and versions."""
+"""Filter rules basing on backend names and versions.
+
+All rules implemented in this filter have an identifier that begins with "b" and follows a number. 
+Examples: b1, b42, b678 ...
+
+These identifiers are used in the test names, for example, to make it clear which test is testing 
+which rule.
+"""
 
 from typing import Optional, IO
 from bashi.types import ParameterValueTuple

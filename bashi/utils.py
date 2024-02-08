@@ -1,6 +1,6 @@
 """Different helper functions for bashi"""
 
-from typing import Dict, List, IO, Union
+from typing import Dict, List, IO, Union, Optional
 from collections import OrderedDict
 import dataclasses
 import sys
@@ -16,10 +16,6 @@ from bashi.types import (
     CombinationList,
     FilterFunction,
 )
-from bashi.filter_compiler_name import compiler_name_filter
-from bashi.filter_compiler_version import compiler_version_filter
-from bashi.filter_backend import backend_filter
-from bashi.filter_software_dependency import software_dependency_filter
 
 
 @dataclasses.dataclass
@@ -80,30 +76,6 @@ class FilterAdapter:
         for index, param_name in enumerate(row):
             ordered_row[self.param_map[index]] = param_name
         return self.filter_func(ordered_row)
-
-
-@typechecked
-def get_default_filter_chain(
-    custom_filter_function: FilterFunction = lambda _: True,
-) -> FilterFunction:
-    """Concatenate the bashi filter functions in the default order and return them as one function
-    with a single entry point.
-
-    Args:
-        custom_filter_function (FilterFunction): This function is added as the last filter level and
-            allows the user to add custom filter rules without having to create the entire filter
-            chain from scratch. Defaults to lambda_:True.
-
-    Returns:
-        FilterFunction: The filter function chain, which can be directly used in bashi.FilterAdapter
-    """
-    return (
-        lambda row: compiler_name_filter(row)
-        and compiler_version_filter(row)
-        and backend_filter(row)
-        and software_dependency_filter(row)
-        and custom_filter_function(row)
-    )
 
 
 @typechecked
@@ -321,3 +293,20 @@ def check_parameter_value_pair_in_combination_list(
             missing_expected_param = True
 
     return not missing_expected_param
+
+
+def reason(output: Optional[IO[str]], msg: str):
+    """Write the message to output if it is not None. This function is used
+    in filter functions to print additional information about filter decisions.
+
+    Args:
+        output (Optional[IO[str]]): IO object. For example, can be io.StringIO, sys.stdout or
+            sys.stderr
+        msg (str): the message
+    """
+    if output:
+        print(
+            msg,
+            file=output,
+            end="",
+        )

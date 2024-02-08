@@ -60,6 +60,11 @@ def get_parameter_value_matrix() -> ParameterValueMatrix:
     for compiler_type in [HOST_COMPILER, DEVICE_COMPILER]:
         param_val_matrix[compiler_type] = []
         for sw_name, sw_versions in extended_version.items():
+            # do not add NVCC as HOST_COMPILER
+            # filtering out all NVCC as HOST_COMPILER later does not work with the covertable
+            # library
+            if compiler_type == HOST_COMPILER and sw_name == NVCC:
+                continue
             if sw_name in COMPILERS:
                 for sw_version in sw_versions:
                     param_val_matrix[compiler_type].append(

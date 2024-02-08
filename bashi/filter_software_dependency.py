@@ -1,4 +1,11 @@
-"""Filter rules handling software dependencies and compiler settings."""
+"""Filter rules handling software dependencies and compiler settings.
+
+All rules implemented in this filter have an identifier that begins with "sw" and follows a number. 
+Examples: sw1, sw42, sw678 ...
+
+These identifiers are used in the test names, for example, to make it clear which test is testing 
+which rule.
+"""
 
 from typing import Optional, IO
 from bashi.types import ParameterValueTuple
