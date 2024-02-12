@@ -32,9 +32,11 @@ def compiler_version_filter_typechecked(
     return compiler_version_filter(row, output)
 
 
+# TODO(SimeonEhrig): remove disable=unused-argument
+# only required for the CI at the moment
 def compiler_version_filter(
-    row: ParameterValueTuple,
-    output: Optional[IO[str]] = None,
+    row: ParameterValueTuple,  # pylint: disable=unused-argument
+    output: Optional[IO[str]] = None,  # pylint: disable=unused-argument
 ) -> bool:
     """Filter rules basing on host and device compiler names and versions.
 
@@ -47,4 +49,5 @@ def compiler_version_filter(
     Returns:
         bool: True, if parameter-value-tuple is valid.
     """
+
     return True

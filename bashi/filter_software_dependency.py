@@ -32,9 +32,11 @@ def software_dependency_filter_typechecked(
     return software_dependency_filter(row, output)
 
 
+# TODO(SimeonEhrig): remove disable=unused-argument
+# only required for the CI at the moment
 def software_dependency_filter(
-    row: ParameterValueTuple,
-    output: Optional[IO[str]] = None,
+    row: ParameterValueTuple,  # pylint: disable=unused-argument
+    output: Optional[IO[str]] = None,  # pylint: disable=unused-argument
 ) -> bool:
     """Filter rules handling software dependencies and compiler settings.
 

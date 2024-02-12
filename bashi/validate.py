@@ -224,11 +224,11 @@ def check_single_filter(
     if filter_func(row, msg):
         print(cs(f"{filter_name}() returns True", "Green"))
         return True
-    else:
-        print(cs(f"{filter_name}() returns False", "Red"))
-        if msg.getvalue() != "":
-            print("  " + msg.getvalue())
-        return False
+
+    print(cs(f"{filter_name}() returns False", "Red"))
+    if msg.getvalue() != "":
+        print("  " + msg.getvalue())
+    return False
 
 
 @typechecked
