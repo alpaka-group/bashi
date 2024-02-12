@@ -105,14 +105,14 @@ def create_parameter_value_pair(  # pylint: disable=too-many-arguments
     if isinstance(value_version1, packaging.version.Version):
         parsed_value_version1: packaging.version.Version = value_version1
     else:
-        parsed_value_version1: packaging.version.Version = packaging.version.parse(
+        parsed_value_version1: packaging.version.Version = packaging.version.parse(  # type: ignore
             str(value_version1)
         )
 
     if isinstance(value_version2, packaging.version.Version):
         parsed_value_version2: packaging.version.Version = value_version2
     else:
-        parsed_value_version2: packaging.version.Version = packaging.version.parse(
+        parsed_value_version2: packaging.version.Version = packaging.version.parse(  # type: ignore
             str(value_version2)
         )
 

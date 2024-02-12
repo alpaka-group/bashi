@@ -276,7 +276,7 @@ def check_filter_chain(row: ParameterValueTuple) -> bool:
     return all_true == 4
 
 
-def main():
+def main() -> None:
     """Entry point for the application."""
     args = get_args()
 
