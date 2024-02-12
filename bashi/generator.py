@@ -3,7 +3,7 @@
 from typing import Dict, List
 from collections import OrderedDict
 
-from covertable import make
+from covertable import make  # type: ignore
 
 from bashi.types import (
     Parameter,
@@ -43,7 +43,7 @@ def generate_combination_list(
 
     # convert List[Dict[Parameter, ParameterValue]] to CombinationList
     for all_pair in all_pairs:
-        tmp_comb: Combination = OrderedDict()
+        tmp_comb: Combination = OrderedDict({})
         # covertable does not keep the ordering of the parameters
         # therefore we sort it
         for param in parameter_value_matrix.keys():

@@ -119,7 +119,8 @@ def is_supported_version(name: ValueName, version: ValueVersion) -> bool:
     on: str = "1.0.0"
 
     local_versions[CLANG_CUDA] = local_versions[CLANG]
-    local_versions[ALPAKA_ACC_GPU_CUDA_ENABLE] = [off] + VERSIONS[NVCC]
+    local_versions[ALPAKA_ACC_GPU_CUDA_ENABLE] = [off]
+    local_versions[ALPAKA_ACC_GPU_CUDA_ENABLE] += VERSIONS[NVCC]
 
     for backend_name in BACKENDS:
         if backend_name != ALPAKA_ACC_GPU_CUDA_ENABLE:
