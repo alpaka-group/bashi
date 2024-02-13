@@ -58,4 +58,14 @@ def compiler_name_filter(
         reason(output, "nvcc is not allowed as host compiler")
         return False
 
+    # Rule: n2
+    if (
+        DEVICE_COMPILER in row
+        and row[DEVICE_COMPILER].name == NVCC
+        and HOST_COMPILER in row
+        and not row[HOST_COMPILER].name in [GCC, CLANG]
+    ):
+        reason(output, "only gcc and clang are allowed as nvcc host compiler")
+        return False
+
     return True
