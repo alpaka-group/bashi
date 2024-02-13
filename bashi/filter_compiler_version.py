@@ -9,7 +9,9 @@ which rule.
 
 from typing import Optional, IO, List
 from typeguard import typechecked
+from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import Parameter, ParameterValueTuple
+from bashi.utils import reason
 
 
 def get_required_parameters() -> List[Parameter]:
@@ -18,7 +20,7 @@ def get_required_parameters() -> List[Parameter]:
     Returns:
         List[Parameter]: list of checked parameters
     """
-    return []
+    return [HOST_COMPILER, DEVICE_COMPILER]
 
 
 @typechecked
@@ -32,11 +34,9 @@ def compiler_version_filter_typechecked(
     return compiler_version_filter(row, output)
 
 
-# TODO(SimeonEhrig): remove disable=unused-argument
-# only required for the CI at the moment
 def compiler_version_filter(
-    row: ParameterValueTuple,  # pylint: disable=unused-argument
-    output: Optional[IO[str]] = None,  # pylint: disable=unused-argument
+    row: ParameterValueTuple,
+    output: Optional[IO[str]] = None,
 ) -> bool:
     """Filter rules basing on host and device compiler names and versions.
 
@@ -49,5 +49,15 @@ def compiler_version_filter(
     Returns:
         bool: True, if parameter-value-tuple is valid.
     """
+
+    # Rule: v1
+    if (
+        DEVICE_COMPILER in row
+        and row[DEVICE_COMPILER].name != NVCC
+        and HOST_COMPILER in row
+        and row[HOST_COMPILER].version != row[DEVICE_COMPILER].version
+    ):
+        reason(output, "host and device compiler version must be the same (except for nvcc)")
+        return False
 
     return True

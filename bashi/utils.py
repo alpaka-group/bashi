@@ -18,7 +18,7 @@ from bashi.types import (
     ParameterValueSingle,
     ParameterValueTuple,
 )
-from bashi.versions import COMPILERS
+from bashi.versions import COMPILERS, VERSIONS
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -332,6 +332,9 @@ def get_expected_bashi_parameter_value_pairs(
     """
     param_val_pair_list = get_expected_parameter_value_pairs(parameter_matrix)
 
+    extend_versions = VERSIONS.copy()
+    extend_versions[CLANG_CUDA] = extend_versions[CLANG]
+
     # remove all combinations where nvcc is device compiler and the host compiler is not gcc or
     # clang
     for compiler_name in set(COMPILERS) - set([GCC, CLANG, NVCC]):
@@ -360,5 +363,24 @@ def get_expected_bashi_parameter_value_pairs(
                     parameter_value_pairs=param_val_pair_list,
                     all_versions=True,
                 )
+
+    # remove all combinations, where host and device compiler version are different except the
+    # compiler name is nvcc
+    for compiler_name in set(COMPILERS) - set([NVCC]):
+        for compiler_version1 in extend_versions[compiler_name]:
+            for compiler_version2 in extend_versions[compiler_name]:
+                if compiler_version1 != compiler_version2:
+                    remove_parameter_value_pair(
+                        to_remove=create_parameter_value_pair(
+                            HOST_COMPILER,
+                            compiler_name,
+                            compiler_version1,
+                            DEVICE_COMPILER,
+                            compiler_name,
+                            compiler_version2,
+                        ),
+                        parameter_value_pairs=param_val_pair_list,
+                        all_versions=False,
+                    )
 
     return param_val_pair_list

@@ -20,7 +20,7 @@ def get_required_parameters() -> List[Parameter]:
     Returns:
         List[Parameter]: list of checked parameters
     """
-    return [HOST_COMPILER]
+    return [HOST_COMPILER, DEVICE_COMPILER]
 
 
 @typechecked
