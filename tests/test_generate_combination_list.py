@@ -8,7 +8,6 @@ from utils_test import parse_param_vals
 from bashi.versions import get_parameter_value_matrix
 from bashi.generator import generate_combination_list
 from bashi.utils import (
-    get_expected_parameter_value_pairs,
     get_expected_bashi_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
     remove_parameter_value_pair,
@@ -33,13 +32,21 @@ class TestGeneratorTestData(unittest.TestCase):
             [(GCC, 10), (GCC, 11), (GCC, 12), (CLANG, 16), (CLANG, 17)]
         )
         cls.param_matrix[DEVICE_COMPILER] = parse_param_vals(
-            [(NVCC, 11.2), (NVCC, 12.0), (GCC, 10), (GCC, 11)]
+            [
+                (NVCC, 11.2),
+                (NVCC, 12.0),
+                (GCC, 10),
+                (GCC, 11),
+                (GCC, 12),
+                (CLANG, 16),
+                (CLANG, 17),
+            ]
         )
         cls.param_matrix[CMAKE] = parse_param_vals([(CMAKE, 3.22), (CMAKE, 3.23)])
         cls.param_matrix[BOOST] = parse_param_vals([(BOOST, 1.81), (BOOST, 1.82), (BOOST, 1.83)])
 
         cls.generated_parameter_value_pairs: List[ParameterValuePair] = (
-            get_expected_parameter_value_pairs(cls.param_matrix)
+            get_expected_bashi_parameter_value_pairs(cls.param_matrix)
         )
 
     def test_generator_without_custom_filter(self):
