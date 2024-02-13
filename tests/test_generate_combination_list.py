@@ -9,6 +9,7 @@ from bashi.versions import get_parameter_value_matrix
 from bashi.generator import generate_combination_list
 from bashi.utils import (
     get_expected_parameter_value_pairs,
+    get_expected_bashi_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
     remove_parameter_value_pair,
     create_parameter_value_pair,
@@ -182,7 +183,7 @@ class TestGeneratorTestData(unittest.TestCase):
 class TestGeneratorRealData(unittest.TestCase):
     def test_generator_without_custom_filter(self):
         param_val_matrix = get_parameter_value_matrix()
-        expected_param_val_pairs = get_expected_parameter_value_pairs(param_val_matrix)
+        expected_param_val_pairs = get_expected_bashi_parameter_value_pairs(param_val_matrix)
 
         comb_list = generate_combination_list(param_val_matrix)
 
@@ -203,7 +204,9 @@ class TestGeneratorRealData(unittest.TestCase):
             return True
 
         param_val_matrix = get_parameter_value_matrix()
-        reduced_expected_param_val_pairs = get_expected_parameter_value_pairs(param_val_matrix)
+        reduced_expected_param_val_pairs = get_expected_bashi_parameter_value_pairs(
+            param_val_matrix
+        )
 
         self.assertTrue(
             remove_parameter_value_pair(

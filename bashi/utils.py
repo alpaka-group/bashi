@@ -1,21 +1,25 @@
 """Different helper functions for bashi"""
 
-from typing import Dict, List, IO, Union, Optional
-from collections import OrderedDict
 import dataclasses
 import sys
-from typeguard import typechecked
+from collections import OrderedDict
+from typing import IO, Dict, List, Optional, Union
+
 import packaging.version
+from typeguard import typechecked
+
 from bashi.types import (
-    Parameter,
-    ParameterValue,
-    ParameterValueTuple,
-    ParameterValueSingle,
-    ParameterValuePair,
-    ParameterValueMatrix,
     CombinationList,
     FilterFunction,
+    Parameter,
+    ParameterValue,
+    ParameterValueMatrix,
+    ParameterValuePair,
+    ParameterValueSingle,
+    ParameterValueTuple,
 )
+from bashi.versions import COMPILERS
+from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 @dataclasses.dataclass
@@ -126,7 +130,7 @@ def create_parameter_value_pair(  # pylint: disable=too-many-arguments
 def get_expected_parameter_value_pairs(
     parameter_matrix: ParameterValueMatrix,
 ) -> List[ParameterValuePair]:
-    """Takes parameter-value-matrix an creates a list of all expected parameter-values-pairs.
+    """Takes parameter-value-matrix and creates a list of all expected parameter-values-pairs.
     The pair-wise generator guaranties, that each pair of two parameter-values exist in at least one
     combination if no filter rules exist. Therefore the generated the generated list can be used
     to verify the output of the pair-wise generator.
@@ -310,3 +314,31 @@ def reason(output: Optional[IO[str]], msg: str):
             file=output,
             end="",
         )
+
+
+@typechecked
+def get_expected_bashi_parameter_value_pairs(
+    parameter_matrix: ParameterValueMatrix,
+) -> List[ParameterValuePair]:
+    """Takes parameter-value-matrix and creates a list of all expected parameter-values-pairs
+    allowed by the bashi library. First it generates a complete list of parameter-value-pairs and
+    then it removes all pairs that are not allowed by filter rules.
+
+    Args:
+        parameter_matrix (ParameterValueMatrix): matrix of parameter values
+
+    Returns:
+        List[ParameterValuePair]: list of all parameter-value-pairs supported by bashi
+    """
+    param_val_pair_list = get_expected_parameter_value_pairs(parameter_matrix)
+
+    for compiler_name in set(COMPILERS) - set([GCC, CLANG, NVCC]):
+        remove_parameter_value_pair(
+            to_remove=create_parameter_value_pair(
+                HOST_COMPILER, compiler_name, 0, DEVICE_COMPILER, NVCC, 0
+            ),
+            parameter_value_pairs=param_val_pair_list,
+            all_versions=True,
+        )
+
+    return param_val_pair_list
