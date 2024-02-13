@@ -51,32 +51,37 @@ class TestNoNvccHostCompiler(unittest.TestCase):
         )
 
     def test_invalid_combination_rule_n1(self):
+        reason_msg1 = io.StringIO()
         self.assertFalse(
             compiler_name_filter_typechecked(
-                OD({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((NVCC, 11.2))})
+                OD({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((NVCC, 11.2))}),
+                reason_msg1,
             )
         )
+        self.assertEqual(reason_msg1.getvalue(), "nvcc is not allowed as host compiler")
 
+        reason_msg2 = io.StringIO()
         self.assertFalse(
             compiler_name_filter_typechecked(
-                OD({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((GCC, 11))})
+                OD({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((GCC, 11))}), reason_msg2
             )
         )
+        self.assertEqual(reason_msg2.getvalue(), "nvcc is not allowed as host compiler")
 
+        reason_msg3 = io.StringIO()
         self.assertFalse(
             compiler_name_filter_typechecked(
-                OD({HOST_COMPILER: ppv((NVCC, 12.2)), DEVICE_COMPILER: ppv((HIPCC, 5.1))})
+                OD({HOST_COMPILER: ppv((NVCC, 12.2)), DEVICE_COMPILER: ppv((HIPCC, 5.1))}),
+                reason_msg3,
             )
         )
+        self.assertEqual(reason_msg3.getvalue(), "nvcc is not allowed as host compiler")
 
-        self.assertFalse(compiler_name_filter_typechecked(OD({HOST_COMPILER: ppv((NVCC, 10.2))})))
-
-    def test_reason_rule_n1(self):
-        reason_msg = io.StringIO()
+        reason_msg4 = io.StringIO()
         self.assertFalse(
-            compiler_name_filter_typechecked(OD({HOST_COMPILER: ppv((NVCC, 10.2))}), reason_msg)
+            compiler_name_filter_typechecked(OD({HOST_COMPILER: ppv((NVCC, 10.2))}), reason_msg4)
         )
-        self.assertEqual(reason_msg.getvalue(), "nvcc is not allowed as host compiler")
+        self.assertEqual(reason_msg4.getvalue(), "nvcc is not allowed as host compiler")
 
 
 class TestSupportedNvccHostCompiler(unittest.TestCase):
@@ -102,6 +107,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                         "only gcc and clang are allowed as nvcc host compiler",
                     )
 
+        reason_msg1 = io.StringIO()
         self.assertFalse(
             compiler_name_filter_typechecked(
                 OD(
@@ -111,9 +117,16 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                         CMAKE: ppv((CMAKE, "3.18")),
                         BOOST: ppv((BOOST, "1.81.0")),
                     }
-                )
+                ),
+                reason_msg1,
             )
         )
+        self.assertEqual(
+            reason_msg1.getvalue(),
+            "only gcc and clang are allowed as nvcc host compiler",
+        )
+
+        reason_msg2 = io.StringIO()
         self.assertFalse(
             compiler_name_filter_typechecked(
                 OD(
@@ -124,8 +137,13 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                         ),
                         DEVICE_COMPILER: ppv((NVCC, "12.3")),
                     }
-                )
+                ),
+                reason_msg2,
             )
+        )
+        self.assertEqual(
+            reason_msg2.getvalue(),
+            "only gcc and clang are allowed as nvcc host compiler",
         )
 
     def test_valid_combination_rule_n2(self):
