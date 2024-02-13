@@ -332,6 +332,8 @@ def get_expected_bashi_parameter_value_pairs(
     """
     param_val_pair_list = get_expected_parameter_value_pairs(parameter_matrix)
 
+    # remove all combinations where nvcc is device compiler and the host compiler is not gcc or
+    # clang
     for compiler_name in set(COMPILERS) - set([GCC, CLANG, NVCC]):
         remove_parameter_value_pair(
             to_remove=create_parameter_value_pair(
@@ -340,5 +342,23 @@ def get_expected_bashi_parameter_value_pairs(
             parameter_value_pairs=param_val_pair_list,
             all_versions=True,
         )
+
+    # remove all combinations, where host and device compiler name are different except the device
+    # compiler name is nvcc
+    for host_compiler_name in set(COMPILERS) - set([NVCC]):
+        for device_compiler_name in set(COMPILERS) - set([NVCC]):
+            if host_compiler_name != device_compiler_name:
+                remove_parameter_value_pair(
+                    to_remove=create_parameter_value_pair(
+                        HOST_COMPILER,
+                        host_compiler_name,
+                        0,
+                        DEVICE_COMPILER,
+                        device_compiler_name,
+                        0,
+                    ),
+                    parameter_value_pairs=param_val_pair_list,
+                    all_versions=True,
+                )
 
     return param_val_pair_list

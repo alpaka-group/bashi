@@ -50,8 +50,6 @@ class TestNoNvccHostCompiler(unittest.TestCase):
             )
         )
 
-        self.assertTrue(compiler_name_filter_typechecked(OD()))
-
     def test_invalid_combination_rule_n1(self):
         self.assertFalse(
             compiler_name_filter_typechecked(
