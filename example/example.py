@@ -14,6 +14,7 @@
 
 from typing import List
 import os
+import sys
 from bashi.generator import generate_combination_list
 from bashi.utils import (
     get_expected_bashi_parameter_value_pairs,
@@ -225,8 +226,13 @@ if __name__ == "__main__":
         parameter_value_matrix=param_matrix, custom_filter=custom_filter
     )
 
-    print("verify combination-list")
-    verify(comb_list, param_matrix)
-
     create_yaml(comb_list)
     print(f"number of combinations: {len(comb_list)}")
+
+    print("verify combination-list")
+    if verify(comb_list, param_matrix):
+        print("verification passed")
+        sys.exit(0)
+
+    print("verification failed")
+    sys.exit(1)
