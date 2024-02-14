@@ -88,6 +88,28 @@ NVCC_GCC_MAX_VERSION: List[NvccHostSupport] = [
 ]
 NVCC_GCC_MAX_VERSION.sort(reverse=True)
 
+# define the maximum supported clang version for a specific nvcc version
+# the latest supported nvcc version must be added, even if the supported clang version does not
+# increase
+# e.g.:
+#   NvccHostSupport("12.3", "16"),
+#   NvccHostSupport("12.2", "15"),
+#   NvccHostSupport("12.1", "15"),
+NVCC_CLANG_MAX_VERSION: List[NvccHostSupport] = [
+    NvccHostSupport("12.3", "16"),
+    NvccHostSupport("12.2", "15"),
+    NvccHostSupport("12.1", "15"),
+    NvccHostSupport("12.0", "14"),
+    NvccHostSupport("11.6", "13"),
+    NvccHostSupport("11.4", "12"),
+    NvccHostSupport("11.2", "11"),
+    NvccHostSupport("11.1", "10"),
+    NvccHostSupport("11.0", "9"),
+    NvccHostSupport("10.1", "8"),
+    NvccHostSupport("10.0", "6"),
+]
+NVCC_CLANG_MAX_VERSION.sort(reverse=True)
+
 
 def get_parameter_value_matrix() -> ParameterValueMatrix:
     """Generates a parameter-value-matrix from all supported compilers, softwares and compilation

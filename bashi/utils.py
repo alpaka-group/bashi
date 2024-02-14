@@ -18,7 +18,7 @@ from bashi.types import (
     ParameterValueSingle,
     ParameterValueTuple,
 )
-from bashi.versions import COMPILERS, VERSIONS, NVCC_GCC_MAX_VERSION
+from bashi.versions import COMPILERS, VERSIONS, NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -390,13 +390,39 @@ def get_expected_bashi_parameter_value_pairs(
     gcc_versions = [packaging.version.parse(str(v)) for v in VERSIONS[GCC]]
     gcc_versions.sort()
     for nvcc_version in nvcc_versions:
-        for max_nvcc_gcc_version in NVCC_GCC_MAX_VERSION:
-            if nvcc_version >= max_nvcc_gcc_version.nvcc:
-                for gcc_version in gcc_versions:
-                    if gcc_version > max_nvcc_gcc_version.host:
+        for max_nvcc_clang_version in NVCC_GCC_MAX_VERSION:
+            if nvcc_version >= max_nvcc_clang_version.nvcc:
+                for clang_version in gcc_versions:
+                    if clang_version > max_nvcc_clang_version.host:
                         remove_parameter_value_pair(
                             to_remove=create_parameter_value_pair(
-                                HOST_COMPILER, GCC, gcc_version, DEVICE_COMPILER, NVCC, nvcc_version
+                                HOST_COMPILER,
+                                GCC,
+                                clang_version,
+                                DEVICE_COMPILER,
+                                NVCC,
+                                nvcc_version,
+                            ),
+                            parameter_value_pairs=param_val_pair_list,
+                        )
+                break
+
+    clang_versions = [packaging.version.parse(str(v)) for v in VERSIONS[CLANG]]
+    clang_versions.sort()
+
+    for nvcc_version in nvcc_versions:
+        for max_nvcc_clang_version in NVCC_CLANG_MAX_VERSION:
+            if nvcc_version >= max_nvcc_clang_version.nvcc:
+                for clang_version in clang_versions:
+                    if clang_version > max_nvcc_clang_version.host:
+                        remove_parameter_value_pair(
+                            to_remove=create_parameter_value_pair(
+                                HOST_COMPILER,
+                                CLANG,
+                                clang_version,
+                                DEVICE_COMPILER,
+                                NVCC,
+                                nvcc_version,
                             ),
                             parameter_value_pairs=param_val_pair_list,
                         )

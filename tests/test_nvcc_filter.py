@@ -434,7 +434,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
                         DEVICE_COMPILER: ppv((NVCC, 12.1)),
                         ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: ppv(
-                            (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, "1.0.0")
+                            (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON)
                         ),
                     }
                 )
@@ -470,7 +470,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
                         DEVICE_COMPILER: ppv((NVCC, 11.8)),
                         ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: ppv(
-                            (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, "1.0.0")
+                            (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON)
                         ),
                     }
                 ),
@@ -497,6 +497,172 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
                 OD(
                     {
                         HOST_COMPILER: ppv((GCC, 12)),
+                        DEVICE_COMPILER: ppv((NVCC, unsupported_nvcc_version)),
+                    }
+                ),
+            ),
+            f"nvcc {unsupported_nvcc_version} should pass the filter, because it is unknown "
+            "version",
+        )
+
+
+class TestNvccSupportedClangVersion(unittest.TestCase):
+    def test_valid_combination_max_clang_rule_v3(self):
+        # change the version, if you added a new cuda release
+        # this test is a guard to be sure, that the following test contains the latest nvcc release
+        latest_covered_nvcc_release = "12.3"
+        self.assertEqual(
+            latest_covered_nvcc_release,
+            str(VERSIONS[NVCC][-1]),
+            f"The tests cases covers up to nvcc version {latest_covered_nvcc_release}.\n"
+            f"VERSION[NVCC] defines nvcc {VERSIONS[NVCC][-1]} as latest supported version.",
+        )
+
+        # add the latest supported clang version for a supported nvcc version and also the successor
+        # clang version
+        expected_results = [
+            ("10.0", "6", True),
+            ("10.0", "7", False),
+            ("10.1", "8", True),
+            ("10.1", "9", False),
+            ("10.2", "8", True),
+            ("10.2", "9", False),
+            ("11.0", "9", True),
+            ("11.0", "10", False),
+            ("11.1", "10", True),
+            ("11.1", "11", False),
+            ("11.2", "11", True),
+            ("11.2", "12", False),
+            # because of compiler bugs, clang is disabled for CUDA 11.3 until 11.5
+            # ("11.3", "11", False),
+            # ("11.3", "12", False),
+            # ("11.4", "12", False),
+            # ("11.4", "13", False),
+            # ("11.5", "12", False),
+            # ("11.5", "13", False),
+            ("11.6", "13", True),
+            ("11.6", "14", False),
+            ("11.7", "13", True),
+            ("11.7", "14", False),
+            ("11.8", "13", True),
+            ("11.8", "14", False),
+            ("12.0", "14", True),
+            ("12.0", "15", False),
+            ("12.1", "15", True),
+            ("12.1", "16", False),
+            ("12.2", "15", True),
+            ("12.2", "16", False),
+            ("12.3", "16", True),
+            ("12.3", "17", False),
+        ]
+
+        for nvcc_version, clang_version, expected_filter_return_value in expected_results:
+            reason_msg = io.StringIO()
+            self.assertEqual(
+                compiler_version_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((CLANG, clang_version)),
+                            DEVICE_COMPILER: ppv((NVCC, nvcc_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+                expected_filter_return_value,
+                f"the filter for the combination of nvcc {nvcc_version} + clang {clang_version} "
+                f"should return {expected_filter_return_value}",
+            )
+            if not expected_filter_return_value:
+                self.assertEqual(
+                    reason_msg.getvalue(),
+                    f"nvcc {nvcc_version} " f"does not support clang {clang_version}",
+                )
+
+    def test_valid_multi_row_entries_clang_rule_v2(self):
+        self.assertTrue(
+            compiler_version_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((CLANG, 10)),
+                        DEVICE_COMPILER: ppv((NVCC, 11.2)),
+                        CMAKE: ppv((CMAKE, 3.18)),
+                        BOOST: ppv((BOOST, 1.78)),
+                    }
+                )
+            )
+        )
+
+        self.assertTrue(
+            compiler_version_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((CLANG, 12)),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
+                        DEVICE_COMPILER: ppv((NVCC, 12.1)),
+                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: ppv(
+                            (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON)
+                        ),
+                    }
+                )
+            )
+        )
+
+    def test_invalid_multi_row_entries_clang_rule_v2(self):
+        reason_msg1 = io.StringIO()
+        self.assertFalse(
+            compiler_version_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((CLANG, 13)),
+                        DEVICE_COMPILER: ppv((NVCC, 11.2)),
+                        CMAKE: ppv((CMAKE, 3.18)),
+                        BOOST: ppv((BOOST, 1.78)),
+                    }
+                ),
+                reason_msg1,
+            ),
+        )
+        self.assertEqual(
+            reason_msg1.getvalue(),
+            "nvcc 11.2 does not support clang 13",
+        )
+
+        reason_msg2 = io.StringIO()
+        self.assertFalse(
+            compiler_version_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((CLANG, 16)),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
+                        DEVICE_COMPILER: ppv((NVCC, 11.8)),
+                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: ppv(
+                            (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON)
+                        ),
+                    }
+                ),
+                reason_msg2,
+            )
+        )
+        self.assertEqual(
+            reason_msg2.getvalue(),
+            "nvcc 11.8 does not support clang 16",
+        )
+
+    def test_unknown_combination_clang_rule_v2(self):
+        # test an unsupported nvcc version
+        # we assume, that the nvcc supports all gcc versions
+        unsupported_nvcc_version = 42.0
+        self.assertFalse(
+            unsupported_nvcc_version in VERSIONS[NVCC],
+            f"for the test, it is required that nvcc {unsupported_nvcc_version} is an unsupported "
+            "version",
+        )
+
+        self.assertTrue(
+            compiler_version_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((CLANG, 12)),
                         DEVICE_COMPILER: ppv((NVCC, unsupported_nvcc_version)),
                     }
                 ),
