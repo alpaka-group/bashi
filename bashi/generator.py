@@ -33,6 +33,11 @@ def generate_combination_list(
     """
     filter_chain = get_default_filter_chain(custom_filter)
 
+    # TODO(SimeonEhrig): add filter function here, which remove NVCC as host compiler and
+    # CLANG-CUDA 13 and older as compiler
+    # the covertable throws an error, if the filter rule removes to much possibilities in an early
+    # filter
+
     comb_list: CombinationList = []
 
     all_pairs: List[Dict[Parameter, ParameterValue]] = make(

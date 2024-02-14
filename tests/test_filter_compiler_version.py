@@ -33,9 +33,9 @@ class TestHostDeviceCompilerSameVersion(unittest.TestCase):
             compiler_version_filter_typechecked(
                 OD(
                     {
-                        HOST_COMPILER: ppv((CLANG_CUDA, 10)),
+                        HOST_COMPILER: ppv((CLANG_CUDA, 14)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
-                        DEVICE_COMPILER: ppv((CLANG_CUDA, 10)),
+                        DEVICE_COMPILER: ppv((CLANG_CUDA, 14)),
                         CMAKE: ppv((CMAKE, 3.18)),
                     }
                 )

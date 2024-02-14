@@ -111,6 +111,7 @@ NVCC_CLANG_MAX_VERSION: List[NvccHostSupport] = [
 NVCC_CLANG_MAX_VERSION.sort(reverse=True)
 
 
+# pylint: disable=too-many-branches
 def get_parameter_value_matrix() -> ParameterValueMatrix:
     """Generates a parameter-value-matrix from all supported compilers, softwares and compilation
     configuration.
@@ -133,9 +134,10 @@ def get_parameter_value_matrix() -> ParameterValueMatrix:
                 continue
             if sw_name in COMPILERS:
                 for sw_version in sw_versions:
-                    param_val_matrix[compiler_type].append(
-                        ParameterValue(sw_name, pkv.parse(str(sw_version)))
-                    )
+                    if not (sw_name == CLANG_CUDA and pkv.parse(str(sw_version)) < pkv.parse("14")):
+                        param_val_matrix[compiler_type].append(
+                            ParameterValue(sw_name, pkv.parse(str(sw_version)))
+                        )
 
     for backend in BACKENDS:
         if backend == ALPAKA_ACC_GPU_CUDA_ENABLE:
