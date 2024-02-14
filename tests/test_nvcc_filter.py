@@ -133,7 +133,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                     {
                         HOST_COMPILER: ppv((HIPCC, "5.3")),
                         ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: ppv(
-                            (ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE, "1.0.0")
+                            (ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE, ON)
                         ),
                         DEVICE_COMPILER: ppv((NVCC, "12.3")),
                     }
@@ -178,7 +178,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                     {
                         HOST_COMPILER: ppv((CLANG, "14")),
                         ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: ppv(
-                            (ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE, "1.0.0")
+                            (ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE, ON)
                         ),
                         DEVICE_COMPILER: ppv((NVCC, "10.1")),
                     }

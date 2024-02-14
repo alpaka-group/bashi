@@ -12,6 +12,10 @@ A library to provide a job generator for CI's for alpaka based projects.
 
 The main component of the `bashi` library is combinatorics. Due to the wide spread of the field, there are different words for the same things. Therefore, `bashi` has introduced a naming guideline that is used for function and parameter names and documentation. Please read the [naming guidelines](docs/naming.md).
 
+# Example
+
+An example of the use of the `bashi` library can be found in [example/example.py](example/example.py). It shows how to use the library to create a `combination-list` from a `parameter-value-matrix`. The example also uses a custom filter. For more details, please read the module documentation of [example/example.py](example/example.py).
+
 # Developing
 
 It is strongly recommended to use a Python environment for developing the code, such as `virtualenv` or a `conda` environment. The following code uses a `virtualenv`.

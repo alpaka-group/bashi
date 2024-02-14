@@ -45,5 +45,7 @@ CMAKE: str = "cmake"
 BOOST: str = "boost"
 CXX_STANDARD: str = "cxx_standard"
 
-OFF_VER: packaging.version.Version = packaging.version.parse("0.0.0")
-ON_VER: packaging.version.Version = packaging.version.parse("1.0.0")
+OFF: str = "0.0.0"
+ON: str = "1.0.0"
+OFF_VER: packaging.version.Version = packaging.version.parse(OFF)
+ON_VER: packaging.version.Version = packaging.version.parse(ON)

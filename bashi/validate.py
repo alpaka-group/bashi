@@ -80,10 +80,10 @@ class VersionCheck(argparse.Action):
         version: str = str(values)
 
         if version == "OFF":
-            version = "0.0.0"
+            version = OFF
 
         if version == "ON":
-            version = "1.0.0"
+            version = ON
 
         # use parse() function to validate that the version has a valid shape
         try:

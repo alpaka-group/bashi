@@ -50,7 +50,7 @@ class TestHostDeviceCompilerSameName(unittest.TestCase):
                         HOST_COMPILER: ppv((CLANG, 10)),
                         DEVICE_COMPILER: ppv((CLANG, 10)),
                         ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE: ppv(
-                            (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, "1.0.0")
+                            (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, ON)
                         ),
                         CMAKE: ppv((CMAKE, 3.24)),
                         BOOST: ppv((BOOST, 1.78)),
@@ -106,7 +106,7 @@ class TestHostDeviceCompilerSameName(unittest.TestCase):
                         HOST_COMPILER: ppv((GCC, 15)),
                         DEVICE_COMPILER: ppv((CLANG, 10)),
                         ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE: ppv(
-                            (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, "1.0.0")
+                            (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, ON)
                         ),
                         CMAKE: ppv((CMAKE, 3.24)),
                         BOOST: ppv((BOOST, 1.78)),
