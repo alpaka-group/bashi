@@ -8,6 +8,7 @@ which rule.
 """
 
 from typing import Optional, IO, List
+import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import Parameter, ParameterValueTuple
@@ -35,6 +36,7 @@ def compiler_version_filter_typechecked(
     return compiler_version_filter(row, output)
 
 
+# pylint: disable=too-many-branches
 def compiler_version_filter(
     row: ParameterValueTuple,
     output: Optional[IO[str]] = None,
@@ -85,6 +87,16 @@ def compiler_version_filter(
                         break
 
         if HOST_COMPILER in row and row[HOST_COMPILER].name == CLANG:
+            # Rule: v4
+            if row[DEVICE_COMPILER].version >= pkv.parse("11.3") and row[
+                DEVICE_COMPILER
+            ].version <= pkv.parse("11.5"):
+                reason(
+                    output,
+                    "clang as host compiler is disabled for nvcc 11.3 to 11.5",
+                )
+                return False
+
             # Rule: v3
             # remove all unsupported nvcc clang version combinations
             # define which is the latest supported clang compiler for a nvcc version
