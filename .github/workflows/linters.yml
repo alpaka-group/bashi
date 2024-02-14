@@ -1,6 +1,17 @@
 name: lint-code
 on: [push, pull_request]
 jobs:
+    formatter:
+        name: runner black code formatter
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v4
+        - uses: psf/black@stable
+          with:
+            options: "--check --verbose"
+            src: "./"
+            version: "~= 24.0"
+
     mypy-linter:
         name: run mypy linter
         runs-on: ubuntu-latest
@@ -17,9 +28,12 @@ jobs:
         - name: Install mypy
           run: |
             pip install mypy
-        - name: Run mypy
+        - name: Run mypy on bashi source code
           run: |
             mypy bashi
+        - name: Run mypy on example
+          run: |
+            mypy example
 
     pylint-linter:
         name: run pylint linter
@@ -37,6 +51,9 @@ jobs:
         - name: Install pylint
           run: |
             pip install pylint
-        - name: Run pylint
+        - name: Run pylint on bashi source code
           run: |
             pylint bashi
+        - name: Run pylint on example
+          run: |
+            pylint example/example.py

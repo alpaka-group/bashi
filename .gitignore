@@ -14,6 +14,12 @@ env
 .coverage
 
 ####################
+# example output
+####################
+
+example/job.yaml
+
+####################
 # IDE files
 ####################
 .vscode

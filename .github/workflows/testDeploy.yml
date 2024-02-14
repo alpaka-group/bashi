@@ -1,20 +1,8 @@
 name: test-and-deploy
 on: [push, pull_request]
 jobs:
-    formatter:
-        name: runner black code formatter
-        runs-on: ubuntu-latest
-        steps:
-        - uses: actions/checkout@v4
-        - uses: psf/black@stable
-          with:
-            options: "--check --verbose"
-            src: "./"
-            version: "~= 24.0"
-
     unit-tests:
         runs-on: ubuntu-latest
-        needs: formatter
         strategy:
             matrix:
                 python-version: ['3.10', '3.11', '3.12']
@@ -31,3 +19,19 @@ jobs:
                 pip install .
             - name: run unit tests
               run: python -m unittest discover -s tests
+    integration-tests:
+      needs: unit-tests
+      runs-on: ubuntu-latest
+      name: Run example/example.py as integration test
+      steps:
+            - uses: actions/checkout@v4
+            - name: Set up Python
+              uses: actions/setup-python@v3
+              with:
+                python-version: 3.12
+                architecture: x64
+            - name: Install bashi
+              run: |
+                pip install .
+            - name: run integration test
+              run: python example/example.py
