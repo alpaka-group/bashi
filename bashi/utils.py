@@ -18,7 +18,7 @@ from bashi.types import (
     ParameterValueSingle,
     ParameterValueTuple,
 )
-from bashi.versions import COMPILERS, VERSIONS
+from bashi.versions import COMPILERS, VERSIONS, NVCC_GCC_MAX_VERSION
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -316,6 +316,7 @@ def reason(output: Optional[IO[str]], msg: str):
         )
 
 
+# pylint: disable=too-many-branches
 @typechecked
 def get_expected_bashi_parameter_value_pairs(
     parameter_matrix: ParameterValueMatrix,
@@ -382,5 +383,23 @@ def get_expected_bashi_parameter_value_pairs(
                         parameter_value_pairs=param_val_pair_list,
                         all_versions=False,
                     )
+
+    # remove all gcc version, which are to new for a specific nvcc version
+    nvcc_versions = [packaging.version.parse(str(v)) for v in VERSIONS[NVCC]]
+    nvcc_versions.sort()
+    gcc_versions = [packaging.version.parse(str(v)) for v in VERSIONS[GCC]]
+    gcc_versions.sort()
+    for nvcc_version in nvcc_versions:
+        for max_nvcc_gcc_version in NVCC_GCC_MAX_VERSION:
+            if nvcc_version >= max_nvcc_gcc_version.nvcc:
+                for gcc_version in gcc_versions:
+                    if gcc_version > max_nvcc_gcc_version.host:
+                        remove_parameter_value_pair(
+                            to_remove=create_parameter_value_pair(
+                                HOST_COMPILER, GCC, gcc_version, DEVICE_COMPILER, NVCC, nvcc_version
+                            ),
+                            parameter_value_pairs=param_val_pair_list,
+                        )
+                break
 
     return param_val_pair_list

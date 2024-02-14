@@ -11,6 +11,7 @@ from typing import Optional, IO, List
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import Parameter, ParameterValueTuple
+from bashi.versions import NVCC_GCC_MAX_VERSION
 from bashi.utils import reason
 
 
@@ -59,5 +60,28 @@ def compiler_version_filter(
     ):
         reason(output, "host and device compiler version must be the same (except for nvcc)")
         return False
+
+    # now idea, how remove nested blocks without hitting the performance
+    # pylint: disable=too-many-nested-blocks
+    if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
+        if HOST_COMPILER in row and row[HOST_COMPILER].name == GCC:
+            # Rule: v2
+            # remove all unsupported nvcc gcc version combinations
+            # define which is the latest supported gcc compiler for a nvcc version
+
+            # if a nvcc version is not supported by bashi, assume that the version supports the
+            # latest gcc compiler version
+            if row[DEVICE_COMPILER].version <= NVCC_GCC_MAX_VERSION[0].nvcc:
+                # check the maximum supported gcc version for the given nvcc version
+                for comb in NVCC_GCC_MAX_VERSION:
+                    if row[DEVICE_COMPILER].version >= comb.nvcc:
+                        if row[HOST_COMPILER].version > comb.host:
+                            reason(
+                                output,
+                                f"nvcc {row[DEVICE_COMPILER].version} "
+                                f"does not support gcc {row[HOST_COMPILER].version}",
+                            )
+                            return False
+                        break
 
     return True
