@@ -2,6 +2,7 @@
 
 import dataclasses
 import sys
+import copy
 from collections import OrderedDict
 from typing import IO, Dict, List, Optional, Union
 
@@ -316,7 +317,9 @@ def reason(output: Optional[IO[str]], msg: str):
         )
 
 
+# TODO(SimeonEhrig) modularize the function
 # pylint: disable=too-many-branches
+# pylint: disable=too-many-locals
 @typechecked
 def get_expected_bashi_parameter_value_pairs(
     parameter_matrix: ParameterValueMatrix,
@@ -331,9 +334,34 @@ def get_expected_bashi_parameter_value_pairs(
     Returns:
         List[ParameterValuePair]: list of all parameter-value-pairs supported by bashi
     """
-    param_val_pair_list = get_expected_parameter_value_pairs(parameter_matrix)
+    local_parameter_matrix = copy.deepcopy(parameter_matrix)
 
-    extend_versions = VERSIONS.copy()
+    def remove_host_compiler_nvcc(param_val: ParameterValue) -> bool:
+        if param_val.name == NVCC:
+            return False
+        return True
+
+    # remove nvcc as host compiler
+    local_parameter_matrix[HOST_COMPILER] = list(
+        filter(remove_host_compiler_nvcc, local_parameter_matrix[HOST_COMPILER])
+    )
+
+    # remove clang-cuda 13 and older
+    def remove_unsupported_clang_cuda_version(param_val: ParameterValue) -> bool:
+        if param_val.name == CLANG_CUDA and param_val.version < packaging.version.parse("14"):
+            return False
+        return True
+
+    local_parameter_matrix[HOST_COMPILER] = list(
+        filter(remove_unsupported_clang_cuda_version, local_parameter_matrix[HOST_COMPILER])
+    )
+    local_parameter_matrix[DEVICE_COMPILER] = list(
+        filter(remove_unsupported_clang_cuda_version, local_parameter_matrix[DEVICE_COMPILER])
+    )
+
+    param_val_pair_list = get_expected_parameter_value_pairs(local_parameter_matrix)
+
+    extend_versions = copy.deepcopy(VERSIONS)
     extend_versions[CLANG_CUDA] = extend_versions[CLANG]
 
     # remove all combinations where nvcc is device compiler and the host compiler is not gcc or
@@ -390,15 +418,15 @@ def get_expected_bashi_parameter_value_pairs(
     gcc_versions = [packaging.version.parse(str(v)) for v in VERSIONS[GCC]]
     gcc_versions.sort()
     for nvcc_version in nvcc_versions:
-        for max_nvcc_clang_version in NVCC_GCC_MAX_VERSION:
-            if nvcc_version >= max_nvcc_clang_version.nvcc:
-                for clang_version in gcc_versions:
-                    if clang_version > max_nvcc_clang_version.host:
+        for max_nvcc_gcc_version in NVCC_GCC_MAX_VERSION:
+            if nvcc_version >= max_nvcc_gcc_version.nvcc:
+                for gcc_version in gcc_versions:
+                    if gcc_version > max_nvcc_gcc_version.host:
                         remove_parameter_value_pair(
                             to_remove=create_parameter_value_pair(
                                 HOST_COMPILER,
                                 GCC,
-                                clang_version,
+                                gcc_version,
                                 DEVICE_COMPILER,
                                 NVCC,
                                 nvcc_version,

@@ -1,5 +1,6 @@
 # pylint: disable=missing-docstring
 import unittest
+import copy
 from typing import List, Dict
 from collections import OrderedDict
 import io
@@ -635,7 +636,7 @@ class TestRemoveExpectedParameterValuePair(unittest.TestCase):
 
         expected_number_of_reduced_pairs = len(reduced_param_value_pairs)
 
-        expected_reduced_param_value_pairs = reduced_param_value_pairs.copy()
+        expected_reduced_param_value_pairs = copy.deepcopy(reduced_param_value_pairs)
 
         # remove single value to verify that default flag is working
         example_single_pair = create_parameter_value_pair(
