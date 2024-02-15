@@ -2,7 +2,7 @@
 import unittest
 import copy
 from typing import List, Dict
-from collections import OrderedDict
+from collections import OrderedDict as OD
 import io
 import packaging.version as pkv
 
@@ -21,6 +21,7 @@ from bashi.utils import (
     get_expected_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
     remove_parameter_value_pair,
+    remove_parameter_value_pair_2,
     create_parameter_value_pair,
 )
 
@@ -180,7 +181,7 @@ class TestCreateParameterValuePair(unittest.TestCase):
 class TestExpectedValuePairs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.param_matrix: ParameterValueMatrix = OrderedDict()
+        cls.param_matrix: ParameterValueMatrix = OD()
 
         cls.param_matrix[HOST_COMPILER] = parse_param_vals(
             [(GCC, 10), (GCC, 11), (GCC, 12), (CLANG, 16), (CLANG, 17)]
@@ -194,8 +195,6 @@ class TestExpectedValuePairs(unittest.TestCase):
         cls.generated_parameter_value_pairs: List[ParameterValuePair] = (
             get_expected_parameter_value_pairs(cls.param_matrix)
         )
-
-        OD = OrderedDict
 
         cls.expected_param_val_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
@@ -360,8 +359,6 @@ class TestExpectedValuePairs(unittest.TestCase):
         )
 
     def test_check_parameter_value_pair_in_combination_list_less_valid_input(self):
-        OD = OrderedDict
-
         # all pairs exists in the combination list, but not all pairs are tested
         self.assertTrue(
             check_parameter_value_pair_in_combination_list(
@@ -385,8 +382,6 @@ class TestExpectedValuePairs(unittest.TestCase):
         )
 
     def test_check_parameter_value_pair_in_combination_list_single_wrong_input(self):
-        OD = OrderedDict
-
         single_wrong_pair = parse_expected_val_pairs(
             [
                 OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
@@ -413,8 +408,6 @@ class TestExpectedValuePairs(unittest.TestCase):
         )
 
     def test_check_parameter_value_pair_in_combination_list_many_wrong_input(self):
-        OD = OrderedDict
-
         many_wrong_pairs = parse_expected_val_pairs(
             [
                 OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
@@ -450,8 +443,6 @@ class TestExpectedValuePairs(unittest.TestCase):
         self.assertEqual(output_wrong_many_pairs_list, expected_output_many_wrong_pairs_list)
 
     def test_check_parameter_value_pair_in_combination_list_complete_list_plus_wrong_input(self):
-        OD = OrderedDict
-
         many_wrong_pairs = parse_expected_val_pairs(
             [
                 OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
@@ -497,7 +488,7 @@ class TestExpectedValuePairs(unittest.TestCase):
         )  # type: ignore
 
         for all_pair in all_pairs:
-            comb_list.append(OrderedDict(all_pair))
+            comb_list.append(OD(all_pair))
 
         self.assertTrue(
             check_parameter_value_pair_in_combination_list(comb_list, self.expected_param_val_pairs)
@@ -506,8 +497,6 @@ class TestExpectedValuePairs(unittest.TestCase):
 
 class TestRemoveExpectedParameterValuePair(unittest.TestCase):
     def test_remove_parameter_value_pair(self):
-        OD = OrderedDict
-
         expected_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
@@ -543,7 +532,6 @@ class TestRemoveExpectedParameterValuePair(unittest.TestCase):
         self.assertEqual(len(expected_param_value_pairs), original_length - 2)
 
     def test_remove_parameter_value_single(self):
-        OD = OrderedDict
         ppv = parse_param_val
 
         expected_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
@@ -618,7 +606,7 @@ class TestRemoveExpectedParameterValuePair(unittest.TestCase):
             BOOST: [1.80, 1.81, 1.82],
         }
 
-        param_val_matrix: ParameterValueMatrix = OrderedDict()
+        param_val_matrix: ParameterValueMatrix = OD()
         for compiler in [HOST_COMPILER, DEVICE_COMPILER]:
             param_val_matrix[compiler] = []
             for compiler_name in [GCC, CLANG, NVCC, HIPCC]:
@@ -747,3 +735,406 @@ class TestRemoveExpectedParameterValuePair(unittest.TestCase):
         reduced_param_value_pairs.sort()
         expected_reduced_param_value_pairs.sort()
         self.assertEqual(reduced_param_value_pairs, expected_reduced_param_value_pairs)
+
+
+class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
+    def test_remove_parameter_value_pair(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+            ]
+        )
+        original_length = len(test_param_value_pairs)
+
+        self.assertFalse(
+            remove_parameter_value_pair_2(
+                test_param_value_pairs,
+                HOST_COMPILER,
+                GCC,
+                9,
+                DEVICE_COMPILER,
+                NVCC,
+                11.2,
+            )
+        )
+        self.assertEqual(len(test_param_value_pairs), original_length)
+        self.assertEqual(
+            sorted(test_param_value_pairs),
+            sorted(
+                parse_expected_val_pairs(
+                    [
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                        OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                        OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                    ]
+                )
+            ),
+        )
+
+        self.assertTrue(
+            remove_parameter_value_pair_2(
+                test_param_value_pairs,
+                HOST_COMPILER,
+                GCC,
+                10,
+                DEVICE_COMPILER,
+                NVCC,
+                12.0,
+            )
+        )
+        self.assertEqual(len(test_param_value_pairs), original_length - 1)
+        self.assertEqual(
+            sorted(test_param_value_pairs),
+            sorted(
+                parse_expected_val_pairs(
+                    [
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                        OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                        OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                    ]
+                )
+            ),
+        )
+
+        self.assertTrue(
+            remove_parameter_value_pair_2(
+                test_param_value_pairs,
+                CMAKE,
+                CMAKE,
+                3.23,
+                BOOST,
+                BOOST,
+                1.83,
+            )
+        )
+        self.assertEqual(len(test_param_value_pairs), original_length - 2)
+        self.assertEqual(
+            sorted(test_param_value_pairs),
+            sorted(
+                parse_expected_val_pairs(
+                    [
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                        OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                    ]
+                )
+            ),
+        )
+
+    def test_all_white_card(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+            ]
+        )
+
+        self.assertTrue(
+            remove_parameter_value_pair_2(
+                test_param_value_pairs,
+                parameter1=ANY_PARAM,
+                value_name1=ANY_NAME,
+                value_version1=ANY_VERSION,
+                parameter2=ANY_PARAM,
+                value_name2=ANY_NAME,
+                value_version2=ANY_VERSION,
+            )
+        )
+
+        self.assertEqual(len(test_param_value_pairs), 0)
+
+    def test_single_white_card(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (CLANG, 17)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (GCC, 17)}),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                OD({HOST_COMPILER: (CLANG, 10), BOOST: (BOOST, 1.83)}),
+                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+            ]
+        )
+        test_original_len = len(test_param_value_pairs)
+
+        t1_any_version1_param_value_pairs = copy.deepcopy(test_param_value_pairs)
+        self.assertTrue(
+            remove_parameter_value_pair_2(
+                t1_any_version1_param_value_pairs,
+                parameter1=HOST_COMPILER,
+                value_name1=GCC,
+                value_version1=ANY_VERSION,
+                parameter2=DEVICE_COMPILER,
+                value_name2=NVCC,
+                value_version2=12.0,
+            )
+        )
+        self.assertEqual(len(t1_any_version1_param_value_pairs), test_original_len - 2)
+        self.assertEqual(
+            sorted(t1_any_version1_param_value_pairs),
+            sorted(
+                parse_expected_val_pairs(
+                    [
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                        OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (CLANG, 17)}),
+                        OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (GCC, 17)}),
+                        OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                        OD({HOST_COMPILER: (CLANG, 10), BOOST: (BOOST, 1.83)}),
+                        OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                    ]
+                )
+            ),
+        )
+
+        t2_any_name1_param_value_pairs = copy.deepcopy(test_param_value_pairs)
+        self.assertTrue(
+            remove_parameter_value_pair_2(
+                t2_any_name1_param_value_pairs,
+                parameter1=HOST_COMPILER,
+                value_name1=ANY_NAME,
+                value_version1=10,
+                parameter2=DEVICE_COMPILER,
+                value_name2=NVCC,
+                value_version2=12.0,
+            )
+        )
+        self.assertEqual(len(t2_any_name1_param_value_pairs), test_original_len - 2)
+        self.assertEqual(
+            sorted(t2_any_name1_param_value_pairs),
+            sorted(
+                parse_expected_val_pairs(
+                    [
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                        OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                        OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (CLANG, 17)}),
+                        OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (GCC, 17)}),
+                        OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                        OD({HOST_COMPILER: (CLANG, 10), BOOST: (BOOST, 1.83)}),
+                    ]
+                )
+            ),
+        )
+
+    def test_white_card_multi_parameter(self):
+        t1_any_parameter_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({BOOST: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (CLANG, 17)}),
+                OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (CLANG, 16)}),
+                OD({CMAKE: (GCC, 10), UBUNTU: (NVCC, 11.2)}),
+            ]
+        )
+        test_original_len = len(t1_any_parameter_param_value_pairs)
+
+        self.assertTrue(
+            remove_parameter_value_pair_2(
+                t1_any_parameter_param_value_pairs,
+                parameter1=ANY_PARAM,
+                value_name1=GCC,
+                value_version1=10,
+                parameter2=ANY_PARAM,
+                value_name2=NVCC,
+                value_version2=11.2,
+            )
+        )
+        self.assertEqual(len(t1_any_parameter_param_value_pairs), test_original_len - 3)
+        self.assertEqual(
+            sorted(t1_any_parameter_param_value_pairs),
+            sorted(
+                parse_expected_val_pairs(
+                    [
+                        OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (CLANG, 17)}),
+                        OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (CLANG, 16)}),
+                    ]
+                )
+            ),
+        )
+
+    def test_remove_all_gcc_host(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (CLANG, 17)}),
+                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (GCC, 17)}),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                OD({HOST_COMPILER: (CLANG, 10), BOOST: (BOOST, 1.83)}),
+                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+            ]
+        )
+        test_original_len = len(test_param_value_pairs)
+
+        self.assertTrue(
+            remove_parameter_value_pair_2(
+                test_param_value_pairs,
+                parameter1=HOST_COMPILER,
+                value_name1=GCC,
+                value_version1=ANY_VERSION,
+            )
+        )
+        self.assertEqual(len(test_param_value_pairs), test_original_len - 5)
+        self.assertEqual(
+            sorted(test_param_value_pairs),
+            sorted(
+                parse_expected_val_pairs(
+                    [
+                        OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                        OD({HOST_COMPILER: (CLANG, 10), BOOST: (BOOST, 1.83)}),
+                        OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                    ]
+                )
+            ),
+        )
+
+    def test_symmetric(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                OD({DEVICE_COMPILER: (NVCC, 11.2), HOST_COMPILER: (GCC, 10)}),
+                OD({DEVICE_COMPILER: (NVCC, 12.0), HOST_COMPILER: (GCC, 10)}),
+                OD({BOOST: (BOOST, 1.83), CMAKE: (CMAKE, 3.23)}),
+            ]
+        )
+        test_original_len = len(test_param_value_pairs)
+
+        t1_single_hit_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
+        self.assertTrue(
+            remove_parameter_value_pair_2(
+                t1_single_hit_symmetric_param_value_pairs,
+                parameter1=HOST_COMPILER,
+                value_name1=GCC,
+                value_version1=10,
+                parameter2=DEVICE_COMPILER,
+                value_name2=NVCC,
+                value_version2=12.0,
+            )
+        )
+        self.assertEqual(len(t1_single_hit_symmetric_param_value_pairs), test_original_len - 2)
+        self.assertEqual(
+            sorted(t1_single_hit_symmetric_param_value_pairs),
+            sorted(
+                parse_expected_val_pairs(
+                    [
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                        OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                        OD({DEVICE_COMPILER: (NVCC, 11.2), HOST_COMPILER: (GCC, 10)}),
+                        OD({BOOST: (BOOST, 1.83), CMAKE: (CMAKE, 3.23)}),
+                    ]
+                )
+            ),
+        )
+
+        t2_single_hit_no_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
+        self.assertTrue(
+            remove_parameter_value_pair_2(
+                t2_single_hit_no_symmetric_param_value_pairs,
+                parameter1=HOST_COMPILER,
+                value_name1=GCC,
+                value_version1=10,
+                parameter2=DEVICE_COMPILER,
+                value_name2=NVCC,
+                value_version2=12.0,
+                symmetric=False,
+            )
+        )
+        self.assertEqual(len(t2_single_hit_no_symmetric_param_value_pairs), test_original_len - 1)
+        self.assertEqual(
+            sorted(t2_single_hit_no_symmetric_param_value_pairs),
+            sorted(
+                parse_expected_val_pairs(
+                    [
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                        OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                        OD({DEVICE_COMPILER: (NVCC, 11.2), HOST_COMPILER: (GCC, 10)}),
+                        OD({DEVICE_COMPILER: (NVCC, 12.0), HOST_COMPILER: (GCC, 10)}),
+                        OD({BOOST: (BOOST, 1.83), CMAKE: (CMAKE, 3.23)}),
+                    ]
+                )
+            ),
+        )
+
+        t3_single_hit_no_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
+        self.assertTrue(
+            remove_parameter_value_pair_2(
+                t3_single_hit_no_symmetric_param_value_pairs,
+                parameter1=DEVICE_COMPILER,
+                value_name1=NVCC,
+                value_version1=12.0,
+                parameter2=HOST_COMPILER,
+                value_name2=GCC,
+                value_version2=10,
+                symmetric=False,
+            )
+        )
+        self.assertEqual(len(t3_single_hit_no_symmetric_param_value_pairs), test_original_len - 1)
+        self.assertEqual(
+            sorted(t3_single_hit_no_symmetric_param_value_pairs),
+            sorted(
+                parse_expected_val_pairs(
+                    [
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                        OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                        OD({DEVICE_COMPILER: (NVCC, 11.2), HOST_COMPILER: (GCC, 10)}),
+                        OD({BOOST: (BOOST, 1.83), CMAKE: (CMAKE, 3.23)}),
+                    ]
+                )
+            ),
+        )
+
+        t4_multi_hit_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
+        self.assertTrue(
+            remove_parameter_value_pair_2(
+                t4_multi_hit_symmetric_param_value_pairs,
+                parameter1=HOST_COMPILER,
+                value_name1=GCC,
+                value_version1=ANY_VERSION,
+            )
+        )
+        self.assertEqual(len(t4_multi_hit_symmetric_param_value_pairs), test_original_len - 4)
+        self.assertEqual(
+            sorted(t4_multi_hit_symmetric_param_value_pairs),
+            sorted(
+                parse_expected_val_pairs(
+                    [
+                        OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                        OD({BOOST: (BOOST, 1.83), CMAKE: (CMAKE, 3.23)}),
+                    ]
+                )
+            ),
+        )
+
+        t5_multi_hit_no_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
+        self.assertTrue(
+            remove_parameter_value_pair_2(
+                t5_multi_hit_no_symmetric_param_value_pairs,
+                parameter2=HOST_COMPILER,
+                value_name2=GCC,
+                value_version2=ANY_VERSION,
+                symmetric=False,
+            )
+        )
+        self.assertEqual(len(t5_multi_hit_no_symmetric_param_value_pairs), test_original_len - 2)
+        self.assertEqual(
+            sorted(t5_multi_hit_no_symmetric_param_value_pairs),
+            sorted(
+                parse_expected_val_pairs(
+                    [
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                        OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                        OD({BOOST: (BOOST, 1.83), CMAKE: (CMAKE, 3.23)}),
+                    ]
+                )
+            ),
+        )
