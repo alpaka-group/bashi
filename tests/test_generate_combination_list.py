@@ -2,6 +2,7 @@
 import unittest
 import os
 import io
+import copy
 from collections import OrderedDict
 import packaging.version as pkv
 from utils_test import parse_param_vals
@@ -145,7 +146,7 @@ class TestGeneratorTestData(unittest.TestCase):
             parameter_value_matrix=self.param_matrix, custom_filter=custom_filter
         )
 
-        reduced_expected_param_val_pairs = self.generated_parameter_value_pairs.copy()
+        reduced_expected_param_val_pairs = copy.deepcopy(self.generated_parameter_value_pairs)
         for device_compiler in self.param_matrix[DEVICE_COMPILER]:
             if device_compiler.name == NVCC:
                 self.assertTrue(
@@ -241,3 +242,69 @@ class TestGeneratorRealData(unittest.TestCase):
             number_of_combs = len(missing_combinations_str.split("\n"))
             print(f"\nnumber of missing combinations: {number_of_combs}")
             raise e
+
+
+class TestParameterMatrixFilter(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.param_base_matrix: ParameterValueMatrix = OrderedDict()
+
+        cls.param_base_matrix[HOST_COMPILER] = parse_param_vals(
+            [(GCC, 10), (GCC, 11), (GCC, 12), (CLANG, 16), (CLANG, 17)]
+        )
+        cls.param_base_matrix[DEVICE_COMPILER] = parse_param_vals(
+            [
+                (GCC, 10),
+                (GCC, 11),
+                (GCC, 12),
+                (CLANG, 16),
+                (CLANG, 17),
+            ]
+        )
+        cls.param_base_matrix[CMAKE] = parse_param_vals([(CMAKE, 3.22), (CMAKE, 3.23)])
+        cls.param_base_matrix[BOOST] = parse_param_vals(
+            [(BOOST, 1.81), (BOOST, 1.82), (BOOST, 1.83)]
+        )
+
+    def test_nvcc_host_compiler_rule_n1(self):
+        # test if generate_combination_list() correctly handles nvcc as host compiler
+        param_matrix = copy.deepcopy(self.param_base_matrix)
+        for nvcc_version in [11.2, 11.3, 11.8, 12.0]:
+            param_matrix[HOST_COMPILER].append(ParameterValue(NVCC, pkv.parse(str(nvcc_version))))
+            param_matrix[DEVICE_COMPILER].append(ParameterValue(NVCC, pkv.parse(str(nvcc_version))))
+        param_matrix_before = copy.deepcopy(param_matrix)
+
+        comb_list = generate_combination_list(param_matrix)
+
+        # generate_combination_list should not modify the param_matrix
+        self.assertEqual(param_matrix_before, param_matrix)
+
+        self.assertTrue(
+            check_parameter_value_pair_in_combination_list(
+                comb_list, get_expected_bashi_parameter_value_pairs(param_matrix)
+            )
+        )
+
+    def test_clang_cuda_old_versions_rule_v5(self):
+        # test if generate_combination_list() correctly clang-cuda version 13 and older
+
+        param_matrix = copy.deepcopy(self.param_base_matrix)
+        for clang_cuda_version in [8, 13, 14, 17]:
+            param_matrix[HOST_COMPILER].append(
+                ParameterValue(CLANG_CUDA, pkv.parse(str(clang_cuda_version)))
+            )
+            param_matrix[DEVICE_COMPILER].append(
+                ParameterValue(CLANG_CUDA, pkv.parse(str(clang_cuda_version)))
+            )
+        param_matrix_before = copy.deepcopy(param_matrix)
+
+        comb_list = generate_combination_list(parameter_value_matrix=param_matrix)
+
+        # generate_combination_list should not modify the param_matrix
+        self.assertEqual(param_matrix_before, param_matrix)
+
+        self.assertTrue(
+            check_parameter_value_pair_in_combination_list(
+                comb_list, get_expected_bashi_parameter_value_pairs(param_matrix)
+            )
+        )

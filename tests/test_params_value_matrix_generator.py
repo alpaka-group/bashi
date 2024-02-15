@@ -1,5 +1,6 @@
 # pylint: disable=missing-docstring
 import unittest
+import copy
 from bashi.versions import VERSIONS, get_parameter_value_matrix
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
@@ -24,15 +25,17 @@ class TestParameterValueGenerator(unittest.TestCase):
         )
 
     def test_number_host_device_compiler(self):
-        extended_versions = VERSIONS.copy()
+        extended_versions = copy.deepcopy(VERSIONS)
+        # filter clang-cuda 13 and older because the pair-wise generator cannot filter it out
+        # afterwards
         extended_versions[CLANG_CUDA] = extended_versions[CLANG]
+
         number_of_host_compilers = 0
         for compiler in COMPILERS:
-            if compiler != NVCC:
-                number_of_host_compilers += len(extended_versions[compiler])
+            number_of_host_compilers += len(extended_versions[compiler])
 
         # NVCC is only as device compiler added
-        number_of_device_compilers = number_of_host_compilers + len(extended_versions[NVCC])
+        number_of_device_compilers = number_of_host_compilers
 
         self.assertEqual(len(self.param_val_matrix[HOST_COMPILER]), number_of_host_compilers)
         self.assertEqual(len(self.param_val_matrix[DEVICE_COMPILER]), number_of_device_compilers)

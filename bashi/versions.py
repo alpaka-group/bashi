@@ -1,5 +1,6 @@
 """Provides all supported software versions"""
 
+import copy
 from typing import Dict, List, Union
 from collections import OrderedDict
 from typeguard import typechecked
@@ -111,6 +112,7 @@ NVCC_CLANG_MAX_VERSION: List[NvccHostSupport] = [
 NVCC_CLANG_MAX_VERSION.sort(reverse=True)
 
 
+# pylint: disable=too-many-branches
 def get_parameter_value_matrix() -> ParameterValueMatrix:
     """Generates a parameter-value-matrix from all supported compilers, softwares and compilation
     configuration.
@@ -120,17 +122,12 @@ def get_parameter_value_matrix() -> ParameterValueMatrix:
     """
     param_val_matrix: ParameterValueMatrix = OrderedDict()
 
-    extended_version = VERSIONS.copy()
+    extended_version = copy.deepcopy(VERSIONS)
     extended_version[CLANG_CUDA] = extended_version[CLANG]
 
     for compiler_type in [HOST_COMPILER, DEVICE_COMPILER]:
         param_val_matrix[compiler_type] = []
         for sw_name, sw_versions in extended_version.items():
-            # do not add NVCC as HOST_COMPILER
-            # filtering out all NVCC as HOST_COMPILER later does not work with the covertable
-            # library
-            if compiler_type == HOST_COMPILER and sw_name == NVCC:
-                continue
             if sw_name in COMPILERS:
                 for sw_version in sw_versions:
                     param_val_matrix[compiler_type].append(
@@ -178,7 +175,7 @@ def is_supported_version(name: ValueName, version: ValueVersion) -> bool:
     if name not in known_names:
         raise ValueError(f"Unknown software name: {name}")
 
-    local_versions = VERSIONS.copy()
+    local_versions = copy.deepcopy(VERSIONS)
 
     local_versions[CLANG_CUDA] = local_versions[CLANG]
     local_versions[ALPAKA_ACC_GPU_CUDA_ENABLE] = [OFF]

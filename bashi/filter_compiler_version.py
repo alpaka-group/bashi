@@ -116,4 +116,17 @@ def compiler_version_filter(
                             return False
                         break
 
+    # Rule: v5
+    # clang-cuda 13 and older is not supported
+    # this rule will be never used, because of an implementation detail of the covertable library
+    # it is not possible to add the clang-cuda versions and filter it out afterwards
+    # this rule is only used by bashi-verify
+    if (
+        DEVICE_COMPILER in row
+        and row[DEVICE_COMPILER].name == CLANG_CUDA
+        and row[DEVICE_COMPILER].version < pkv.parse("14")
+    ):
+        reason(output, "all clang versions older than 14 are disabled as CUDA Compiler")
+        return False
+
     return True
