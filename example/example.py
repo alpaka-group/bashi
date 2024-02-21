@@ -18,7 +18,7 @@ import sys
 from bashi.generator import generate_combination_list
 from bashi.utils import (
     check_parameter_value_pair_in_combination_list,
-    remove_parameter_value_pair_2,
+    remove_parameter_value_pairs,
 )
 from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
@@ -71,7 +71,7 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
                     other_backend_versions = [ON]
 
                 for other_backend_version in other_backend_versions:
-                    remove_parameter_value_pair_2(
+                    remove_parameter_value_pairs(
                         expected_param_val_tuple,
                         parameter1=gpu_backend,
                         value_name1=gpu_backend,
@@ -87,7 +87,7 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
     for cpu_backend in cpu_backends:
         for other_cpu_backend in cpu_backends:
             if cpu_backend != other_cpu_backend:
-                remove_parameter_value_pair_2(
+                remove_parameter_value_pairs(
                     expected_param_val_tuple,
                     parameter1=cpu_backend,
                     value_name1=cpu_backend,

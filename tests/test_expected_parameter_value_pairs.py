@@ -25,7 +25,7 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.utils import (
     get_expected_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
-    remove_parameter_value_pair_2,
+    remove_parameter_value_pairs,
     create_parameter_value_pair,
 )
 
@@ -499,7 +499,7 @@ class TestExpectedValuePairs(unittest.TestCase):
         )
 
 
-class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
+class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
     def test_remove_parameter_value_pair(self):
         test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
@@ -514,7 +514,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
         t1_no_remove = copy.deepcopy(test_param_value_pairs)
 
         self.assertFalse(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t1_no_remove,
                 HOST_COMPILER,
                 GCC,
@@ -543,7 +543,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t2_remove_single_entry = copy.deepcopy(t1_no_remove)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t2_remove_single_entry,
                 HOST_COMPILER,
                 GCC,
@@ -573,7 +573,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t3_remove_another_entry = copy.deepcopy(t2_remove_single_entry)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t3_remove_another_entry,
                 CMAKE,
                 CMAKE,
@@ -611,7 +611,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
         )
 
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 test_param_value_pairs,
                 parameter1=ANY_PARAM,
                 value_name1=ANY_NAME,
@@ -641,7 +641,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t1_any_version1_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t1_any_version1_param_value_pairs,
                 parameter1=HOST_COMPILER,
                 value_name1=GCC,
@@ -673,7 +673,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t2_any_name1_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t2_any_name1_param_value_pairs,
                 parameter1=HOST_COMPILER,
                 value_name1=ANY_NAME,
@@ -717,7 +717,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
         test_original_len = len(t1_any_parameter_param_value_pairs)
 
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t1_any_parameter_param_value_pairs,
                 parameter1=ANY_PARAM,
                 value_name1=GCC,
@@ -760,7 +760,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
         test_original_len = len(test_param_value_pairs)
 
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 test_param_value_pairs,
                 parameter1=HOST_COMPILER,
                 value_name1=GCC,
@@ -800,7 +800,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t1_single_hit_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t1_single_hit_symmetric_param_value_pairs,
                 parameter1=HOST_COMPILER,
                 value_name1=GCC,
@@ -834,7 +834,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t2_single_hit_no_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t2_single_hit_no_symmetric_param_value_pairs,
                 parameter1=HOST_COMPILER,
                 value_name1=GCC,
@@ -870,7 +870,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t3_single_hit_no_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t3_single_hit_no_symmetric_param_value_pairs,
                 parameter1=DEVICE_COMPILER,
                 value_name1=NVCC,
@@ -906,7 +906,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t4_multi_hit_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t4_multi_hit_symmetric_param_value_pairs,
                 parameter1=HOST_COMPILER,
                 value_name1=GCC,
@@ -935,7 +935,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t5_multi_hit_no_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t5_multi_hit_no_symmetric_param_value_pairs,
                 parameter2=HOST_COMPILER,
                 value_name2=GCC,
@@ -988,7 +988,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t1_remove_cuda11 = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t1_remove_cuda11,
                 parameter2=DEVICE_COMPILER,
                 value_name2=NVCC,
@@ -1016,7 +1016,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t2_cuda113_to_cuda122_ignore_cuda116 = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t2_cuda113_to_cuda122_ignore_cuda116,
                 parameter2=DEVICE_COMPILER,
                 value_name2=NVCC,
@@ -1049,7 +1049,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t3_gcc_8_and_9 = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t3_gcc_8_and_9,
                 parameter1=HOST_COMPILER,
                 value_name1=GCC,
@@ -1099,7 +1099,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t1_remove_specific_gcc_and_cuda = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t1_remove_specific_gcc_and_cuda,
                 parameter1=HOST_COMPILER,
                 value_name1=GCC,
@@ -1152,7 +1152,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t1_remove_specific_gcc_and_cuda = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t1_remove_specific_gcc_and_cuda,
                 parameter1=HOST_COMPILER,
                 value_name1=GCC,
@@ -1214,7 +1214,7 @@ class TestRemoveExpectedParameterValuePair2(unittest.TestCase):
 
         t1_remove_specific_gcc_and_cuda = copy.deepcopy(test_param_value_pairs)
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 t1_remove_specific_gcc_and_cuda,
                 parameter1=HOST_COMPILER,
                 value_name1=GCC,

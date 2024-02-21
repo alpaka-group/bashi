@@ -7,7 +7,7 @@ from packaging.specifiers import SpecifierSet
 from bashi.types import ParameterValue, ParameterValuePair, ParameterValueMatrix
 from bashi.utils import (
     get_expected_parameter_value_pairs,
-    remove_parameter_value_pair_2,
+    remove_parameter_value_pairs,
 )
 
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -78,7 +78,7 @@ def _remove_unsupported_nvcc_host_compiler(parameter_value_pairs: List[Parameter
         parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     """
     for compiler_name in set(COMPILERS) - set([GCC, CLANG, NVCC]):
-        remove_parameter_value_pair_2(
+        remove_parameter_value_pairs(
             parameter_value_pairs,
             parameter1=HOST_COMPILER,
             value_name1=compiler_name,
@@ -99,7 +99,7 @@ def _remove_different_compiler_names(parameter_value_pairs: List[ParameterValueP
     for host_compiler_name in set(COMPILERS) - set([NVCC]):
         for device_compiler_name in set(COMPILERS) - set([NVCC]):
             if host_compiler_name != device_compiler_name:
-                remove_parameter_value_pair_2(
+                remove_parameter_value_pairs(
                     parameter_value_pairs,
                     parameter1=HOST_COMPILER,
                     value_name1=host_compiler_name,
@@ -244,7 +244,7 @@ def _remove_specific_nvcc_clang_combinations(parameter_value_pairs: List[Paramet
     Args:
         parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     """
-    remove_parameter_value_pair_2(
+    remove_parameter_value_pairs(
         parameter_value_pairs,
         parameter1=HOST_COMPILER,
         value_name1=CLANG,

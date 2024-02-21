@@ -10,7 +10,7 @@ from bashi.versions import get_parameter_value_matrix
 from bashi.generator import generate_combination_list
 from bashi.utils import (
     check_parameter_value_pair_in_combination_list,
-    remove_parameter_value_pair_2,
+    remove_parameter_value_pairs,
 )
 from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
@@ -148,7 +148,7 @@ class TestGeneratorTestData(unittest.TestCase):
         for device_compiler in self.param_matrix[DEVICE_COMPILER]:
             if device_compiler.name == NVCC:
                 self.assertTrue(
-                    remove_parameter_value_pair_2(
+                    remove_parameter_value_pairs(
                         reduced_expected_param_val_pairs,
                         parameter1=DEVICE_COMPILER,
                         value_name1=NVCC,
@@ -157,7 +157,7 @@ class TestGeneratorTestData(unittest.TestCase):
                 )
 
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 reduced_expected_param_val_pairs,
                 parameter1=CMAKE,
                 value_name1=CMAKE,
@@ -213,7 +213,7 @@ class TestGeneratorRealData(unittest.TestCase):
         )
 
         self.assertTrue(
-            remove_parameter_value_pair_2(
+            remove_parameter_value_pairs(
                 reduced_expected_param_val_pairs,
                 parameter1=CMAKE,
                 value_name1=CMAKE,

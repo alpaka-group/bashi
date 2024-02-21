@@ -188,7 +188,7 @@ def _loop_over_parameter_values(
 
 # pylint: disable=too-many-locals
 @typechecked
-def remove_parameter_value_pair_2(  # pylint: disable=too-many-arguments
+def remove_parameter_value_pairs(  # pylint: disable=too-many-arguments
     parameter_value_pairs: List[ParameterValuePair],
     parameter1: Parameter = ANY_PARAM,
     value_name1: ValueName = ANY_NAME,
@@ -302,7 +302,7 @@ def remove_parameter_value_pair_2(  # pylint: disable=too-many-arguments
     parameter_value_pairs[:] = list(filter(filter_func, parameter_value_pairs))
 
     if symmetric:
-        remove_parameter_value_pair_2(
+        remove_parameter_value_pairs(
             parameter_value_pairs,
             parameter2,
             value_name2,
