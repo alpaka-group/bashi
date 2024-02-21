@@ -7,6 +7,7 @@ from collections import OrderedDict
 from typing import IO, Dict, List, Optional, Union, Callable
 
 import packaging.version
+from packaging.specifiers import SpecifierSet, InvalidSpecifier
 from typeguard import typechecked
 
 from bashi.types import (
@@ -264,6 +265,7 @@ def _remove_parameter_value_pair_all_versions(
     return len_before != len(param_val_pairs)
 
 
+# pylint: disable=too-many-locals
 @typechecked
 def remove_parameter_value_pair_2(  # pylint: disable=too-many-arguments
     parameter_value_pairs: List[ParameterValuePair],
@@ -284,12 +286,16 @@ def remove_parameter_value_pair_2(  # pylint: disable=too-many-arguments
             removed
         parameter1 (Parameter, optional): Name of the first parameter. Defaults to ANY_PARAM.
         value_name1 (ValueName, optional): Name of the first value-name. Defaults to ANY_NAME.
-        value_version1 (Union[int, float, str], optional): Name of the first value-version. Defaults
-            to ANY_VERSION.
+        value_version1 (Union[int, float, str], optional): Name of the first value-version. Either
+            as a single version or as a version range that can be parsed into a
+            `packaging.specifier.SpecifierSet`. If it is a version range, all versions that are not
+            within this range are removed. Defaults to ANY_VERSION.
         parameter2 (Parameter, optional): Name of the second parameter. Defaults to ANY_PARAM.
         value_name2 (ValueName, optional): Name of the second value-name. Defaults to ANY_NAME.
-        value_version2 (Union[int, float, str], optional): Name of the second value-name. Defaults
-            to ANY_VERSION.
+        value_version2 (Union[int, float, str], optional): Name of the second value-name. Either as
+            a single version or as a version range that can be parsed into a
+            `packaging.specifier.SpecifierSet`. If it is a version range, all versions that are not
+            within this range are removed. Defaults to ANY_VERSION.
         symmetric (bool, optional): If symmetric is true, it does not matter whether a group of
             parameters, value-name and value-version was found in the first or second
             parameter-value. If false, it is taken into account whether the search criterion was
@@ -305,23 +311,63 @@ def remove_parameter_value_pair_2(  # pylint: disable=too-many-arguments
     if value_name1 != ANY_NAME:
         filter_list.append(lambda param_val: param_val.first.parameterValue.name == value_name1)
 
-    if value_version1 != ANY_VERSION:
-        parsed_value_version1 = packaging.version.parse(str(value_version1))
-        filter_list.append(
-            lambda param_val: param_val.first.parameterValue.version == parsed_value_version1
-        )
-
     if parameter2 != ANY_PARAM:
         filter_list.append(lambda param_val: param_val.second.parameter == parameter2)
 
     if value_name2 != ANY_NAME:
         filter_list.append(lambda param_val: param_val.second.parameterValue.name == value_name2)
 
-    if value_version2 != ANY_VERSION:
-        parsed_value_version2 = packaging.version.parse(str(value_version2))
+    def is_specifier_set(version: Union[int, float, str]) -> bool:
+        try:
+            SpecifierSet(str(version))
+            return True
+        except InvalidSpecifier:
+            return False
+
+    if (
+        value_version1 != ANY_VERSION
+        and value_version2 != ANY_VERSION
+        and is_specifier_set(value_version1)
+        and is_specifier_set(value_version2)
+    ):
+        specifier_set_version1 = SpecifierSet(str(value_version1))
+        specifier_set_version2 = SpecifierSet(str(value_version2))
+
         filter_list.append(
-            lambda param_val: param_val.second.parameterValue.version == parsed_value_version2
+            lambda param_val: not (
+                param_val.first.parameterValue.version in specifier_set_version1
+                and param_val.second.parameterValue.version in specifier_set_version2
+            )
         )
+
+    else:
+        if value_version1 != ANY_VERSION:
+            try:
+                specifier_set_version1 = SpecifierSet(str(value_version1))
+                filter_list.append(
+                    lambda param_val: not param_val.first.parameterValue.version
+                    in specifier_set_version1
+                )
+            except InvalidSpecifier:
+                parsed_value_version1 = packaging.version.parse(str(value_version1))
+                filter_list.append(
+                    lambda param_val: param_val.first.parameterValue.version
+                    == parsed_value_version1
+                )
+
+        if value_version2 != ANY_VERSION:
+            try:
+                specifier_set_version2 = SpecifierSet(str(value_version2))
+                filter_list.append(
+                    lambda param_val: not param_val.second.parameterValue.version
+                    in specifier_set_version2
+                )
+            except InvalidSpecifier:
+                parsed_value_version2 = packaging.version.parse(str(value_version2))
+                filter_list.append(
+                    lambda param_val: param_val.second.parameterValue.version
+                    == parsed_value_version2
+                )
 
     def filter_func(param_value_pair: ParameterValuePair) -> bool:
         return_value = True

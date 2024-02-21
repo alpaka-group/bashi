@@ -80,3 +80,37 @@ def parse_expected_val_pairs(
         )
 
     return expected_val_pairs
+
+
+def create_diff_parameter_value_pairs(
+    given_result: List[ParameterValuePair], expected_result: List[ParameterValuePair]
+) -> str:
+    """Returns a string for a readable output, if two lists of parameter-value-pairs are different.
+
+    Args:
+        given_result (List[ParameterValuePair]): Results from the test
+        expected_result (List[ParameterValuePair]): Expected results
+
+    Returns:
+        str: Output string
+    """
+    output = f"\ngiven ({len(given_result)} elements):\n"
+    for g_result in sorted(given_result):
+        output += (
+            f"  {g_result.first.parameter}="
+            f"{g_result.first.parameterValue.name} {g_result.first.parameterValue.version} + "
+            f"{g_result.second.parameter}="
+            f"{g_result.second.parameterValue.name} {g_result.second.parameterValue.version}\n"
+        )
+
+    output += f"expected ({len(expected_result)} elements):\n"
+
+    for e_result in sorted(expected_result):
+        output += (
+            f"  {e_result.first.parameter}="
+            f"{e_result.first.parameterValue.name} {e_result.first.parameterValue.version} + "
+            f"{e_result.second.parameter}="
+            f"{e_result.second.parameterValue.name} {e_result.second.parameterValue.version}\n"
+        )
+
+    return output
