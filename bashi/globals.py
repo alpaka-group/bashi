@@ -2,21 +2,21 @@
 
 from typing import List
 import packaging.version
-
+from bashi.types import Parameter, ValueName, ValueVersion
 
 # parameter key names, whit special meaning
-HOST_COMPILER: str = "host_compiler"
-DEVICE_COMPILER: str = "device_compiler"
+HOST_COMPILER: Parameter = "host_compiler"
+DEVICE_COMPILER: Parameter = "device_compiler"
 
 # name of the used compilers
-GCC: str = "gcc"
-CLANG: str = "clang"
-NVCC: str = "nvcc"
-CLANG_CUDA: str = "clang-cuda"
-HIPCC: str = "hipcc"
-ICPX: str = "icpx"
+GCC: ValueName = "gcc"
+CLANG: ValueName = "clang"
+NVCC: ValueName = "nvcc"
+CLANG_CUDA: ValueName = "clang-cuda"
+HIPCC: ValueName = "hipcc"
+ICPX: ValueName = "icpx"
 
-COMPILERS: List[str] = [GCC, CLANG, NVCC, CLANG_CUDA, HIPCC, ICPX]
+COMPILERS: List[ValueName] = [GCC, CLANG, NVCC, CLANG_CUDA, HIPCC, ICPX]
 
 # alpaka backend names
 ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: str = "alpaka_ACC_CPU_B_SEQ_T_SEQ_ENABLE"
@@ -47,5 +47,10 @@ CXX_STANDARD: str = "cxx_standard"
 
 OFF: str = "0.0.0"
 ON: str = "1.0.0"
-OFF_VER: packaging.version.Version = packaging.version.parse(OFF)
-ON_VER: packaging.version.Version = packaging.version.parse(ON)
+OFF_VER: ValueVersion = packaging.version.parse(OFF)
+ON_VER: ValueVersion = packaging.version.parse(ON)
+
+# values are used for remove_parameter_value_pair
+ANY_PARAM: Parameter = "*"
+ANY_NAME: ValueName = "*"
+ANY_VERSION: str = "*"

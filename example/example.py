@@ -17,11 +17,10 @@ import os
 import sys
 from bashi.generator import generate_combination_list
 from bashi.utils import (
-    get_expected_bashi_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
-    remove_parameter_value_pair,
-    create_parameter_value_pair,
+    remove_parameter_value_pairs,
 )
+from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
     ParameterValuePair,
     ParameterValueTuple,
@@ -72,28 +71,14 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
                     other_backend_versions = [ON]
 
                 for other_backend_version in other_backend_versions:
-
-                    remove_parameter_value_pair(
-                        to_remove=create_parameter_value_pair(
-                            gpu_backend,
-                            gpu_backend,
-                            gpu_version,
-                            other_backend,
-                            other_backend,
-                            other_backend_version,
-                        ),
-                        parameter_value_pairs=expected_param_val_tuple,
-                    )
-                    remove_parameter_value_pair(
-                        to_remove=create_parameter_value_pair(
-                            other_backend,
-                            other_backend,
-                            other_backend_version,
-                            gpu_backend,
-                            gpu_backend,
-                            gpu_version,
-                        ),
-                        parameter_value_pairs=expected_param_val_tuple,
+                    remove_parameter_value_pairs(
+                        expected_param_val_tuple,
+                        parameter1=gpu_backend,
+                        value_name1=gpu_backend,
+                        value_version1=gpu_version,
+                        parameter2=other_backend,
+                        value_name2=other_backend,
+                        value_version2=other_backend_version,
                     )
 
     cpu_backends = set(BACKENDS) - gpu_backends
@@ -102,27 +87,14 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
     for cpu_backend in cpu_backends:
         for other_cpu_backend in cpu_backends:
             if cpu_backend != other_cpu_backend:
-                remove_parameter_value_pair(
-                    to_remove=create_parameter_value_pair(
-                        cpu_backend,
-                        cpu_backend,
-                        ON_VER,
-                        other_cpu_backend,
-                        other_cpu_backend,
-                        OFF_VER,
-                    ),
-                    parameter_value_pairs=expected_param_val_tuple,
-                )
-                remove_parameter_value_pair(
-                    to_remove=create_parameter_value_pair(
-                        other_cpu_backend,
-                        other_cpu_backend,
-                        OFF_VER,
-                        cpu_backend,
-                        cpu_backend,
-                        ON_VER,
-                    ),
-                    parameter_value_pairs=expected_param_val_tuple,
+                remove_parameter_value_pairs(
+                    expected_param_val_tuple,
+                    parameter1=cpu_backend,
+                    value_name1=cpu_backend,
+                    value_version1=ON,
+                    parameter2=other_cpu_backend,
+                    value_name2=other_cpu_backend,
+                    value_version2=OFF,
                 )
 
     return check_parameter_value_pair_in_combination_list(

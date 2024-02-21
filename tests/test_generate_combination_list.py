@@ -9,14 +9,12 @@ from utils_test import parse_param_vals
 from bashi.versions import get_parameter_value_matrix
 from bashi.generator import generate_combination_list
 from bashi.utils import (
-    get_expected_bashi_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
-    remove_parameter_value_pair,
-    create_parameter_value_pair,
+    remove_parameter_value_pairs,
 )
+from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
     ParameterValue,
-    ParameterValueSingle,
     ParameterValuePair,
     ParameterValueTuple,
     ParameterValueMatrix,
@@ -150,25 +148,23 @@ class TestGeneratorTestData(unittest.TestCase):
         for device_compiler in self.param_matrix[DEVICE_COMPILER]:
             if device_compiler.name == NVCC:
                 self.assertTrue(
-                    remove_parameter_value_pair(
-                        ParameterValueSingle(
-                            DEVICE_COMPILER, ParameterValue(NVCC, device_compiler.version)
-                        ),
+                    remove_parameter_value_pairs(
                         reduced_expected_param_val_pairs,
+                        parameter1=DEVICE_COMPILER,
+                        value_name1=NVCC,
+                        value_version1=str(device_compiler.version),
                     )
                 )
 
         self.assertTrue(
-            remove_parameter_value_pair(
-                create_parameter_value_pair(
-                    CMAKE,
-                    CMAKE,
-                    "3.23",
-                    BOOST,
-                    BOOST,
-                    "1.82",
-                ),
+            remove_parameter_value_pairs(
                 reduced_expected_param_val_pairs,
+                parameter1=CMAKE,
+                value_name1=CMAKE,
+                value_version1="3.23",
+                parameter2=BOOST,
+                value_name2=BOOST,
+                value_version2="1.82",
             )
         )
 
@@ -217,9 +213,14 @@ class TestGeneratorRealData(unittest.TestCase):
         )
 
         self.assertTrue(
-            remove_parameter_value_pair(
-                create_parameter_value_pair(CMAKE, CMAKE, "3.23", BOOST, BOOST, "1.82"),
+            remove_parameter_value_pairs(
                 reduced_expected_param_val_pairs,
+                parameter1=CMAKE,
+                value_name1=CMAKE,
+                value_version1="3.23",
+                parameter2=BOOST,
+                value_name2=BOOST,
+                value_version2="1.82",
             )
         )
 

@@ -70,6 +70,8 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
     ],
     CXX_STANDARD: [17, 20],
 }
+# Clang and Clang-CUDA has the same version numbers
+VERSIONS[CLANG_CUDA] = copy.copy(VERSIONS[CLANG])
 
 # define the maximum supported gcc version for a specific nvcc version
 # the latest supported nvcc version must be added, even if the supported gcc version does not
@@ -122,12 +124,9 @@ def get_parameter_value_matrix() -> ParameterValueMatrix:
     """
     param_val_matrix: ParameterValueMatrix = OrderedDict()
 
-    extended_version = copy.deepcopy(VERSIONS)
-    extended_version[CLANG_CUDA] = extended_version[CLANG]
-
     for compiler_type in [HOST_COMPILER, DEVICE_COMPILER]:
         param_val_matrix[compiler_type] = []
-        for sw_name, sw_versions in extended_version.items():
+        for sw_name, sw_versions in VERSIONS.items():
             if sw_name in COMPILERS:
                 for sw_version in sw_versions:
                     param_val_matrix[compiler_type].append(
@@ -137,7 +136,7 @@ def get_parameter_value_matrix() -> ParameterValueMatrix:
     for backend in BACKENDS:
         if backend == ALPAKA_ACC_GPU_CUDA_ENABLE:
             param_val_matrix[backend] = [ParameterValue(backend, OFF_VER)]
-            for cuda_version in extended_version[NVCC]:
+            for cuda_version in VERSIONS[NVCC]:
                 param_val_matrix[backend].append(
                     ParameterValue(backend, pkv.parse(str(cuda_version)))
                 )
@@ -147,7 +146,7 @@ def get_parameter_value_matrix() -> ParameterValueMatrix:
                 ParameterValue(backend, ON_VER),
             ]
 
-    for other, versions in extended_version.items():
+    for other, versions in VERSIONS.items():
         if not other in COMPILERS + BACKENDS:
             param_val_matrix[other] = []
             for version in versions:
@@ -177,7 +176,6 @@ def is_supported_version(name: ValueName, version: ValueVersion) -> bool:
 
     local_versions = copy.deepcopy(VERSIONS)
 
-    local_versions[CLANG_CUDA] = local_versions[CLANG]
     local_versions[ALPAKA_ACC_GPU_CUDA_ENABLE] = [OFF]
     local_versions[ALPAKA_ACC_GPU_CUDA_ENABLE] += VERSIONS[NVCC]
 

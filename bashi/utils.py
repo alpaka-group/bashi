@@ -2,11 +2,11 @@
 
 import dataclasses
 import sys
-import copy
 from collections import OrderedDict
-from typing import IO, Dict, List, Optional, Union
+from typing import IO, Dict, List, Optional, Union, Callable
 
 import packaging.version
+from packaging.specifiers import SpecifierSet, InvalidSpecifier
 from typeguard import typechecked
 
 from bashi.types import (
@@ -18,8 +18,8 @@ from bashi.types import (
     ParameterValuePair,
     ParameterValueSingle,
     ParameterValueTuple,
+    ValueName,
 )
-from bashi.versions import COMPILERS, VERSIONS, NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -186,81 +186,134 @@ def _loop_over_parameter_values(
             )
 
 
+# pylint: disable=too-many-locals
 @typechecked
-def remove_parameter_value_pair(
-    to_remove: Union[ParameterValueSingle, ParameterValuePair],
+def remove_parameter_value_pairs(  # pylint: disable=too-many-arguments
     parameter_value_pairs: List[ParameterValuePair],
-    all_versions: bool = False,
+    parameter1: Parameter = ANY_PARAM,
+    value_name1: ValueName = ANY_NAME,
+    value_version1: Union[int, float, str] = ANY_VERSION,
+    parameter2: Parameter = ANY_PARAM,
+    value_name2: ValueName = ANY_NAME,
+    value_version2: Union[int, float, str] = ANY_VERSION,
+    symmetric: bool = True,
 ) -> bool:
-    """Removes a parameter-value pair with one or two entries from the parameter-value-pair list. If
-    the parameter-value-pair only has one parameter value, all parameter-value-pairs that contain
-    the parameter value are removed.
+    """Removes a parameter-value-pair from a list based on the specified search criteria. A
+    parameter-value pair must match all specified search criteria to be removed if none of the
+    criteria is `ANY_*`. If a criterion is `ANY_*`, it is ignored and it is always a match.
 
     Args:
-        to_remove (Union[ParameterValueSingle, ParameterValuePair]): Parameter-value-single or
-            parameter-value-pair to remove
-        param_val_pairs (List[ParameterValuePair]): List of parameter-value-pairs. Will be modified.
-        all_versions (bool): If it is `True` and `to_remove` has type of `ParameterValuePair`,
-            removes all parameter-value-pairs witch matches the value-names independent of the
-            value-version. Defaults to False.
-    Raises:
-        RuntimeError: If `all_versions=True` and `to_remove` is a `ParameterValueSingle`
+        parameter_value_pairs (List[ParameterValuePair]): list where parameter-value-pairs will be
+            removed
+        parameter1 (Parameter, optional): Name of the first parameter. Defaults to ANY_PARAM.
+        value_name1 (ValueName, optional): Name of the first value-name. Defaults to ANY_NAME.
+        value_version1 (Union[int, float, str], optional): Name of the first value-version. Either
+            as a single version or as a version range that can be parsed into a
+            `packaging.specifier.SpecifierSet`. If it is a version range, all versions that are not
+            within this range are removed. Defaults to ANY_VERSION.
+        parameter2 (Parameter, optional): Name of the second parameter. Defaults to ANY_PARAM.
+        value_name2 (ValueName, optional): Name of the second value-name. Defaults to ANY_NAME.
+        value_version2 (Union[int, float, str], optional): Name of the second value-name. Either as
+            a single version or as a version range that can be parsed into a
+            `packaging.specifier.SpecifierSet`. If it is a version range, all versions that are not
+            within this range are removed. Defaults to ANY_VERSION.
+        symmetric (bool, optional): If symmetric is true, it does not matter whether a group of
+            parameters, value-name and value-version was found in the first or second
+            parameter-value. If false, it is taken into account whether the search criterion was
+            found in the first or second parameter value. Defaults to True.
 
     Returns:
-        bool: True if entry was removed from parameter_value_pairs
+        bool: Return True, if parameter-value-pair was removed.
     """
-    if isinstance(to_remove, ParameterValueSingle):
-        if all_versions:
-            raise RuntimeError("all_versions=True is not support for ParameterValueSingle")
+    filter_list: List[Callable[[ParameterValuePair], bool]] = []
+    if parameter1 != ANY_PARAM:
+        filter_list.append(lambda param_val: param_val.first.parameter == parameter1)
 
-        return _remove_single_entry_parameter_value_pair(to_remove, parameter_value_pairs)
+    if value_name1 != ANY_NAME:
+        filter_list.append(lambda param_val: param_val.first.parameterValue.name == value_name1)
 
-    if all_versions:
-        return _remove_parameter_value_pair_all_versions(to_remove, parameter_value_pairs)
+    if parameter2 != ANY_PARAM:
+        filter_list.append(lambda param_val: param_val.second.parameter == parameter2)
 
-    try:
-        parameter_value_pairs.remove(to_remove)
-        return True
-    except ValueError:
-        return False
+    if value_name2 != ANY_NAME:
+        filter_list.append(lambda param_val: param_val.second.parameterValue.name == value_name2)
 
-
-@typechecked
-def _remove_single_entry_parameter_value_pair(
-    to_remove: ParameterValueSingle, param_val_pairs: List[ParameterValuePair]
-) -> bool:
-    len_before = len(param_val_pairs)
-
-    def filter_function(param_val_pair: ParameterValuePair) -> bool:
-        for param_val_entry in param_val_pair:
-            if param_val_entry == to_remove:
-                return False
-        return True
-
-    param_val_pairs[:] = list(filter(filter_function, param_val_pairs))
-
-    return len_before != len(param_val_pairs)
-
-
-@typechecked
-def _remove_parameter_value_pair_all_versions(
-    to_remove: ParameterValuePair, param_val_pairs: List[ParameterValuePair]
-) -> bool:
-    len_before = len(param_val_pairs)
-
-    def filter_function(param_val_pair: ParameterValuePair) -> bool:
-        if (
-            param_val_pair.first.parameter == to_remove.first.parameter
-            and param_val_pair.second.parameter == to_remove.second.parameter
-            and param_val_pair.first.parameterValue.name == to_remove.first.parameterValue.name
-            and param_val_pair.second.parameterValue.name == to_remove.second.parameterValue.name
-        ):
+    def is_specifier_set(version: Union[int, float, str]) -> bool:
+        try:
+            SpecifierSet(str(version))
+            return True
+        except InvalidSpecifier:
             return False
-        return True
 
-    param_val_pairs[:] = list(filter(filter_function, param_val_pairs))
+    if (
+        value_version1 != ANY_VERSION
+        and value_version2 != ANY_VERSION
+        and is_specifier_set(value_version1)
+        and is_specifier_set(value_version2)
+    ):
+        specifier_set_version1 = SpecifierSet(str(value_version1))
+        specifier_set_version2 = SpecifierSet(str(value_version2))
 
-    return len_before != len(param_val_pairs)
+        filter_list.append(
+            lambda param_val: not (
+                param_val.first.parameterValue.version in specifier_set_version1
+                and param_val.second.parameterValue.version in specifier_set_version2
+            )
+        )
+
+    else:
+        if value_version1 != ANY_VERSION:
+            try:
+                specifier_set_version1 = SpecifierSet(str(value_version1))
+                filter_list.append(
+                    lambda param_val: not param_val.first.parameterValue.version
+                    in specifier_set_version1
+                )
+            except InvalidSpecifier:
+                parsed_value_version1 = packaging.version.parse(str(value_version1))
+                filter_list.append(
+                    lambda param_val: param_val.first.parameterValue.version
+                    == parsed_value_version1
+                )
+
+        if value_version2 != ANY_VERSION:
+            try:
+                specifier_set_version2 = SpecifierSet(str(value_version2))
+                filter_list.append(
+                    lambda param_val: not param_val.second.parameterValue.version
+                    in specifier_set_version2
+                )
+            except InvalidSpecifier:
+                parsed_value_version2 = packaging.version.parse(str(value_version2))
+                filter_list.append(
+                    lambda param_val: param_val.second.parameterValue.version
+                    == parsed_value_version2
+                )
+
+    def filter_func(param_value_pair: ParameterValuePair) -> bool:
+        return_value = True
+
+        for f in filter_list:
+            return_value = return_value and f(param_value_pair)
+
+        return not return_value
+
+    len_before = len(parameter_value_pairs)
+    parameter_value_pairs[:] = list(filter(filter_func, parameter_value_pairs))
+
+    if symmetric:
+        remove_parameter_value_pairs(
+            parameter_value_pairs,
+            parameter2,
+            value_name2,
+            value_version2,
+            parameter1,
+            value_name1,
+            value_version1,
+            symmetric=False,
+        )
+
+    return len_before != len(parameter_value_pairs)
 
 
 @typechecked
@@ -315,161 +368,3 @@ def reason(output: Optional[IO[str]], msg: str):
             file=output,
             end="",
         )
-
-
-# TODO(SimeonEhrig) modularize the function
-# pylint: disable=too-many-branches
-# pylint: disable=too-many-locals
-@typechecked
-def get_expected_bashi_parameter_value_pairs(
-    parameter_matrix: ParameterValueMatrix,
-) -> List[ParameterValuePair]:
-    """Takes parameter-value-matrix and creates a list of all expected parameter-values-pairs
-    allowed by the bashi library. First it generates a complete list of parameter-value-pairs and
-    then it removes all pairs that are not allowed by filter rules.
-
-    Args:
-        parameter_matrix (ParameterValueMatrix): matrix of parameter values
-
-    Returns:
-        List[ParameterValuePair]: list of all parameter-value-pairs supported by bashi
-    """
-    local_parameter_matrix = copy.deepcopy(parameter_matrix)
-
-    def remove_host_compiler_nvcc(param_val: ParameterValue) -> bool:
-        if param_val.name == NVCC:
-            return False
-        return True
-
-    # remove nvcc as host compiler
-    local_parameter_matrix[HOST_COMPILER] = list(
-        filter(remove_host_compiler_nvcc, local_parameter_matrix[HOST_COMPILER])
-    )
-
-    # remove clang-cuda 13 and older
-    def remove_unsupported_clang_cuda_version(param_val: ParameterValue) -> bool:
-        if param_val.name == CLANG_CUDA and param_val.version < packaging.version.parse("14"):
-            return False
-        return True
-
-    local_parameter_matrix[HOST_COMPILER] = list(
-        filter(remove_unsupported_clang_cuda_version, local_parameter_matrix[HOST_COMPILER])
-    )
-    local_parameter_matrix[DEVICE_COMPILER] = list(
-        filter(remove_unsupported_clang_cuda_version, local_parameter_matrix[DEVICE_COMPILER])
-    )
-
-    param_val_pair_list = get_expected_parameter_value_pairs(local_parameter_matrix)
-
-    extend_versions = copy.deepcopy(VERSIONS)
-    extend_versions[CLANG_CUDA] = extend_versions[CLANG]
-
-    # remove all combinations where nvcc is device compiler and the host compiler is not gcc or
-    # clang
-    for compiler_name in set(COMPILERS) - set([GCC, CLANG, NVCC]):
-        remove_parameter_value_pair(
-            to_remove=create_parameter_value_pair(
-                HOST_COMPILER, compiler_name, 0, DEVICE_COMPILER, NVCC, 0
-            ),
-            parameter_value_pairs=param_val_pair_list,
-            all_versions=True,
-        )
-
-    # remove all combinations, where host and device compiler name are different except the device
-    # compiler name is nvcc
-    for host_compiler_name in set(COMPILERS) - set([NVCC]):
-        for device_compiler_name in set(COMPILERS) - set([NVCC]):
-            if host_compiler_name != device_compiler_name:
-                remove_parameter_value_pair(
-                    to_remove=create_parameter_value_pair(
-                        HOST_COMPILER,
-                        host_compiler_name,
-                        0,
-                        DEVICE_COMPILER,
-                        device_compiler_name,
-                        0,
-                    ),
-                    parameter_value_pairs=param_val_pair_list,
-                    all_versions=True,
-                )
-
-    # remove all combinations, where host and device compiler version are different except the
-    # compiler name is nvcc
-    for compiler_name in set(COMPILERS) - set([NVCC]):
-        for compiler_version1 in extend_versions[compiler_name]:
-            for compiler_version2 in extend_versions[compiler_name]:
-                if compiler_version1 != compiler_version2:
-                    remove_parameter_value_pair(
-                        to_remove=create_parameter_value_pair(
-                            HOST_COMPILER,
-                            compiler_name,
-                            compiler_version1,
-                            DEVICE_COMPILER,
-                            compiler_name,
-                            compiler_version2,
-                        ),
-                        parameter_value_pairs=param_val_pair_list,
-                        all_versions=False,
-                    )
-
-    # remove all gcc version, which are to new for a specific nvcc version
-    nvcc_versions = [packaging.version.parse(str(v)) for v in VERSIONS[NVCC]]
-    nvcc_versions.sort()
-    gcc_versions = [packaging.version.parse(str(v)) for v in VERSIONS[GCC]]
-    gcc_versions.sort()
-    for nvcc_version in nvcc_versions:
-        for max_nvcc_gcc_version in NVCC_GCC_MAX_VERSION:
-            if nvcc_version >= max_nvcc_gcc_version.nvcc:
-                for gcc_version in gcc_versions:
-                    if gcc_version > max_nvcc_gcc_version.host:
-                        remove_parameter_value_pair(
-                            to_remove=create_parameter_value_pair(
-                                HOST_COMPILER,
-                                GCC,
-                                gcc_version,
-                                DEVICE_COMPILER,
-                                NVCC,
-                                nvcc_version,
-                            ),
-                            parameter_value_pairs=param_val_pair_list,
-                        )
-                break
-
-    clang_versions = [packaging.version.parse(str(v)) for v in VERSIONS[CLANG]]
-    clang_versions.sort()
-
-    # remove all clang version, which are to new for a specific nvcc version
-    for nvcc_version in nvcc_versions:
-        for max_nvcc_clang_version in NVCC_CLANG_MAX_VERSION:
-            if nvcc_version >= max_nvcc_clang_version.nvcc:
-                for clang_version in clang_versions:
-                    if clang_version > max_nvcc_clang_version.host:
-                        remove_parameter_value_pair(
-                            to_remove=create_parameter_value_pair(
-                                HOST_COMPILER,
-                                CLANG,
-                                clang_version,
-                                DEVICE_COMPILER,
-                                NVCC,
-                                nvcc_version,
-                            ),
-                            parameter_value_pairs=param_val_pair_list,
-                        )
-                break
-
-    # remove all pairs, where clang is host-compiler for nvcc 11.3, 11.4 and 11.5 as device compiler
-    for nvcc_version in [packaging.version.parse(str(v)) for v in [11.3, 11.4, 11.5]]:
-        for clang_version in clang_versions:
-            remove_parameter_value_pair(
-                to_remove=create_parameter_value_pair(
-                    HOST_COMPILER,
-                    CLANG,
-                    clang_version,
-                    DEVICE_COMPILER,
-                    NVCC,
-                    nvcc_version,
-                ),
-                parameter_value_pairs=param_val_pair_list,
-            )
-
-    return param_val_pair_list
