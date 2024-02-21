@@ -17,11 +17,11 @@ import os
 import sys
 from bashi.generator import generate_combination_list
 from bashi.utils import (
-    get_expected_bashi_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
     remove_parameter_value_pair,
     create_parameter_value_pair,
 )
+from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
     ParameterValuePair,
     ParameterValueTuple,

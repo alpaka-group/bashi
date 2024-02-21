@@ -2,7 +2,6 @@
 
 import dataclasses
 import sys
-import copy
 from collections import OrderedDict
 from typing import IO, Dict, List, Optional, Union, Callable
 
@@ -21,7 +20,6 @@ from bashi.types import (
     ParameterValueTuple,
     ValueName,
 )
-from bashi.versions import COMPILERS, VERSIONS, NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -447,161 +445,3 @@ def reason(output: Optional[IO[str]], msg: str):
             file=output,
             end="",
         )
-
-
-# TODO(SimeonEhrig) modularize the function
-# pylint: disable=too-many-branches
-# pylint: disable=too-many-locals
-@typechecked
-def get_expected_bashi_parameter_value_pairs(
-    parameter_matrix: ParameterValueMatrix,
-) -> List[ParameterValuePair]:
-    """Takes parameter-value-matrix and creates a list of all expected parameter-values-pairs
-    allowed by the bashi library. First it generates a complete list of parameter-value-pairs and
-    then it removes all pairs that are not allowed by filter rules.
-
-    Args:
-        parameter_matrix (ParameterValueMatrix): matrix of parameter values
-
-    Returns:
-        List[ParameterValuePair]: list of all parameter-value-pairs supported by bashi
-    """
-    local_parameter_matrix = copy.deepcopy(parameter_matrix)
-
-    def remove_host_compiler_nvcc(param_val: ParameterValue) -> bool:
-        if param_val.name == NVCC:
-            return False
-        return True
-
-    # remove nvcc as host compiler
-    local_parameter_matrix[HOST_COMPILER] = list(
-        filter(remove_host_compiler_nvcc, local_parameter_matrix[HOST_COMPILER])
-    )
-
-    # remove clang-cuda 13 and older
-    def remove_unsupported_clang_cuda_version(param_val: ParameterValue) -> bool:
-        if param_val.name == CLANG_CUDA and param_val.version < packaging.version.parse("14"):
-            return False
-        return True
-
-    local_parameter_matrix[HOST_COMPILER] = list(
-        filter(remove_unsupported_clang_cuda_version, local_parameter_matrix[HOST_COMPILER])
-    )
-    local_parameter_matrix[DEVICE_COMPILER] = list(
-        filter(remove_unsupported_clang_cuda_version, local_parameter_matrix[DEVICE_COMPILER])
-    )
-
-    param_val_pair_list = get_expected_parameter_value_pairs(local_parameter_matrix)
-
-    extend_versions = copy.deepcopy(VERSIONS)
-    extend_versions[CLANG_CUDA] = extend_versions[CLANG]
-
-    # remove all combinations where nvcc is device compiler and the host compiler is not gcc or
-    # clang
-    for compiler_name in set(COMPILERS) - set([GCC, CLANG, NVCC]):
-        remove_parameter_value_pair(
-            to_remove=create_parameter_value_pair(
-                HOST_COMPILER, compiler_name, 0, DEVICE_COMPILER, NVCC, 0
-            ),
-            parameter_value_pairs=param_val_pair_list,
-            all_versions=True,
-        )
-
-    # remove all combinations, where host and device compiler name are different except the device
-    # compiler name is nvcc
-    for host_compiler_name in set(COMPILERS) - set([NVCC]):
-        for device_compiler_name in set(COMPILERS) - set([NVCC]):
-            if host_compiler_name != device_compiler_name:
-                remove_parameter_value_pair(
-                    to_remove=create_parameter_value_pair(
-                        HOST_COMPILER,
-                        host_compiler_name,
-                        0,
-                        DEVICE_COMPILER,
-                        device_compiler_name,
-                        0,
-                    ),
-                    parameter_value_pairs=param_val_pair_list,
-                    all_versions=True,
-                )
-
-    # remove all combinations, where host and device compiler version are different except the
-    # compiler name is nvcc
-    for compiler_name in set(COMPILERS) - set([NVCC]):
-        for compiler_version1 in extend_versions[compiler_name]:
-            for compiler_version2 in extend_versions[compiler_name]:
-                if compiler_version1 != compiler_version2:
-                    remove_parameter_value_pair(
-                        to_remove=create_parameter_value_pair(
-                            HOST_COMPILER,
-                            compiler_name,
-                            compiler_version1,
-                            DEVICE_COMPILER,
-                            compiler_name,
-                            compiler_version2,
-                        ),
-                        parameter_value_pairs=param_val_pair_list,
-                        all_versions=False,
-                    )
-
-    # remove all gcc version, which are to new for a specific nvcc version
-    nvcc_versions = [packaging.version.parse(str(v)) for v in VERSIONS[NVCC]]
-    nvcc_versions.sort()
-    gcc_versions = [packaging.version.parse(str(v)) for v in VERSIONS[GCC]]
-    gcc_versions.sort()
-    for nvcc_version in nvcc_versions:
-        for max_nvcc_gcc_version in NVCC_GCC_MAX_VERSION:
-            if nvcc_version >= max_nvcc_gcc_version.nvcc:
-                for gcc_version in gcc_versions:
-                    if gcc_version > max_nvcc_gcc_version.host:
-                        remove_parameter_value_pair(
-                            to_remove=create_parameter_value_pair(
-                                HOST_COMPILER,
-                                GCC,
-                                gcc_version,
-                                DEVICE_COMPILER,
-                                NVCC,
-                                nvcc_version,
-                            ),
-                            parameter_value_pairs=param_val_pair_list,
-                        )
-                break
-
-    clang_versions = [packaging.version.parse(str(v)) for v in VERSIONS[CLANG]]
-    clang_versions.sort()
-
-    # remove all clang version, which are to new for a specific nvcc version
-    for nvcc_version in nvcc_versions:
-        for max_nvcc_clang_version in NVCC_CLANG_MAX_VERSION:
-            if nvcc_version >= max_nvcc_clang_version.nvcc:
-                for clang_version in clang_versions:
-                    if clang_version > max_nvcc_clang_version.host:
-                        remove_parameter_value_pair(
-                            to_remove=create_parameter_value_pair(
-                                HOST_COMPILER,
-                                CLANG,
-                                clang_version,
-                                DEVICE_COMPILER,
-                                NVCC,
-                                nvcc_version,
-                            ),
-                            parameter_value_pairs=param_val_pair_list,
-                        )
-                break
-
-    # remove all pairs, where clang is host-compiler for nvcc 11.3, 11.4 and 11.5 as device compiler
-    for nvcc_version in [packaging.version.parse(str(v)) for v in [11.3, 11.4, 11.5]]:
-        for clang_version in clang_versions:
-            remove_parameter_value_pair(
-                to_remove=create_parameter_value_pair(
-                    HOST_COMPILER,
-                    CLANG,
-                    clang_version,
-                    DEVICE_COMPILER,
-                    NVCC,
-                    nvcc_version,
-                ),
-                parameter_value_pairs=param_val_pair_list,
-            )
-
-    return param_val_pair_list

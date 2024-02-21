@@ -9,11 +9,11 @@ from utils_test import parse_param_vals
 from bashi.versions import get_parameter_value_matrix
 from bashi.generator import generate_combination_list
 from bashi.utils import (
-    get_expected_bashi_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
     remove_parameter_value_pair,
     create_parameter_value_pair,
 )
+from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
     ParameterValue,
     ParameterValueSingle,
