@@ -5,14 +5,14 @@ import io
 from collections import OrderedDict as OD
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.filter_compiler_version import compiler_version_filter_typechecked
+from bashi.filter_compiler import compiler_filter_typechecked
 
 
 class TestClangCudaOldVersions(unittest.TestCase):
-    def test_valid_clang_cuda_versions_rule_v5(self):
+    def test_valid_clang_cuda_versions_rule_c8(self):
         for clang_cuda_version in [14, 16, 18, 78]:
             self.assertTrue(
-                compiler_version_filter_typechecked(
+                compiler_filter_typechecked(
                     OD(
                         {
                             HOST_COMPILER: ppv((CLANG_CUDA, clang_cuda_version)),
@@ -22,10 +22,10 @@ class TestClangCudaOldVersions(unittest.TestCase):
                 )
             )
 
-    def test_valid_clang_cuda_versions_multi_row_rule_v5(self):
+    def test_valid_clang_cuda_versions_multi_row_rule_c8(self):
         for clang_cuda_version in [14, 16, 18, 78]:
             self.assertTrue(
-                compiler_version_filter_typechecked(
+                compiler_filter_typechecked(
                     OD(
                         {
                             HOST_COMPILER: ppv((CLANG_CUDA, clang_cuda_version)),
@@ -37,11 +37,11 @@ class TestClangCudaOldVersions(unittest.TestCase):
                 )
             )
 
-    def test_invalid_clang_cuda_versions_rule_v5(self):
+    def test_invalid_clang_cuda_versions_rule_c8(self):
         for clang_cuda_version in [13, 7, 1]:
             reason_msg = io.StringIO()
             self.assertFalse(
-                compiler_version_filter_typechecked(
+                compiler_filter_typechecked(
                     OD(
                         {
                             HOST_COMPILER: ppv((CLANG_CUDA, clang_cuda_version)),
@@ -56,11 +56,11 @@ class TestClangCudaOldVersions(unittest.TestCase):
                 "all clang versions older than 14 are disabled as CUDA Compiler",
             )
 
-    def test_invalid_clang_cuda_versions_multi_row_rule_v5(self):
+    def test_invalid_clang_cuda_versions_multi_row_rule_c8(self):
         for clang_cuda_version in [13, 7, 1]:
             reason_msg = io.StringIO()
             self.assertFalse(
-                compiler_version_filter_typechecked(
+                compiler_filter_typechecked(
                     OD(
                         {
                             HOST_COMPILER: ppv((CLANG_CUDA, clang_cuda_version)),

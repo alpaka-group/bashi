@@ -6,8 +6,7 @@ import packaging.version as pkv
 from typeguard import typechecked
 from bashi.types import ParameterValueTuple, ParameterValue
 from bashi.utils import FilterAdapter
-from bashi.filter_compiler_name import compiler_name_filter_typechecked
-from bashi.filter_compiler_version import compiler_version_filter
+from bashi.filter_compiler import compiler_filter_typechecked
 from bashi.filter_backend import backend_filter
 from bashi.filter_software_dependency import software_dependency_filter
 
@@ -108,11 +107,11 @@ class TestFilterAdapterDataSet1(unittest.TestCase):
             "because the test data should no trigger any rule"
         )
         self.assertTrue(
-            FilterAdapter(self.param_map, compiler_name_filter_typechecked)(self.test_row),
+            FilterAdapter(self.param_map, compiler_filter_typechecked)(self.test_row),
             error_msg,
         )
         self.assertTrue(
-            FilterAdapter(self.param_map, compiler_version_filter)(self.test_row), error_msg
+            FilterAdapter(self.param_map, compiler_filter_typechecked)(self.test_row), error_msg
         )
         self.assertTrue(FilterAdapter(self.param_map, backend_filter)(self.test_row), error_msg)
         self.assertTrue(

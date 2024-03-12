@@ -398,7 +398,10 @@ def print_row_nice(row: ParameterValueTuple, init: str = ""):
 
     for param, val in row.items():
         if param in [HOST_COMPILER, DEVICE_COMPILER]:
-            s += f"{short_name.get(param, param)}={short_name.get(val.name, val.name)}-{nice_version.get(val.version, str(val.version))} "
+            s += (
+                f"{short_name.get(param, param)}={short_name.get(val.name, val.name)}-"
+                f"{nice_version.get(val.version, str(val.version))} "
+            )
         else:
             s += (
                 f"{short_name.get(param, param)}={nice_version.get(val.version, str(val.version))} "
