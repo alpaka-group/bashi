@@ -7,27 +7,26 @@ import packaging.version as pkv
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.versions import VERSIONS, NvccHostSupport
-from bashi.filter_compiler_name import compiler_name_filter_typechecked
-from bashi.filter_compiler_version import compiler_version_filter_typechecked
+from bashi.filter_compiler import compiler_filter_typechecked
 
 
 class TestNoNvccHostCompiler(unittest.TestCase):
-    def test_valid_combination_rule_n1(self):
+    def test_valid_combination_rule_c1(self):
         self.assertTrue(
-            compiler_name_filter_typechecked(
+            compiler_filter_typechecked(
                 OD({HOST_COMPILER: ppv((GCC, 10)), DEVICE_COMPILER: ppv((NVCC, 11.2))})
             )
         )
 
         # version should not matter
         self.assertTrue(
-            compiler_name_filter_typechecked(
+            compiler_filter_typechecked(
                 OD({HOST_COMPILER: ppv((CLANG, 0)), DEVICE_COMPILER: ppv((NVCC, 0))})
             )
         )
 
         self.assertTrue(
-            compiler_name_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((CLANG, 0)),
@@ -42,7 +41,7 @@ class TestNoNvccHostCompiler(unittest.TestCase):
         # if HOST_COMPILER does not exist in the row, it should pass because HOST_COMPILER can be
         # added at the next round
         self.assertTrue(
-            compiler_name_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         DEVICE_COMPILER: ppv((NVCC, 0)),
@@ -53,10 +52,10 @@ class TestNoNvccHostCompiler(unittest.TestCase):
             )
         )
 
-    def test_invalid_combination_rule_n1(self):
+    def test_invalid_combination_rule_c1(self):
         reason_msg1 = io.StringIO()
         self.assertFalse(
-            compiler_name_filter_typechecked(
+            compiler_filter_typechecked(
                 OD({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((NVCC, 11.2))}),
                 reason_msg1,
             )
@@ -65,7 +64,7 @@ class TestNoNvccHostCompiler(unittest.TestCase):
 
         reason_msg2 = io.StringIO()
         self.assertFalse(
-            compiler_name_filter_typechecked(
+            compiler_filter_typechecked(
                 OD({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((GCC, 11))}), reason_msg2
             )
         )
@@ -73,7 +72,7 @@ class TestNoNvccHostCompiler(unittest.TestCase):
 
         reason_msg3 = io.StringIO()
         self.assertFalse(
-            compiler_name_filter_typechecked(
+            compiler_filter_typechecked(
                 OD({HOST_COMPILER: ppv((NVCC, 12.2)), DEVICE_COMPILER: ppv((HIPCC, 5.1))}),
                 reason_msg3,
             )
@@ -82,18 +81,18 @@ class TestNoNvccHostCompiler(unittest.TestCase):
 
         reason_msg4 = io.StringIO()
         self.assertFalse(
-            compiler_name_filter_typechecked(OD({HOST_COMPILER: ppv((NVCC, 10.2))}), reason_msg4)
+            compiler_filter_typechecked(OD({HOST_COMPILER: ppv((NVCC, 10.2))}), reason_msg4)
         )
         self.assertEqual(reason_msg4.getvalue(), "nvcc is not allowed as host compiler")
 
 
 class TestSupportedNvccHostCompiler(unittest.TestCase):
-    def test_invalid_combination_rule_n2(self):
+    def test_invalid_combination_rule_c2(self):
         for compiler_name in [CLANG_CUDA, HIPCC, ICPX, NVCC]:
             for compiler_version in ["0", "13", "32a2"]:
                 reason_msg = io.StringIO()
                 self.assertFalse(
-                    compiler_name_filter_typechecked(
+                    compiler_filter_typechecked(
                         OD(
                             {
                                 HOST_COMPILER: ppv((compiler_name, compiler_version)),
@@ -112,7 +111,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
 
         reason_msg1 = io.StringIO()
         self.assertFalse(
-            compiler_name_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((HIPCC, "5.3")),
@@ -131,7 +130,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
 
         reason_msg2 = io.StringIO()
         self.assertFalse(
-            compiler_name_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((HIPCC, "5.3")),
@@ -149,11 +148,11 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
             "only gcc and clang are allowed as nvcc host compiler",
         )
 
-    def test_valid_combination_rule_n2(self):
+    def test_valid_combination_rule_c2(self):
         for compiler_name in [GCC, CLANG]:
-            for compiler_version in ["0", "13", "7b2"]:
+            for compiler_version in ["0", "7", "10"]:
                 self.assertTrue(
-                    compiler_name_filter_typechecked(
+                    compiler_filter_typechecked(
                         OD(
                             {
                                 HOST_COMPILER: ppv((compiler_name, compiler_version)),
@@ -164,10 +163,10 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                 )
 
         self.assertTrue(
-            compiler_name_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
-                        HOST_COMPILER: ppv((GCC, "13")),
+                        HOST_COMPILER: ppv((GCC, "10")),
                         DEVICE_COMPILER: ppv((NVCC, "11.5")),
                         BOOST: ppv((BOOST, "1.84.0")),
                         CMAKE: ppv((CMAKE, "3.23")),
@@ -176,10 +175,10 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
             )
         )
         self.assertTrue(
-            compiler_name_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
-                        HOST_COMPILER: ppv((CLANG, "14")),
+                        HOST_COMPILER: ppv((CLANG, "7")),
                         ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: ppv(
                             (ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE, ON)
                         ),
@@ -276,7 +275,7 @@ class TestNvccHostSupportClass(unittest.TestCase):
 
 
 class TestNvccSupportedGccVersion(unittest.TestCase):
-    def test_valid_combination_general_algorithm_rule_v2(self):
+    def test_valid_combination_general_algorithm_rule_c5(self):
         # this tests checks, if also version are respected, which are located between two defined
         # nvcc versions
         # e.g the following was defined:
@@ -324,7 +323,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
         for nvcc_version, gcc_version, expected_filter_return_value in expected_results:
             reason_msg = io.StringIO()
             self.assertEqual(
-                compiler_version_filter_typechecked(
+                compiler_filter_typechecked(
                     OD(
                         {
                             HOST_COMPILER: ppv((GCC, gcc_version)),
@@ -343,7 +342,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
                     f"nvcc {nvcc_version} " f"does not support gcc {gcc_version}",
                 )
 
-    def test_valid_combination_max_gcc_rule_v2(self):
+    def test_valid_combination_max_gcc_rule_c5(self):
         # change the version, if you added a new cuda release
         # this test is a guard to be sure, that the following test contains the latest nvcc release
         latest_covered_nvcc_release = "12.3"
@@ -394,7 +393,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
         for nvcc_version, gcc_version, expected_filter_return_value in expected_results:
             reason_msg = io.StringIO()
             self.assertEqual(
-                compiler_version_filter_typechecked(
+                compiler_filter_typechecked(
                     OD(
                         {
                             HOST_COMPILER: ppv((GCC, gcc_version)),
@@ -413,9 +412,9 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
                     f"nvcc {nvcc_version} " f"does not support gcc {gcc_version}",
                 )
 
-    def test_valid_multi_row_entries_gcc_rule_v2(self):
+    def test_valid_multi_row_entries_gcc_rule_c5(self):
         self.assertTrue(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((GCC, 10)),
@@ -428,7 +427,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
         )
 
         self.assertTrue(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((GCC, 12)),
@@ -442,10 +441,10 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
             )
         )
 
-    def test_invalid_multi_row_entries_gcc_rule_v2(self):
+    def test_invalid_multi_row_entries_gcc_rule_c5(self):
         reason_msg1 = io.StringIO()
         self.assertFalse(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((GCC, 13)),
@@ -464,7 +463,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
 
         reason_msg2 = io.StringIO()
         self.assertFalse(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((GCC, 12)),
@@ -483,7 +482,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
             "nvcc 11.8 does not support gcc 12",
         )
 
-    def test_unknown_combination_gcc_rule_v2(self):
+    def test_unknown_combination_gcc_rule_c5(self):
         # test an unsupported nvcc version
         # we assume, that the nvcc supports all gcc versions
         unsupported_nvcc_version = 42.0
@@ -494,7 +493,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
         )
 
         self.assertTrue(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((GCC, 12)),
@@ -508,7 +507,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
 
 
 class TestNvccSupportedClangVersion(unittest.TestCase):
-    def test_valid_combination_max_clang_rule_v3_rule_v4(self):
+    def test_valid_combination_max_clang_rule_c6_rule_c7(self):
         # change the version, if you added a new cuda release
         # this test is a guard to be sure, that the following test contains the latest nvcc release
         latest_covered_nvcc_release = "12.3"
@@ -561,7 +560,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
         for nvcc_version, clang_version, expected_filter_return_value in expected_results:
             reason_msg = io.StringIO()
             self.assertEqual(
-                compiler_version_filter_typechecked(
+                compiler_filter_typechecked(
                     OD(
                         {
                             HOST_COMPILER: ppv((CLANG, clang_version)),
@@ -590,9 +589,9 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                         f"nvcc {nvcc_version} " f"does not support clang {clang_version}",
                     )
 
-    def test_valid_multi_row_entries_clang_rule_v3(self):
+    def test_valid_multi_row_entries_clang_rule_c6(self):
         self.assertTrue(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((CLANG, 10)),
@@ -605,7 +604,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
         )
 
         self.assertTrue(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((CLANG, 12)),
@@ -619,10 +618,10 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
             )
         )
 
-    def test_invalid_multi_row_entries_clang_rule_v3(self):
+    def test_invalid_multi_row_entries_clang_rule_c6(self):
         reason_msg1 = io.StringIO()
         self.assertFalse(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((CLANG, 13)),
@@ -641,7 +640,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
 
         reason_msg2 = io.StringIO()
         self.assertFalse(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((CLANG, 16)),
@@ -660,7 +659,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
             "nvcc 11.8 does not support clang 16",
         )
 
-    def test_unknown_combination_clang_rule_v3(self):
+    def test_unknown_combination_clang_rule_c6(self):
         # test an unsupported nvcc version
         # we assume, that the nvcc supports all gcc versions
         unsupported_nvcc_version = 42.0
@@ -671,7 +670,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
         )
 
         self.assertTrue(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((CLANG, 12)),
@@ -683,12 +682,12 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
             "version",
         )
 
-    def test_no_clang_as_host_compiler_rule_v4(self):
+    def test_no_clang_as_host_compiler_rule_c7(self):
         for nvcc_version in [11.3, 11.4, 11.5]:
             for clang_version in [0, 7, 56]:
                 reason_msg = io.StringIO()
                 self.assertFalse(
-                    compiler_version_filter_typechecked(
+                    compiler_filter_typechecked(
                         OD(
                             {
                                 HOST_COMPILER: ppv((CLANG, clang_version)),
@@ -704,12 +703,12 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                     "clang as host compiler is disabled for nvcc 11.3 to 11.5",
                 )
 
-    def test_no_clang_as_host_compiler_multi_row_rule_v4(self):
+    def test_no_clang_as_host_compiler_multi_row_rule_c7(self):
         for nvcc_version in [11.3, 11.4, 11.5]:
             for clang_version in [0, 10, 78]:
                 reason_msg = io.StringIO()
                 self.assertFalse(
-                    compiler_version_filter_typechecked(
+                    compiler_filter_typechecked(
                         OD(
                             {
                                 HOST_COMPILER: ppv((CLANG, clang_version)),

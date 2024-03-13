@@ -5,16 +5,16 @@ import io
 from collections import OrderedDict as OD
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.filter_compiler_version import compiler_version_filter_typechecked
+from bashi.filter_compiler import compiler_filter_typechecked
 
 
 class TestEmptyRow(unittest.TestCase):
     def test_empty_row_shall_always_pass(self):
-        self.assertTrue(compiler_version_filter_typechecked(OD()))
+        self.assertTrue(compiler_filter_typechecked(OD()))
 
 
 class TestHostDeviceCompilerSameVersion(unittest.TestCase):
-    def test_valid_combination_rule_v1(self):
+    def test_valid_combination_rule_c4(self):
         for comb in [
             (ppv((GCC, 10)), ppv((GCC, 10))),
             (ppv((ICPX, "2040.1.0")), ppv((ICPX, "2040.1.0"))),
@@ -23,14 +23,12 @@ class TestHostDeviceCompilerSameVersion(unittest.TestCase):
             (ppv((CLANG_CUDA, 17)), ppv((CLANG_CUDA, 17))),
         ]:
             self.assertTrue(
-                compiler_version_filter_typechecked(
-                    OD({HOST_COMPILER: comb[0], DEVICE_COMPILER: comb[1]})
-                ),
+                compiler_filter_typechecked(OD({HOST_COMPILER: comb[0], DEVICE_COMPILER: comb[1]})),
                 f"host compiler and device compiler version are not the same: {comb[0]} != {comb[1]}",
             )
 
         self.assertTrue(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((CLANG_CUDA, 14)),
@@ -43,7 +41,7 @@ class TestHostDeviceCompilerSameVersion(unittest.TestCase):
         )
 
         self.assertTrue(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((CLANG, 14)),
@@ -58,7 +56,7 @@ class TestHostDeviceCompilerSameVersion(unittest.TestCase):
             ),
         )
 
-    def test_invalid_combination_rule_v1(self):
+    def test_invalid_combination_rule_c4(self):
         for comb in [
             (ppv((GCC, 10)), ppv((GCC, 11))),
             (ppv((ICPX, "2023.1.0")), ppv((ICPX, "2040.1.0"))),
@@ -69,7 +67,7 @@ class TestHostDeviceCompilerSameVersion(unittest.TestCase):
             reason_msg = io.StringIO()
 
             self.assertFalse(
-                compiler_version_filter_typechecked(
+                compiler_filter_typechecked(
                     OD({HOST_COMPILER: comb[0], DEVICE_COMPILER: comb[1]}), reason_msg
                 ),
                 f"same host compiler and device compiler version should pass: {comb[0]} and {comb[1]}",
@@ -81,7 +79,7 @@ class TestHostDeviceCompilerSameVersion(unittest.TestCase):
 
         reason_msg_multi1 = io.StringIO()
         self.assertFalse(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((CLANG_CUDA, 10)),
@@ -100,7 +98,7 @@ class TestHostDeviceCompilerSameVersion(unittest.TestCase):
 
         reason_msg_multi2 = io.StringIO()
         self.assertFalse(
-            compiler_version_filter_typechecked(
+            compiler_filter_typechecked(
                 OD(
                     {
                         HOST_COMPILER: ppv((GCC, 15)),

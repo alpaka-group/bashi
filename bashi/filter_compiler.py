@@ -1,7 +1,7 @@
 """Filter rules basing on host and device compiler names and versions.
 
-All rules implemented in this filter have an identifier that begins with "v" and follows a number. 
-Examples: v1, v42, v678 ...
+All rules implemented in this filter have an identifier that begins with "c" and follows a number. 
+Examples: c1, c42, c678 ...
 
 These identifiers are used in the test names, for example, to make it clear which test is testing 
 which rule.
@@ -15,6 +15,9 @@ from bashi.types import Parameter, ParameterValueTuple
 from bashi.versions import NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION
 from bashi.utils import reason
 
+# uncomment me for debugging
+# from bashi.utils import print_row_nice
+
 
 def get_required_parameters() -> List[Parameter]:
     """Return list of parameters which will be checked in the filter.
@@ -26,18 +29,19 @@ def get_required_parameters() -> List[Parameter]:
 
 
 @typechecked
-def compiler_version_filter_typechecked(
+def compiler_filter_typechecked(
     row: ParameterValueTuple,
     output: Optional[IO[str]] = None,
 ) -> bool:
-    """Type-checked version of compiler_version_filter(). Type checking has a big performance cost,
-    which is why the non type-checked version is used for the pairwise generator.
+    """Type-checked version of compiler_filter(). Type checking has a big performance cost, which
+    is why the non type-checked version is used for the pairwise generator.
     """
-    return compiler_version_filter(row, output)
+    return compiler_filter(row, output)
 
 
 # pylint: disable=too-many-branches
-def compiler_version_filter(
+# pylint: disable=too-many-return-statements
+def compiler_filter(
     row: ParameterValueTuple,
     output: Optional[IO[str]] = None,
 ) -> bool:
@@ -52,22 +56,43 @@ def compiler_version_filter(
     Returns:
         bool: True, if parameter-value-tuple is valid.
     """
+    # uncomment me for debugging
+    # print_row_nice(row)
 
-    # Rule: v1
-    if (
-        DEVICE_COMPILER in row
-        and row[DEVICE_COMPILER].name != NVCC
-        and HOST_COMPILER in row
-        and row[HOST_COMPILER].version != row[DEVICE_COMPILER].version
-    ):
-        reason(output, "host and device compiler version must be the same (except for nvcc)")
+    # Rule: c1
+    # NVCC as HOST_COMPILER is not allow
+    # this rule will be never used, because of an implementation detail of the covertable library
+    # it is not possible to add NVCC as HOST_COMPILER and filter out afterwards
+    # this rule is only used by bashi-verify
+    if HOST_COMPILER in row and row[HOST_COMPILER].name == NVCC:
+        reason(output, "nvcc is not allowed as host compiler")
         return False
+
+    if HOST_COMPILER in row and DEVICE_COMPILER in row:
+        if NVCC in (row[HOST_COMPILER].name, row[DEVICE_COMPILER].name):
+            # Rule: c2
+            if row[HOST_COMPILER].name not in (GCC, CLANG):
+                reason(output, "only gcc and clang are allowed as nvcc host compiler")
+                return False
+        else:
+            # Rule: c3
+            if row[HOST_COMPILER].name != row[DEVICE_COMPILER].name:
+                reason(output, "host and device compiler name must be the same (except for nvcc)")
+                return False
+
+            # Rule: c4
+            if row[HOST_COMPILER].version != row[DEVICE_COMPILER].version:
+                reason(
+                    output,
+                    "host and device compiler version must be the same (except for nvcc)",
+                )
+                return False
 
     # now idea, how remove nested blocks without hitting the performance
     # pylint: disable=too-many-nested-blocks
     if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
         if HOST_COMPILER in row and row[HOST_COMPILER].name == GCC:
-            # Rule: v2
+            # Rule: c5
             # remove all unsupported nvcc gcc version combinations
             # define which is the latest supported gcc compiler for a nvcc version
 
@@ -87,7 +112,7 @@ def compiler_version_filter(
                         break
 
         if HOST_COMPILER in row and row[HOST_COMPILER].name == CLANG:
-            # Rule: v4
+            # Rule: c7
             if row[DEVICE_COMPILER].version >= pkv.parse("11.3") and row[
                 DEVICE_COMPILER
             ].version <= pkv.parse("11.5"):
@@ -97,7 +122,7 @@ def compiler_version_filter(
                 )
                 return False
 
-            # Rule: v3
+            # Rule: c6
             # remove all unsupported nvcc clang version combinations
             # define which is the latest supported clang compiler for a nvcc version
 
@@ -116,17 +141,18 @@ def compiler_version_filter(
                             return False
                         break
 
-    # Rule: v5
+    # Rule: c8
     # clang-cuda 13 and older is not supported
     # this rule will be never used, because of an implementation detail of the covertable library
     # it is not possible to add the clang-cuda versions and filter it out afterwards
     # this rule is only used by bashi-verify
-    if (
-        DEVICE_COMPILER in row
-        and row[DEVICE_COMPILER].name == CLANG_CUDA
-        and row[DEVICE_COMPILER].version < pkv.parse("14")
-    ):
-        reason(output, "all clang versions older than 14 are disabled as CUDA Compiler")
-        return False
+    for compiler in (HOST_COMPILER, DEVICE_COMPILER):
+        if (
+            compiler in row
+            and row[compiler].name == CLANG_CUDA
+            and row[compiler].version < pkv.parse("14")
+        ):
+            reason(output, "all clang versions older than 14 are disabled as CUDA Compiler")
+            return False
 
     return True

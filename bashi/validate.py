@@ -15,8 +15,7 @@ import packaging.version as pkv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValue, ParameterValueTuple
 from bashi.versions import is_supported_version
-import bashi.filter_compiler_name
-import bashi.filter_compiler_version
+import bashi.filter_compiler
 import bashi.filter_backend
 import bashi.filter_software_dependency
 
@@ -244,17 +243,9 @@ def check_filter_chain(row: ParameterValueTuple) -> bool:
     all_true = 0
     all_true += int(
         check_single_filter(
-            bashi.filter_compiler_name.compiler_name_filter_typechecked,
+            bashi.filter_compiler.compiler_filter,
             row,
-            bashi.filter_compiler_name.get_required_parameters(),
-        )
-    )
-
-    all_true += int(
-        check_single_filter(
-            bashi.filter_compiler_version.compiler_version_filter_typechecked,
-            row,
-            bashi.filter_compiler_version.get_required_parameters(),
+            bashi.filter_compiler.get_required_parameters(),
         )
     )
     all_true += int(
@@ -273,7 +264,7 @@ def check_filter_chain(row: ParameterValueTuple) -> bool:
     )
 
     # each filter add a one, if it was successful
-    return all_true == 4
+    return all_true == 3
 
 
 def main() -> None:

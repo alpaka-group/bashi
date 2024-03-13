@@ -267,7 +267,7 @@ class TestParameterMatrixFilter(unittest.TestCase):
             [(BOOST, 1.81), (BOOST, 1.82), (BOOST, 1.83)]
         )
 
-    def test_nvcc_host_compiler_rule_n1(self):
+    def test_nvcc_host_compiler_rule_c1(self):
         # test if generate_combination_list() correctly handles nvcc as host compiler
         param_matrix = copy.deepcopy(self.param_base_matrix)
         for nvcc_version in [11.2, 11.3, 11.8, 12.0]:
@@ -286,7 +286,7 @@ class TestParameterMatrixFilter(unittest.TestCase):
             )
         )
 
-    def test_clang_cuda_old_versions_rule_v5(self):
+    def test_clang_cuda_old_versions_rule_c8(self):
         # test if generate_combination_list() correctly clang-cuda version 13 and older
 
         param_matrix = copy.deepcopy(self.param_base_matrix)
