@@ -2,8 +2,6 @@
 
 from typing import Dict, List
 from collections import OrderedDict
-import copy
-import packaging.version as pkv
 
 from covertable import make  # type: ignore
 
@@ -34,44 +32,12 @@ def generate_combination_list(
     Returns:
         CombinationList: combination-list
     """
-    # use local version to do not modify parameter_value_matrix
-    local_param_val_mat = copy.deepcopy(parameter_value_matrix)
-
     filter_chain = get_default_filter_chain(custom_filter)
-
-    def host_compiler_filter(param_val: ParameterValue) -> bool:
-        # Rule: n1
-        # remove nvcc as host compiler
-        if param_val.name == NVCC:
-            return False
-        # Rule: v5
-        # remove clang-cuda older than 14
-        if param_val.name == CLANG_CUDA and param_val.version < pkv.parse("14"):
-            return False
-
-        return True
-
-    def device_compiler_filter(param_val: ParameterValue) -> bool:
-        # Rule: v5
-        # remove clang-cuda older than 14
-        if param_val.name == CLANG_CUDA and param_val.version < pkv.parse("14"):
-            return False
-
-        return True
-
-    pre_filters = {HOST_COMPILER: host_compiler_filter, DEVICE_COMPILER: device_compiler_filter}
-
-    # some filter rules requires that specific parameter-values are already removed from the
-    # parameter-value-matrix
-    # otherwise the covertable library throws an error
-    for param, filter_func in pre_filters.items():
-        if param in local_param_val_mat:
-            local_param_val_mat[param] = list(filter(filter_func, local_param_val_mat[param]))
 
     comb_list: CombinationList = []
 
     all_pairs: List[Dict[Parameter, ParameterValue]] = make(
-        factors=local_param_val_mat,
+        factors=parameter_value_matrix,
         length=2,
         pre_filter=filter_chain,
     )  # type: ignore
@@ -81,7 +47,7 @@ def generate_combination_list(
         tmp_comb: Combination = OrderedDict({})
         # covertable does not keep the ordering of the parameters
         # therefore we sort it
-        for param in local_param_val_mat.keys():
+        for param in parameter_value_matrix.keys():
             tmp_comb[param] = all_pair[param]
         comb_list.append(tmp_comb)
 

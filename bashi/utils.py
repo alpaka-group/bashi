@@ -370,7 +370,8 @@ def reason(output: Optional[IO[str]], msg: str):
         )
 
 
-def print_row_nice(row: ParameterValueTuple, init: str = ""):
+# do not cover code, because the function is only used for debugging
+def print_row_nice(row: ParameterValueTuple, init: str = ""):  # pragma: no cover
     """Prints a parameter-value-tuple in a short and nice way.
 
     Args:
