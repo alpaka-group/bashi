@@ -68,6 +68,16 @@ def get_expected_bashi_parameter_value_pairs(
     _remove_specific_nvcc_clang_combinations(param_val_pair_list)
     _remove_unsupported_compiler_for_hip_backend(param_val_pair_list)
     _remove_disabled_hip_backend_for_hipcc(param_val_pair_list)
+    _remove_enabled_sycl_backend_for_hipcc(param_val_pair_list)
+    remove_parameter_value_pairs(
+        param_val_pair_list,
+        parameter1=ALPAKA_ACC_GPU_HIP_ENABLE,
+        value_name1=ALPAKA_ACC_GPU_HIP_ENABLE,
+        value_version1=ON,
+        parameter2=ALPAKA_ACC_SYCL_ENABLE,
+        value_name2=ALPAKA_ACC_SYCL_ENABLE,
+        value_version2=ON,
+    )
 
     return param_val_pair_list
 
@@ -292,4 +302,22 @@ def _remove_disabled_hip_backend_for_hipcc(parameter_value_pairs: List[Parameter
             parameter2=ALPAKA_ACC_GPU_HIP_ENABLE,
             value_name2=ALPAKA_ACC_GPU_HIP_ENABLE,
             value_version2=OFF,
+        )
+
+
+def _remove_enabled_sycl_backend_for_hipcc(parameter_value_pairs: List[ParameterValuePair]):
+    """Remove all pairs, where the hipcc is the compiler and the sycl backend is enabled.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    """
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        remove_parameter_value_pairs(
+            parameter_value_pairs,
+            parameter1=compiler_type,
+            value_name1=HIPCC,
+            value_version1=ANY_VERSION,
+            parameter2=ALPAKA_ACC_SYCL_ENABLE,
+            value_name2=ALPAKA_ACC_SYCL_ENABLE,
+            value_version2=ON,
         )

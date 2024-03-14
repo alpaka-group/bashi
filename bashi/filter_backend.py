@@ -49,4 +49,10 @@ def backend_filter(
                 reason(output, "An enabled HIP backend requires hipcc as compiler.")
                 return False
 
+        # Rule: b2
+        # related to rule c10
+        if ALPAKA_ACC_SYCL_ENABLE in row and row[ALPAKA_ACC_SYCL_ENABLE].version != OFF_VER:
+            reason(output, "The HIP and SYCL backend cannot be enabled on the same time.")
+            return False
+
     return True

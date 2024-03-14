@@ -21,6 +21,7 @@ from bashi.results import (
     _remove_specific_nvcc_clang_combinations,
     _remove_unsupported_compiler_for_hip_backend,
     _remove_disabled_hip_backend_for_hipcc,
+    _remove_enabled_sycl_backend_for_hipcc,
 )
 from bashi.versions import NvccHostSupport, NVCC_GCC_MAX_VERSION
 
@@ -834,6 +835,114 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
                         {
                             DEVICE_COMPILER: (NVCC, 11.2),
                             ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
+                        }
+                    ),
+                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ]
+            )
+        )
+
+        self.assertEqual(
+            test_param_value_pairs,
+            expected_results,
+            create_diff_parameter_value_pairs(test_param_value_pairs, expected_results),
+        )
+
+    def test_remove_enabled_sycl_backend_for_hipcc(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD(
+                    {
+                        HOST_COMPILER: (CLANG_CUDA, 16),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                    }
+                ),
+                OD(
+                    {
+                        HOST_COMPILER: (GCC, 10),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (HIPCC, 4.3),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                    }
+                ),
+                OD(
+                    {
+                        HOST_COMPILER: (HIPCC, 5.1),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (ICPX, "2023.1.0"),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (HIPCC, 6.0),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (NVCC, 11.2),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                    }
+                ),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                OD(
+                    {
+                        DEVICE_COMPILER: (HIPCC, 5.7),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                    }
+                ),
+            ]
+        )
+
+        _remove_enabled_sycl_backend_for_hipcc(test_param_value_pairs)
+
+        test_param_value_pairs.sort()
+        expected_results = sorted(
+            parse_expected_val_pairs(
+                [
+                    OD(
+                        {
+                            HOST_COMPILER: (CLANG_CUDA, 16),
+                            ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        }
+                    ),
+                    OD(
+                        {
+                            HOST_COMPILER: (GCC, 10),
+                            ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        }
+                    ),
+                    OD(
+                        {
+                            HOST_COMPILER: (HIPCC, 5.1),
+                            ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        }
+                    ),
+                    OD(
+                        {
+                            DEVICE_COMPILER: (ICPX, "2023.1.0"),
+                            ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        }
+                    ),
+                    OD(
+                        {
+                            DEVICE_COMPILER: (HIPCC, 6.0),
+                            ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        }
+                    ),
+                    OD(
+                        {
+                            DEVICE_COMPILER: (NVCC, 11.2),
+                            ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
                         }
                     ),
                     OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),

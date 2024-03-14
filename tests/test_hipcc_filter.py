@@ -368,3 +368,223 @@ class TestHipccCompilerFilter(unittest.TestCase):
                 f"nvcc + {host_compiler} should not pass the filter if "
                 "ALPAKA_ACC_GPU_HIP_ENABLE is on",
             )
+
+    def test_hipcc_requires_disabled_sycl_backend_pass_c10(self):
+        for version in (4.5, 5.3, 6.0):
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                        }
+                    )
+                )
+            )
+
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                        }
+                    )
+                )
+            )
+
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                        }
+                    )
+                )
+            )
+
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                        }
+                    )
+                )
+            )
+
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            CMAKE: ppv((CMAKE, 3.18)),
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            BOOST: ppv((BOOST, "1.78.0")),
+                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                        }
+                    )
+                )
+            )
+
+    def test_hipcc_requires_disabled_sycl_backend_not_pass_c10(self):
+        for version in (4.5, 5.3, 6.0):
+            reason_msg1 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                        }
+                    ),
+                    reason_msg1,
+                )
+            )
+            self.assertEqual(reason_msg1.getvalue(), "hipcc does not support the SYCL backend.")
+
+            reason_msg2 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                        }
+                    ),
+                    reason_msg2,
+                )
+            )
+            self.assertEqual(reason_msg2.getvalue(), "hipcc does not support the SYCL backend.")
+
+            reason_msg3 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                        }
+                    ),
+                    reason_msg3,
+                )
+            )
+            self.assertEqual(reason_msg3.getvalue(), "hipcc does not support the SYCL backend.")
+
+            reason_msg4 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                        }
+                    ),
+                    reason_msg4,
+                )
+            )
+            self.assertEqual(reason_msg4.getvalue(), "hipcc does not support the SYCL backend.")
+
+            reason_msg5 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            CMAKE: ppv((CMAKE, 3.18)),
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            BOOST: ppv((BOOST, "1.78.0")),
+                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                        }
+                    ),
+                    reason_msg5,
+                )
+            )
+            self.assertEqual(reason_msg5.getvalue(), "hipcc does not support the SYCL backend.")
+
+    def test_hip_and_sycl_backend_cannot_be_active_at_the_same_time_b2(self):
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                    }
+                ),
+            )
+        )
+
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                    }
+                ),
+            )
+        )
+
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                    }
+                ),
+            )
+        )
+
+        reason_msg1 = io.StringIO()
+        self.assertFalse(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                    }
+                ),
+                reason_msg1,
+            )
+        )
+        self.assertEqual(
+            reason_msg1.getvalue(), "The HIP and SYCL backend cannot be enabled on the same time."
+        )
+
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        CMAKE: ppv((CMAKE, 3.18)),
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                        BOOST: ppv((BOOST, "1.78.0")),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                    }
+                ),
+            )
+        )
+
+        reason_msg2 = io.StringIO()
+        self.assertFalse(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        CMAKE: ppv((CMAKE, 3.18)),
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                        BOOST: ppv((BOOST, "1.78.0")),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                    }
+                ),
+                reason_msg2,
+            )
+        )
+        self.assertEqual(
+            reason_msg2.getvalue(), "The HIP and SYCL backend cannot be enabled on the same time."
+        )

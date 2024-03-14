@@ -18,7 +18,8 @@ import sys
 from bashi.generator import generate_combination_list
 from bashi.utils import (
     check_parameter_value_pair_in_combination_list,
-    remove_parameter_value_pairs,
+    # TODO(SimeonEhrig): bring me back, if all GPU backend filter rules was implemented
+    # remove_parameter_value_pairs,
 )
 from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
@@ -28,7 +29,11 @@ from bashi.types import (
     CombinationList,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import get_parameter_value_matrix, VERSIONS
+from bashi.versions import (
+    get_parameter_value_matrix,
+    # TODO(SimeonEhrig): bring me back, if all GPU backend filter rules was implemented
+    # VERSIONS,
+)
 
 
 # pylint: disable=too-many-branches
@@ -103,7 +108,8 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
     )
 
 
-def custom_filter(row: ParameterValueTuple) -> bool:
+# TODO(SimeonEhrig): remove pylint statement
+def custom_filter(row: ParameterValueTuple) -> bool:  # pylint: disable=unused-argument
     """Filter function defined by the user. In this case, remove some backend combinations, see
     module documentation.
 
