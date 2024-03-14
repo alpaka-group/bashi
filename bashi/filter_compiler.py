@@ -172,4 +172,29 @@ def compiler_filter(
                 reason(output, "hipcc does not support the CUDA backend.")
                 return False
 
+        if compiler in row and row[compiler].name == ICPX:
+            # Rule: c12
+            # related to rule b4
+            if ALPAKA_ACC_SYCL_ENABLE in row and row[ALPAKA_ACC_SYCL_ENABLE].version == OFF_VER:
+                reason(output, "icpx requires an enabled SYCL backend.")
+                return False
+
+            # Rule: c13
+            # related to rule b5
+            if (
+                ALPAKA_ACC_GPU_HIP_ENABLE in row
+                and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER
+            ):
+                reason(output, "icpx does not support the HIP backend.")
+                return False
+
+            # Rule: c14
+            # related to rule b6
+            if (
+                ALPAKA_ACC_GPU_CUDA_ENABLE in row
+                and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
+            ):
+                reason(output, "icpx does not support the CUDA backend.")
+                return False
+
     return True

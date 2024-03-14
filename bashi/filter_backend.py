@@ -25,6 +25,8 @@ def backend_filter_typechecked(
     return backend_filter(row, output)
 
 
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-return-statements
 def backend_filter(
     row: ParameterValueTuple,
     output: Optional[IO[str]] = None,
@@ -59,6 +61,26 @@ def backend_filter(
         # related to rule c11
         if ALPAKA_ACC_GPU_CUDA_ENABLE in row and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER:
             reason(output, "The HIP and CUDA backend cannot be enabled on the same time.")
+            return False
+
+    if ALPAKA_ACC_SYCL_ENABLE in row and row[ALPAKA_ACC_SYCL_ENABLE].version != OFF_VER:
+        # Rule: b4
+        # related to rule c12
+        for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+            if compiler_type in row and row[compiler_type].name != ICPX:
+                reason(output, "An enabled SYCL backend requires icpx as compiler.")
+                return False
+
+        # Rule: b5
+        # related to rule c13
+        if ALPAKA_ACC_GPU_HIP_ENABLE in row and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER:
+            reason(output, "The SYCL and HIP backend cannot be enabled on the same time.")
+            return False
+
+        # Rule: b6
+        # related to rule c14
+        if ALPAKA_ACC_GPU_CUDA_ENABLE in row and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER:
+            reason(output, "The SYCL and CUDA backend cannot be enabled on the same time.")
             return False
 
     return True
