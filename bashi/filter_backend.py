@@ -55,4 +55,10 @@ def backend_filter(
             reason(output, "The HIP and SYCL backend cannot be enabled on the same time.")
             return False
 
+        # Rule: b3
+        # related to rule c11
+        if ALPAKA_ACC_GPU_CUDA_ENABLE in row and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER:
+            reason(output, "The HIP and CUDA backend cannot be enabled on the same time.")
+            return False
+
     return True

@@ -163,4 +163,13 @@ def compiler_filter(
                 reason(output, "hipcc does not support the SYCL backend.")
                 return False
 
+            # Rule: c11
+            # related to rule b2
+            if (
+                ALPAKA_ACC_GPU_CUDA_ENABLE in row
+                and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
+            ):
+                reason(output, "hipcc does not support the CUDA backend.")
+                return False
+
     return True

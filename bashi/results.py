@@ -78,6 +78,8 @@ def get_expected_bashi_parameter_value_pairs(
         value_name2=ALPAKA_ACC_SYCL_ENABLE,
         value_version2=ON,
     )
+    _remove_enabled_cuda_backend_for_hipcc(param_val_pair_list)
+    _remove_enabled_cuda_backend_for_enabled_hip_backend(param_val_pair_list)
 
     return param_val_pair_list
 
@@ -321,3 +323,40 @@ def _remove_enabled_sycl_backend_for_hipcc(parameter_value_pairs: List[Parameter
             value_name2=ALPAKA_ACC_SYCL_ENABLE,
             value_version2=ON,
         )
+
+
+def _remove_enabled_cuda_backend_for_hipcc(parameter_value_pairs: List[ParameterValuePair]):
+    """Remove all pairs, where the hipcc is the compiler and the sycl backend is enabled.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    """
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        remove_parameter_value_pairs(
+            parameter_value_pairs,
+            parameter1=compiler_type,
+            value_name1=HIPCC,
+            value_version1=ANY_VERSION,
+            parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+            value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+            value_version2="==0.0.0",
+        )
+
+
+def _remove_enabled_cuda_backend_for_enabled_hip_backend(
+    parameter_value_pairs: List[ParameterValuePair],
+):
+    """Remove all pairs, where the hipcc is the compiler and the sycl backend is enabled.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    """
+    remove_parameter_value_pairs(
+        parameter_value_pairs,
+        parameter1=ALPAKA_ACC_GPU_HIP_ENABLE,
+        value_name1=ALPAKA_ACC_GPU_HIP_ENABLE,
+        value_version1=ON,
+        parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+        value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+        value_version2="==0.0.0",
+    )
