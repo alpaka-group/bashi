@@ -47,55 +47,56 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
         param_value_matrix
     )
 
-    gpu_backends = set(
-        [
-            ALPAKA_ACC_GPU_CUDA_ENABLE,
-            ALPAKA_ACC_GPU_HIP_ENABLE,
-            ALPAKA_ACC_SYCL_ENABLE,
-        ]
-    )
+    # TODO(SimeonEhrig): bring me back, if all GPU backend filter rules was implemented
+    # gpu_backends = set(
+    #     [
+    #         ALPAKA_ACC_GPU_CUDA_ENABLE,
+    #         ALPAKA_ACC_GPU_HIP_ENABLE,
+    #         ALPAKA_ACC_SYCL_ENABLE,
+    #     ]
+    # )
 
-    # if one of the GPU backend is enabled, all other backends needs to be disabled
-    # special case CUDA backend: instead it has the version on or off, it has off or a version
-    # number
-    for gpu_backend in gpu_backends:
-        if gpu_backend == ALPAKA_ACC_GPU_CUDA_ENABLE:
-            gpu_versions = VERSIONS[NVCC]
-        else:
-            gpu_versions = [ON]
-        for gpu_version in gpu_versions:
-            for other_backend in set(BACKENDS) - set([gpu_backend]):
-                if other_backend == ALPAKA_ACC_GPU_CUDA_ENABLE:
-                    other_backend_versions = VERSIONS[NVCC]
-                else:
-                    other_backend_versions = [ON]
+    # # if one of the GPU backend is enabled, all other backends needs to be disabled
+    # # special case CUDA backend: instead it has the version on or off, it has off or a version
+    # # number
+    # for gpu_backend in gpu_backends:
+    #     if gpu_backend == ALPAKA_ACC_GPU_CUDA_ENABLE:
+    #         gpu_versions = VERSIONS[NVCC]
+    #     else:
+    #         gpu_versions = [ON]
+    #     for gpu_version in gpu_versions:
+    #         for other_backend in set(BACKENDS) - set([gpu_backend]):
+    #             if other_backend == ALPAKA_ACC_GPU_CUDA_ENABLE:
+    #                 other_backend_versions = VERSIONS[NVCC]
+    #             else:
+    #                 other_backend_versions = [ON]
 
-                for other_backend_version in other_backend_versions:
-                    remove_parameter_value_pairs(
-                        expected_param_val_tuple,
-                        parameter1=gpu_backend,
-                        value_name1=gpu_backend,
-                        value_version1=gpu_version,
-                        parameter2=other_backend,
-                        value_name2=other_backend,
-                        value_version2=other_backend_version,
-                    )
+    #             for other_backend_version in other_backend_versions:
+    #                 remove_parameter_value_pairs(
+    #                     expected_param_val_tuple,
+    #                     parameter1=gpu_backend,
+    #                     value_name1=gpu_backend,
+    #                     value_version1=gpu_version,
+    #                     parameter2=other_backend,
+    #                     value_name2=other_backend,
+    #                     value_version2=other_backend_version,
+    #                 )
 
-    cpu_backends = set(BACKENDS) - gpu_backends
-    # remove all pairs, which contains two cpu backends and on of the backends is enabled and the
-    # other is disabled
-    for cpu_backend in cpu_backends:
-        for other_cpu_backend in cpu_backends:
-            if cpu_backend != other_cpu_backend:
-                remove_parameter_value_pairs(
-                    expected_param_val_tuple,
-                    parameter1=cpu_backend,
-                    value_name1=cpu_backend,
-                    value_version1=ON,
-                    parameter2=other_cpu_backend,
-                    value_name2=other_cpu_backend,
-                    value_version2=OFF,
-                )
+    # cpu_backends = set(BACKENDS) - gpu_backends
+    # # remove all pairs, which contains two cpu backends and on of the backends is enabled and the
+    # # other is disabled
+    # for cpu_backend in cpu_backends:
+    #     for other_cpu_backend in cpu_backends:
+    #         if cpu_backend != other_cpu_backend:
+    #             remove_parameter_value_pairs(
+    #                 expected_param_val_tuple,
+    #                 parameter1=cpu_backend,
+    #                 value_name1=cpu_backend,
+    #                 value_version1=ON,
+    #                 parameter2=other_cpu_backend,
+    #                 value_name2=other_cpu_backend,
+    #                 value_version2=OFF,
+    #             )
 
     return check_parameter_value_pair_in_combination_list(
         combination_list, expected_param_val_tuple
@@ -112,31 +113,42 @@ def custom_filter(row: ParameterValueTuple) -> bool:
     Returns:
         bool: True if the tuple is valid
     """
-    gpu_backends = set(
-        [
-            ALPAKA_ACC_GPU_CUDA_ENABLE,
-            ALPAKA_ACC_GPU_HIP_ENABLE,
-            ALPAKA_ACC_SYCL_ENABLE,
-        ]
-    )
-    for single_gpu_backend in gpu_backends:
-        if single_gpu_backend in row and row[single_gpu_backend].version != OFF_VER:
-            for backend in BACKENDS:
-                if backend != single_gpu_backend:
-                    if backend in row and row[backend].version != OFF_VER:
-                        return False
 
-    cpu_backends = set(BACKENDS) - gpu_backends
-    for cpu_backend in cpu_backends:
-        if cpu_backend in row and row[cpu_backend].version == ON_VER:
-            # all other cpu backends needs to be enabled
-            for other_cpu_backend in cpu_backends - set(cpu_backend):
-                if other_cpu_backend in row and row[other_cpu_backend].version == OFF_VER:
-                    return False
-            # all other gpu backends needs to be disabled
-            for gpu_backend in gpu_backends:
-                if gpu_backend in row and row[gpu_backend].version != OFF_VER:
-                    return False
+    # TODO(SimeonEhrig): bring me back, if all GPU backend filter rules was implemented
+    # gpu_backends = set(
+    #     [
+    #         ALPAKA_ACC_GPU_CUDA_ENABLE,
+    #         ALPAKA_ACC_GPU_HIP_ENABLE,
+    #         ALPAKA_ACC_SYCL_ENABLE,
+    #     ]
+    # )
+    # for single_gpu_backend in gpu_backends:
+    #     if single_gpu_backend in row and row[single_gpu_backend].version != OFF_VER:
+    #         for backend in BACKENDS:
+    #             if backend != single_gpu_backend:
+    #                 if backend in row and row[backend].version != OFF_VER:
+    #                     return False
+
+    # gpu_backends = [ALPAKA_ACC_GPU_CUDA_ENABLE, ALPAKA_ACC_GPU_HIP_ENABLE, ALPAKA_ACC_SYCL_ENABLE]
+    # cpu_backends = set(BACKENDS) - set(gpu_backends)
+
+    # if (HOST_COMPILER in row and row[HOST_COMPILER].name in (HIPCC, ICPX, CLANG_CUDA)) or (
+    #     DEVICE_COMPILER in row and row[DEVICE_COMPILER].name in (NVCC, HIPCC, ICPX, CLANG_CUDA)
+    # ):
+    #     for cpu_backend in cpu_backends:
+    #         if cpu_backend in row and row[cpu_backend].version != OFF_VER:
+    #             return False
+
+    # for cpu_backend in cpu_backends:
+    #     if cpu_backend in row and row[cpu_backend].version == ON_VER:
+    #         # all other cpu backends needs to be enabled
+    #         for other_cpu_backend in cpu_backends - set(cpu_backend):
+    #             if other_cpu_backend in row and row[other_cpu_backend].version == OFF_VER:
+    #                 return False
+    #         # all other gpu backends needs to be disabled
+    #         for gpu_backend in gpu_backends:
+    #             if gpu_backend in row and row[gpu_backend].version != OFF_VER:
+    #                 return False
 
     return True
 

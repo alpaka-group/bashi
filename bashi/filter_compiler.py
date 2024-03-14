@@ -146,4 +146,15 @@ def compiler_filter(
             reason(output, "all clang versions older than 14 are disabled as CUDA Compiler")
             return False
 
+    for compiler in (HOST_COMPILER, DEVICE_COMPILER):
+        if compiler in row and row[compiler].name == HIPCC:
+            # Rule: c9
+            # related to rule b1
+            if (
+                ALPAKA_ACC_GPU_HIP_ENABLE in row
+                and row[ALPAKA_ACC_GPU_HIP_ENABLE].version == OFF_VER
+            ):
+                reason(output, "hipcc requires an enabled HIP backend.")
+                return False
+
     return True

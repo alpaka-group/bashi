@@ -9,7 +9,9 @@ which rule.
 
 from typing import Optional, IO
 from typeguard import typechecked
+from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValueTuple
+from bashi.utils import reason
 
 
 @typechecked
@@ -23,11 +25,9 @@ def backend_filter_typechecked(
     return backend_filter(row, output)
 
 
-# TODO(SimeonEhrig): remove disable=unused-argument
-# only required for the CI at the moment
 def backend_filter(
-    row: ParameterValueTuple,  # pylint: disable=unused-argument
-    output: Optional[IO[str]] = None,  # pylint: disable=unused-argument
+    row: ParameterValueTuple,
+    output: Optional[IO[str]] = None,
 ) -> bool:
     """Filter rules basing on backend names and versions.
 
@@ -40,4 +40,13 @@ def backend_filter(
     Returns:
         bool: True, if parameter-value-tuple is valid.
     """
+
+    if ALPAKA_ACC_GPU_HIP_ENABLE in row and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER:
+        # Rule: b1
+        # related to rule c9
+        for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+            if compiler_type in row and row[compiler_type].name != HIPCC:
+                reason(output, "An enabled HIP backend requires hipcc as compiler.")
+                return False
+
     return True
