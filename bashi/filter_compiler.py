@@ -7,25 +7,16 @@ These identifiers are used in the test names, for example, to make it clear whic
 which rule.
 """
 
-from typing import Optional, IO, List
+from typing import Optional, IO
 import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.types import Parameter, ParameterValueTuple
+from bashi.types import ParameterValueTuple
 from bashi.versions import NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION
 from bashi.utils import reason
 
 # uncomment me for debugging
 # from bashi.utils import print_row_nice
-
-
-def get_required_parameters() -> List[Parameter]:
-    """Return list of parameters which will be checked in the filter.
-
-    Returns:
-        List[Parameter]: list of checked parameters
-    """
-    return [HOST_COMPILER, DEVICE_COMPILER]
 
 
 @typechecked

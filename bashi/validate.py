@@ -182,7 +182,6 @@ def get_args() -> Namespace:
 def check_single_filter(
     filter_func: Callable[[ParameterValueTuple, Optional[IO[str]]], bool],
     row: ParameterValueTuple,
-    required_parameter: List[str],
 ) -> bool:
     """Check if row passes a filter function.
 
@@ -194,8 +193,6 @@ def check_single_filter(
     Returns:
         bool: True if the row passes the filter.
     """
-    missing_parameters = ""
-
     # get name of the filter for command line output.
     filter_name: str = filter_func.__name__
 
@@ -203,20 +200,6 @@ def check_single_filter(
     # Remove _typed for better output.
     if filter_name.endswith("_typechecked"):
         filter_name = filter_name[: -len("_typechecked")]
-
-    # check if all required parameter are available
-    for req_name in required_parameter:
-        if req_name not in row:
-            missing_parameters += " " + req_name
-
-    if missing_parameters:
-        print(
-            cs(
-                f"skipped {filter_name}(), missing parameters ->" + missing_parameters,
-                "Yellow",
-            )
-        )
-        return False
 
     msg = io.StringIO()
 
@@ -245,21 +228,18 @@ def check_filter_chain(row: ParameterValueTuple) -> bool:
         check_single_filter(
             bashi.filter_compiler.compiler_filter,
             row,
-            bashi.filter_compiler.get_required_parameters(),
         )
     )
     all_true += int(
         check_single_filter(
             bashi.filter_backend.backend_filter_typechecked,
             row,
-            bashi.filter_backend.get_required_parameters(),
         )
     )
     all_true += int(
         check_single_filter(
             bashi.filter_software_dependency.software_dependency_filter_typechecked,
             row,
-            bashi.filter_software_dependency.get_required_parameters(),
         )
     )
 

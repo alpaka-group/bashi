@@ -7,18 +7,9 @@ These identifiers are used in the test names, for example, to make it clear whic
 which rule.
 """
 
-from typing import Optional, IO, List
+from typing import Optional, IO
 from typeguard import typechecked
-from bashi.types import Parameter, ParameterValueTuple
-
-
-def get_required_parameters() -> List[Parameter]:
-    """Return list of parameters which will be checked in the filter.
-
-    Returns:
-        List[Parameter]: list of checked parameters
-    """
-    return []
+from bashi.types import ParameterValueTuple
 
 
 @typechecked
