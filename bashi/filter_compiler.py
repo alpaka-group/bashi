@@ -62,6 +62,7 @@ def compiler_filter(
     if HOST_COMPILER in row and DEVICE_COMPILER in row:
         if NVCC in (row[HOST_COMPILER].name, row[DEVICE_COMPILER].name):
             # Rule: c2
+            # related to rule c13
             if row[HOST_COMPILER].name not in (GCC, CLANG):
                 reason(output, "only gcc and clang are allowed as nvcc host compiler")
                 return False
@@ -84,6 +85,7 @@ def compiler_filter(
     if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
         if HOST_COMPILER in row and row[HOST_COMPILER].name == GCC:
             # Rule: c5
+            # related to rule b10
             # remove all unsupported nvcc gcc version combinations
             # define which is the latest supported gcc compiler for a nvcc version
 
@@ -104,6 +106,7 @@ def compiler_filter(
 
         if HOST_COMPILER in row and row[HOST_COMPILER].name == CLANG:
             # Rule: c7
+            # related to rule b11
             if row[DEVICE_COMPILER].version >= pkv.parse("11.3") and row[
                 DEVICE_COMPILER
             ].version <= pkv.parse("11.5"):
@@ -114,6 +117,7 @@ def compiler_filter(
                 return False
 
             # Rule: c6
+            # related to rule b12
             # remove all unsupported nvcc clang version combinations
             # define which is the latest supported clang compiler for a nvcc version
 
@@ -132,7 +136,29 @@ def compiler_filter(
                             return False
                         break
 
+        # Rule: c15
+        # related to rule b9
+        if (
+            ALPAKA_ACC_GPU_CUDA_ENABLE in row
+            and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != row[DEVICE_COMPILER].version
+        ):
+            reason(output, "nvcc and CUDA backend needs to have the same version")
+            return False
+
+        # Rule: c16
+        # related to rule b14
+        if ALPAKA_ACC_GPU_HIP_ENABLE in row and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER:
+            reason(output, "nvcc does not support the HIP backend.")
+            return False
+
+        # Rule: c17
+        # related to rule b15
+        if ALPAKA_ACC_SYCL_ENABLE in row and row[ALPAKA_ACC_SYCL_ENABLE].version != OFF_VER:
+            reason(output, "nvcc does not support the SYCL backend.")
+            return False
+
     # Rule: c8
+    # related to rule b11
     # clang-cuda 13 and older is not supported
     # this rule will be never used, because of an implementation detail of the covertable library
     # it is not possible to add the clang-cuda versions and filter it out afterwards

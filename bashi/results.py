@@ -85,6 +85,11 @@ def get_expected_bashi_parameter_value_pairs(
     _remove_enabled_hip_backend_for_icpx(param_val_pair_list)
     _remove_enabled_cuda_backend_for_icpx(param_val_pair_list)
     _remove_enabled_cuda_backend_for_enabled_sycl_backend(param_val_pair_list)
+    _remove_nvcc_and_cuda_version_not_same(param_val_pair_list)
+    _remove_cuda_sdk_unsupported_gcc_versions(param_val_pair_list)
+    _remove_cuda_sdk_unsupported_clang_versions(param_val_pair_list)
+    _remove_device_compiler_gcc_clang_enabled_cuda_backend(param_val_pair_list)
+    _remove_specific_cuda_clang_combinations(param_val_pair_list)
 
     return param_val_pair_list
 
@@ -161,8 +166,8 @@ def _remove_nvcc_unsupported_gcc_versions(parameter_value_pairs: List[ParameterV
     Args:
         parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     """
-    _remove_unsupported_nvcc_host_compiler_versions(
-        parameter_value_pairs, GCC, NVCC_GCC_MAX_VERSION
+    _remove_unsupported_nvcc_cuda_host_compiler_versions(
+        parameter_value_pairs, GCC, DEVICE_COMPILER, NVCC, NVCC_GCC_MAX_VERSION
     )
 
 
@@ -172,25 +177,32 @@ def _remove_nvcc_unsupported_clang_versions(parameter_value_pairs: List[Paramete
     Args:
         parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     """
-    _remove_unsupported_nvcc_host_compiler_versions(
-        parameter_value_pairs, CLANG, NVCC_CLANG_MAX_VERSION
+    _remove_unsupported_nvcc_cuda_host_compiler_versions(
+        parameter_value_pairs, CLANG, DEVICE_COMPILER, NVCC, NVCC_CLANG_MAX_VERSION
     )
 
 
-def _remove_unsupported_nvcc_host_compiler_versions(
+def _remove_unsupported_nvcc_cuda_host_compiler_versions(
     parameter_value_pairs: List[ParameterValuePair],
     host_compiler_name: str,
+    second_parameter_name: Parameter,
+    second_value_name: ValueName,
     support_list: List[NvccHostSupport],
 ):
     # pylint: disable=too-few-public-methods
+    # pylint: disable=too-many-arguments
     class _FilterFunctor:
         def __init__(
             self,
             host_compiler_name: str,
+            second_parameter_name: Parameter,
+            second_value_name: ValueName,
             inklusiv_min_version: Optional[NvccHostSupport] = None,
             exklusiv_max_version: Optional[NvccHostSupport] = None,
         ) -> None:
             self.host_compiler_name = host_compiler_name
+            self.second_parameter_name = second_parameter_name
+            self.second_value_name = second_value_name
             if inklusiv_min_version and exklusiv_max_version:
                 if inklusiv_min_version.host == exklusiv_max_version.host:
                     self.host_specifier_set = SpecifierSet(f">{exklusiv_max_version.host}")
@@ -213,20 +225,23 @@ def _remove_unsupported_nvcc_host_compiler_versions(
         def __call__(self, param_val_pair: ParameterValuePair) -> bool:
             if (
                 param_val_pair.first.parameter == HOST_COMPILER
-                and param_val_pair.second.parameter == DEVICE_COMPILER
+                and param_val_pair.second.parameter == self.second_parameter_name
             ):
                 host_param_val = param_val_pair.first.parameterValue
                 nvcc_param_val = param_val_pair.second.parameterValue
             elif (
-                param_val_pair.first.parameter == HOST_COMPILER
-                and param_val_pair.second.parameter == DEVICE_COMPILER
+                param_val_pair.first.parameter == self.second_parameter_name
+                and param_val_pair.second.parameter == HOST_COMPILER
             ):
                 host_param_val = param_val_pair.second.parameterValue
                 nvcc_param_val = param_val_pair.first.parameterValue
             else:
                 return True
 
-            if host_param_val.name == self.host_compiler_name and nvcc_param_val.name == NVCC:
+            if (
+                host_param_val.name == self.host_compiler_name
+                and nvcc_param_val.name == self.second_value_name
+            ):
                 if (
                     nvcc_param_val.version in self.nvcc_specifier_set
                     and host_param_val.version in self.host_specifier_set
@@ -239,19 +254,33 @@ def _remove_unsupported_nvcc_host_compiler_versions(
 
     for index in range(len(oldest_nvcc_first) - 1):
         filter_function = _FilterFunctor(
-            host_compiler_name, oldest_nvcc_first[index], oldest_nvcc_first[index + 1]
+            host_compiler_name,
+            second_parameter_name,
+            second_value_name,
+            oldest_nvcc_first[index],
+            oldest_nvcc_first[index + 1],
         )
 
         parameter_value_pairs[:] = filter(filter_function, parameter_value_pairs)
 
     # lower bound
     parameter_value_pairs[:] = filter(
-        _FilterFunctor(host_compiler_name, inklusiv_min_version=oldest_nvcc_first[0]),
+        _FilterFunctor(
+            host_compiler_name,
+            second_parameter_name,
+            second_value_name,
+            inklusiv_min_version=oldest_nvcc_first[0],
+        ),
         parameter_value_pairs,
     )
     # upper bound
     parameter_value_pairs[:] = filter(
-        _FilterFunctor(host_compiler_name, exklusiv_max_version=oldest_nvcc_first[-1]),
+        _FilterFunctor(
+            host_compiler_name,
+            second_parameter_name,
+            second_value_name,
+            exklusiv_max_version=oldest_nvcc_first[-1],
+        ),
         parameter_value_pairs,
     )
 
@@ -457,4 +486,97 @@ def _remove_enabled_cuda_backend_for_enabled_sycl_backend(
         parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
         value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
         value_version2="==0.0.0",
+    )
+
+
+def _remove_nvcc_and_cuda_version_not_same(parameter_value_pairs: List[ParameterValuePair]):
+    """Remove all pairs, where the device compiler version of nvcc is not equal to the CUDA backend.
+    Filters also the disabled backend, because there is no nvcc@OFF.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    """
+
+    def filter_function(param_val_pair: ParameterValuePair) -> bool:
+        for param_val1, param_val2 in (
+            (param_val_pair.first, param_val_pair.second),
+            (param_val_pair.second, param_val_pair.first),
+        ):
+            if (
+                param_val1.parameter == DEVICE_COMPILER
+                and param_val1.parameterValue.name == NVCC
+                and param_val2.parameter == ALPAKA_ACC_GPU_CUDA_ENABLE
+                and param_val1.parameterValue.version != param_val2.parameterValue.version
+            ):
+                return False
+
+        return True
+
+    parameter_value_pairs[:] = list(filter(filter_function, parameter_value_pairs))
+
+
+def _remove_cuda_sdk_unsupported_gcc_versions(parameter_value_pairs: List[ParameterValuePair]):
+    """Remove all gcc version, which are to new for a specific cuda sdk version.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    """
+    _remove_unsupported_nvcc_cuda_host_compiler_versions(
+        parameter_value_pairs,
+        GCC,
+        ALPAKA_ACC_GPU_CUDA_ENABLE,
+        ALPAKA_ACC_GPU_CUDA_ENABLE,
+        NVCC_GCC_MAX_VERSION,
+    )
+
+
+def _remove_cuda_sdk_unsupported_clang_versions(parameter_value_pairs: List[ParameterValuePair]):
+    """Remove all clang version, which are to new for a specific cuda sdk version.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    """
+    _remove_unsupported_nvcc_cuda_host_compiler_versions(
+        parameter_value_pairs,
+        CLANG,
+        ALPAKA_ACC_GPU_CUDA_ENABLE,
+        ALPAKA_ACC_GPU_CUDA_ENABLE,
+        NVCC_CLANG_MAX_VERSION,
+    )
+
+
+def _remove_device_compiler_gcc_clang_enabled_cuda_backend(
+    parameter_value_pairs: List[ParameterValuePair],
+):
+    """Remove all pairs where clang or gcc is device compiler the CUDA backend is enabled.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    """
+    for compiler in (GCC, CLANG):
+        remove_parameter_value_pairs(
+            parameter_value_pairs,
+            parameter1=DEVICE_COMPILER,
+            value_name1=compiler,
+            value_version1=ANY_VERSION,
+            parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+            value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+            value_version2="==0.0.0",
+        )
+
+
+def _remove_specific_cuda_clang_combinations(parameter_value_pairs: List[ParameterValuePair]):
+    """Remove all pairs, where clang is host-compiler for cuda sdk 11.3, 11.4 and 11.5.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    """
+    remove_parameter_value_pairs(
+        parameter_value_pairs,
+        parameter1=HOST_COMPILER,
+        value_name1=CLANG,
+        value_version1=ANY_VERSION,
+        parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+        value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+        value_version2="!=11.3,!=11.4,!=11.5",
     )
