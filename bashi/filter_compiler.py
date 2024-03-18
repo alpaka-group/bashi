@@ -48,7 +48,7 @@ def compiler_filter(
         bool: True, if parameter-value-tuple is valid.
     """
     # uncomment me for debugging
-    # print_row_nice(row)
+    # print_row_nice(row, bashi_validate=False)
 
     # Rule: c1
     # NVCC as HOST_COMPILER is not allow

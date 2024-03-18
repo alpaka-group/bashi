@@ -5,7 +5,7 @@
 import argparse
 from argparse import ArgumentParser, Namespace
 
-from typing import Sequence, Any, Callable, Optional, IO
+from typing import Sequence, Any, Callable, Optional, IO, Dict, NamedTuple
 from collections import OrderedDict
 import io
 import sys
@@ -15,9 +15,14 @@ import packaging.version as pkv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValue, ParameterValueTuple
 from bashi.versions import is_supported_version
+from bashi.utils import PARAMETER_SHORT_NAME
 import bashi.filter_compiler
 import bashi.filter_backend
 import bashi.filter_software_dependency
+
+ArgumentAlias = NamedTuple("ArgumentAlias", [("alias", List[str]), ("parameter", Parameter)])
+# stores the ordering of the parameter arguments
+param_order: List[str] = []
 
 
 @typechecked
@@ -88,6 +93,8 @@ class VersionCheck(argparse.Action):
         try:
             parsed_version = pkv.parse(version)
             setattr(namespace, self.dest, parsed_version)
+            if option_string:
+                param_order.append(option_string)
         except packaging.version.InvalidVersion:
             exit_error(f"Could not parse version of argument {option_string}: {version}")
 
@@ -124,11 +131,13 @@ class CompilerVersionCheck(argparse.Action):
         try:
             parsed_version = pkv.parse(version)
             setattr(namespace, self.dest, ParameterValue(name, parsed_version))
+            if option_string:
+                param_order.append(option_string)
         except packaging.version.InvalidVersion:
             exit_error(f"Could not parse version number of {name}: {version}")
 
 
-def get_args() -> Namespace:
+def get_args(args_alias: Dict[str, ArgumentAlias]) -> Namespace:
     """Set up command line arguments and parsed it.
 
     Returns:
@@ -136,15 +145,59 @@ def get_args() -> Namespace:
     """
     parser = argparse.ArgumentParser(description="Check if combination of parameters is valid.")
 
+    def add_param_alias(argument: str, args_alias: Dict[str, ArgumentAlias]) -> List[str]:
+        """Returns the argument name and also an alias, if it is defined in the PARAMETER_SHORT_NAME
+
+        Args:
+            argument (str): Name of the argument without '--' prefix
+            args_alias (Dict[str, ArgumentAlias]): Stores the alias and it's parameter for an
+                argument
+
+        Raises:
+            ValueError: If parameter is unknown
+
+        Returns:
+            List[str]: List of arguments for argparse
+        """
+        argument_alias = [f"--{argument}"]
+        modified_arg = argument
+        if argument == "host-compiler":
+            modified_arg = HOST_COMPILER
+
+        if argument == "device-compiler":
+            modified_arg = DEVICE_COMPILER
+
+        if argument == "cxx":
+            modified_arg = CXX_STANDARD
+
+        if not modified_arg in (
+            HOST_COMPILER,
+            DEVICE_COMPILER,
+            *BACKENDS,
+            UBUNTU,
+            CMAKE,
+            BOOST,
+            CXX_STANDARD,
+        ):
+            raise ValueError(f"{modified_arg} is not a know Parameter")
+
+        if modified_arg in PARAMETER_SHORT_NAME:
+            argument_alias.append(f"--{PARAMETER_SHORT_NAME[modified_arg]}")
+
+        # argparse also replace the '-' with the '_' if it stores the argument
+        args_alias[argument.replace("-", "_")] = ArgumentAlias(argument_alias, modified_arg)
+
+        return argument_alias
+
     parser.add_argument(
-        "--host-compiler",
+        *add_param_alias("host-compiler", args_alias),
         type=str,
         action=CompilerVersionCheck,
         help="Define host compiler. Shape needs to be name@version. " "For example gcc@10",
     )
 
     parser.add_argument(
-        "--device-compiler",
+        *add_param_alias("device-compiler", args_alias),
         type=str,
         action=CompilerVersionCheck,
         help="Define device compiler. Shape needs to be name@version. " "For example nvcc@11.3",
@@ -153,7 +206,7 @@ def get_args() -> Namespace:
     for backend in BACKENDS:
         if backend != ALPAKA_ACC_GPU_CUDA_ENABLE:
             parser.add_argument(
-                "--" + backend,
+                *add_param_alias(backend, args_alias),
                 type=str,
                 action=VersionCheck,
                 choices=["ON", "OFF"],
@@ -161,19 +214,24 @@ def get_args() -> Namespace:
             )
         else:
             parser.add_argument(
-                "--" + backend,
+                *add_param_alias(backend, args_alias),
                 type=str,
                 action=VersionCheck,
                 help=f"Set backend {backend} to disabled (OFF) or a specific CUDA SDK version.",
             )
 
-    parser.add_argument("--ubuntu", type=str, action=VersionCheck, help="Ubuntu version.")
-
-    parser.add_argument("--cmake", type=str, action=VersionCheck, help="Set CMake version.")
-
-    parser.add_argument("--boost", type=str, action=VersionCheck, help="Set Boost version.")
-
-    parser.add_argument("--cxx", type=str, action=VersionCheck, help="C++ version.")
+    for argument, help_text in (
+        ("ubuntu", "Ubuntu version."),
+        ("cmake", "Set CMake version."),
+        ("boost", "Set Boost version."),
+        ("cxx", "C++ version."),
+    ):
+        parser.add_argument(
+            *add_param_alias(argument, args_alias),
+            type=str,
+            action=VersionCheck,
+            help=help_text,
+        )
 
     return parser.parse_args()
 
@@ -249,29 +307,21 @@ def check_filter_chain(row: ParameterValueTuple) -> bool:
 
 def main() -> None:
     """Entry point for the application."""
-    args = get_args()
+    # stores alias for parameter arguments and it parameter itself
+    args_alias: Dict[str, ArgumentAlias] = {}
+    args = get_args(args_alias)
 
     row: ParameterValueTuple = OrderedDict()
 
-    for param, arg in [
-        (HOST_COMPILER, "host_compiler"),
-        (DEVICE_COMPILER, "device_compiler"),
-    ]:
-        if hasattr(args, arg) and getattr(args, arg) is not None:
-            row[param] = getattr(args, arg)
-
-    for backend in BACKENDS:
-        if hasattr(args, backend) and getattr(args, backend) is not None:
-            row[backend] = ParameterValue(backend, getattr(args, backend))
-
-    for param, arg in [
-        (UBUNTU, "ubuntu"),
-        (CMAKE, "cmake"),
-        (BOOST, "boost"),
-        (CXX_STANDARD, "cxx"),
-    ]:
-        if hasattr(args, arg) and getattr(args, arg) is not None:
-            row[param] = ParameterValue(param, getattr(args, arg))
+    # Add parameter-values in the order in which they are passed via arguments
+    for param_arg in param_order:
+        for arg, alias in args_alias.items():
+            if param_arg in alias.alias:
+                if getattr(args, arg) is not None:
+                    if arg in ("host_compiler", "device_compiler"):
+                        row[alias.parameter] = getattr(args, arg)
+                    else:
+                        row[alias.parameter] = ParameterValue(alias.parameter, getattr(args, arg))
 
     for val_name, val_version in row.values():
         if not is_supported_version(val_name, val_version):
@@ -281,7 +331,6 @@ def main() -> None:
                     "Yellow",
                 )
             )
-
     sys.exit(int(not check_filter_chain(row)))
 
 
