@@ -953,8 +953,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         self.assertEqual(reason_msg2.getvalue(), "CUDA backend needs to be enabled for nvcc")
 
     def test_check_if_cuda_backend_is_disabled_for_no_cuda_compiler_pass_b7(self):
-        # TODO(SimeonEhrig): if we add CUDA SDK rules for Clang-CUDA, this test should fail
-        for compiler_name in set(COMPILERS) - set([NVCC]):
+        for compiler_name in set(COMPILERS) - set([NVCC, CLANG_CUDA]):
             self.assertTrue(
                 backend_filter_typechecked(
                     OD(

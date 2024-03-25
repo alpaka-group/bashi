@@ -12,7 +12,7 @@ import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValueTuple
-from bashi.versions import NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION
+from bashi.versions import NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION, CLANG_CUDA_MAX_CUDA_VERSION
 from bashi.utils import reason
 
 # uncomment me for debugging
@@ -32,6 +32,7 @@ def compiler_filter_typechecked(
 
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-return-statements
+# pylint: disable=too-many-statements
 def compiler_filter(
     row: ParameterValueTuple,
     output: Optional[IO[str]] = None,
@@ -221,6 +222,53 @@ def compiler_filter(
                 and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
             ):
                 reason(output, "icpx does not support the CUDA backend.")
+                return False
+
+        if compiler in row and row[compiler].name == CLANG_CUDA:
+            # Rule: c15
+            # related to rule b16
+            if (
+                ALPAKA_ACC_GPU_CUDA_ENABLE in row
+                and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version == OFF_VER
+            ):
+                reason(output, "clang-cuda requires an enabled CUDA backend.")
+                return False
+
+            if (
+                ALPAKA_ACC_GPU_CUDA_ENABLE in row
+                and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
+            ):
+                # Rule: c16
+                # related to rule b17
+                # if a clang-cuda version is newer than the latest known clang-cuda version,
+                # we needs to assume that it supports every CUDA SDK version
+                # pylint: disable=duplicate-code
+                if row[compiler].version <= CLANG_CUDA_MAX_CUDA_VERSION[0].clang_cuda:
+                    # check if know clang-cuda version supports CUDA SDK version
+                    for version_combination in CLANG_CUDA_MAX_CUDA_VERSION:
+                        if row[compiler].version >= version_combination.clang_cuda:
+                            if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version > version_combination.cuda:
+                                reason(
+                                    output,
+                                    f"clang-cuda {row[compiler].version} does not support "
+                                    f"CUDA {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version}.",
+                                )
+                                return False
+                            break
+
+            # Rule: c17
+            # related to rule b14
+            if (
+                ALPAKA_ACC_GPU_HIP_ENABLE in row
+                and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER
+            ):
+                reason(output, "clang-cuda does not support the HIP backend.")
+                return False
+
+            # Rule: c18
+            # related to rule b15
+            if ALPAKA_ACC_SYCL_ENABLE in row and row[ALPAKA_ACC_SYCL_ENABLE].version != OFF_VER:
+                reason(output, "clang-cuda does not support the SYCL backend.")
                 return False
 
     return True

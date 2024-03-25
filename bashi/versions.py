@@ -9,7 +9,29 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.types import ValueName, ValueVersion, ParameterValue, ParameterValueMatrix
 
 
-class NvccHostSupport:
+class VersionSupportBase:
+    """Contains a nvcc version and host compiler version. Does automatically parse the input strings
+    to package.version.Version.
+
+    Provides comparision operators for sorting.
+    """
+
+    def __init__(self, version1: str, version2: str):
+        self.version1 = pkv.parse(version1)
+        self.version2 = pkv.parse(version2)
+
+    def __lt__(self, other: "VersionSupportBase") -> bool:
+        return self.version1 < other.version1
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, type(self)):
+            raise TypeError(f"does not support other types than {type(self).__name__}")
+        return self.version1 == other.version1 and self.version2 == other.version2
+
+
+# pylint suggest to use a dataclass, but it does not work because of the cast
+# pylint: disable=too-few-public-methods
+class NvccHostSupport(VersionSupportBase):
     """Contains a nvcc version and host compiler version. Does automatically parse the input strings
     to package.version.Version.
 
@@ -17,19 +39,29 @@ class NvccHostSupport:
     """
 
     def __init__(self, nvcc_version: str, host_version: str):
-        self.nvcc = pkv.parse(nvcc_version)
-        self.host = pkv.parse(host_version)
-
-    def __lt__(self, other: "NvccHostSupport") -> bool:
-        return self.nvcc < other.nvcc
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, NvccHostSupport):
-            raise TypeError("does not support other types than NvccHostSupport")
-        return self.nvcc == other.nvcc and self.host == other.host
+        VersionSupportBase.__init__(self, nvcc_version, host_version)
+        self.nvcc = self.version1
+        self.host = self.version2
 
     def __str__(self) -> str:
         return f"nvcc {str(self.nvcc)} + host version {self.host}"
+
+
+# pylint: disable=too-few-public-methods
+class ClangCudaSDKSupport(VersionSupportBase):
+    """Contains a nvcc version and host compiler version. Does automatically parse the input strings
+    to package.version.Version.
+
+    Provides comparision operators for sorting.
+    """
+
+    def __init__(self, clang_cuda_version: str, cuda_version: str):
+        VersionSupportBase.__init__(self, clang_cuda_version, cuda_version)
+        self.clang_cuda = self.version1
+        self.cuda = self.version2
+
+    def __str__(self) -> str:
+        return f"Clang-CUDA {str(self.clang_cuda)} + CUDA SDK {self.cuda}"
 
 
 VERSIONS: Dict[str, List[Union[str, int, float]]] = {
@@ -112,6 +144,18 @@ NVCC_CLANG_MAX_VERSION: List[NvccHostSupport] = [
     NvccHostSupport("10.0", "6"),
 ]
 NVCC_CLANG_MAX_VERSION.sort(reverse=True)
+
+CLANG_CUDA_MAX_CUDA_VERSION: List[ClangCudaSDKSupport] = [
+    ClangCudaSDKSupport("7", "9.2"),
+    ClangCudaSDKSupport("8", "10.0"),
+    ClangCudaSDKSupport("10", "10.1"),
+    ClangCudaSDKSupport("12", "11.0"),
+    ClangCudaSDKSupport("13", "11.2"),
+    ClangCudaSDKSupport("14", "11.5"),
+    ClangCudaSDKSupport("16", "11.8"),
+    ClangCudaSDKSupport("17", "12.1"),
+]
+CLANG_CUDA_MAX_CUDA_VERSION.sort(reverse=True)
 
 
 # pylint: disable=too-many-branches

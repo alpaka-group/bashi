@@ -1,4 +1,5 @@
 # pylint: disable=missing-docstring
+# pylint: disable=too-many-lines
 import unittest
 import copy
 from typing import List
@@ -9,6 +10,7 @@ from utils_test import parse_expected_val_pairs, create_diff_parameter_value_pai
 
 from bashi.types import ParameterValue, ParameterValueSingle, ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from bashi.versions import VERSIONS, CLANG_CUDA_MAX_CUDA_VERSION
 
 # pyright: reportPrivateUsage=false
 from bashi.results import (
@@ -34,6 +36,7 @@ from bashi.results import (
     _remove_cuda_sdk_unsupported_clang_versions,
     _remove_device_compiler_gcc_clang_enabled_cuda_backend,
     _remove_specific_cuda_clang_combinations,
+    _remove_unsupported_clang_sdk_versions_for_clang_cuda,
 )
 from bashi.versions import NvccHostSupport, NVCC_GCC_MAX_VERSION
 
@@ -1968,6 +1971,225 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
                                 ON,
                             ),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
+                        }
+                    ),
+                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ]
+            )
+        )
+
+        self.assertEqual(
+            test_param_value_pairs,
+            expected_results,
+            create_diff_parameter_value_pairs(test_param_value_pairs, expected_results),
+        )
+
+    def test_remove_unsupported_clang_sdk_versions_for_clang_cuda(self):
+        # use Clang-CUDA 6 to test old unsupported version
+        unsupported_old_clang_cuda_version = 6
+        self.assertNotIn(
+            pkv.parse(str(unsupported_old_clang_cuda_version)),
+            [supported_version.clang_cuda for supported_version in CLANG_CUDA_MAX_CUDA_VERSION],
+        )
+
+        unsupported_new_clang_cuda_version = sorted(VERSIONS[CLANG_CUDA])[-1]
+        # only verify the following calculation
+        self.assertIsInstance(unsupported_new_clang_cuda_version, int)
+        unsupported_new_clang_cuda_version = int(unsupported_new_clang_cuda_version) + 1
+
+        unsupported_new_cuda_sdk_version = sorted(VERSIONS[NVCC])[-1]
+        # only verify the following calculation
+        self.assertIsInstance(unsupported_new_cuda_sdk_version, float)
+        unsupported_new_cuda_sdk_version = float(unsupported_new_cuda_sdk_version) + 1.0
+
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD(
+                    {
+                        DEVICE_COMPILER: (CLANG_CUDA, 14),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (CLANG_CUDA, 15),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (CLANG_CUDA, 15),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.5),
+                    }
+                ),
+                OD(
+                    {
+                        HOST_COMPILER: (CLANG_CUDA, 15),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
+                    }
+                ),
+                OD(
+                    {
+                        HOST_COMPILER: (CLANG_CUDA, 16),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
+                    }
+                ),
+                OD(
+                    {
+                        HOST_COMPILER: (CLANG_CUDA, 16),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
+                        HOST_COMPILER: (CLANG_CUDA, 16),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0),
+                        HOST_COMPILER: (CLANG_CUDA, 16),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (ICPX, "2022.3"),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (CLANG_CUDA, 12),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (CLANG_CUDA, 17),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (CLANG_CUDA, 17),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.3),
+                    }
+                ),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                # clang-cuda 6 is not supported but clang-cuda 7 supports up to CUDA 9.2
+                # therefore there is a chance that clang-cuda 6 also supports CUDA 9.2
+                OD(
+                    {
+                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_old_clang_cuda_version),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 9.2),
+                    }
+                ),
+                # clang-cuda 6 is not supported but clang-cuda 7 supports up to CUDA 9.2
+                # therefore there is no chance, that clang-cuda 6 supports CUDA 10.0
+                OD(
+                    {
+                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_old_clang_cuda_version),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.0),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_new_clang_cuda_version),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.0),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_new_clang_cuda_version),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (
+                            ALPAKA_ACC_GPU_CUDA_ENABLE,
+                            sorted(VERSIONS[NVCC])[-1],
+                        ),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_new_clang_cuda_version),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (
+                            ALPAKA_ACC_GPU_CUDA_ENABLE,
+                            unsupported_new_cuda_sdk_version,
+                        ),
+                    }
+                ),
+            ]
+        )
+
+        _remove_unsupported_clang_sdk_versions_for_clang_cuda(test_param_value_pairs)
+
+        test_param_value_pairs.sort()
+        expected_results = sorted(
+            parse_expected_val_pairs(
+                [
+                    OD(
+                        {
+                            DEVICE_COMPILER: (CLANG_CUDA, 15),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
+                        }
+                    ),
+                    OD(
+                        {
+                            DEVICE_COMPILER: (CLANG_CUDA, 15),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.5),
+                        }
+                    ),
+                    OD(
+                        {
+                            HOST_COMPILER: (CLANG_CUDA, 16),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1),
+                        }
+                    ),
+                    OD(
+                        {
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
+                            HOST_COMPILER: (CLANG_CUDA, 16),
+                        }
+                    ),
+                    OD(
+                        {
+                            DEVICE_COMPILER: (ICPX, "2022.3"),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3),
+                        }
+                    ),
+                    OD(
+                        {
+                            DEVICE_COMPILER: (CLANG_CUDA, 17),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1),
+                        }
+                    ),
+                    OD(
+                        {
+                            DEVICE_COMPILER: (CLANG_CUDA, unsupported_old_clang_cuda_version),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 9.2),
+                        }
+                    ),
+                    OD(
+                        {
+                            DEVICE_COMPILER: (CLANG_CUDA, unsupported_new_clang_cuda_version),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.0),
+                        }
+                    ),
+                    OD(
+                        {
+                            DEVICE_COMPILER: (CLANG_CUDA, unsupported_new_clang_cuda_version),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: (
+                                ALPAKA_ACC_GPU_CUDA_ENABLE,
+                                sorted(VERSIONS[NVCC])[-1],
+                            ),
+                        }
+                    ),
+                    OD(
+                        {
+                            DEVICE_COMPILER: (CLANG_CUDA, unsupported_new_clang_cuda_version),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: (
+                                ALPAKA_ACC_GPU_CUDA_ENABLE,
+                                unsupported_new_cuda_sdk_version,
+                            ),
                         }
                     ),
                     OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),

@@ -15,7 +15,9 @@ from bashi.versions import (
     COMPILERS,
     NVCC_GCC_MAX_VERSION,
     NVCC_CLANG_MAX_VERSION,
+    CLANG_CUDA_MAX_CUDA_VERSION,
     NvccHostSupport,
+    ClangCudaSDKSupport,
 )
 
 
@@ -90,6 +92,7 @@ def get_expected_bashi_parameter_value_pairs(
     _remove_cuda_sdk_unsupported_clang_versions(param_val_pair_list)
     _remove_device_compiler_gcc_clang_enabled_cuda_backend(param_val_pair_list)
     _remove_specific_cuda_clang_combinations(param_val_pair_list)
+    _remove_unsupported_clang_sdk_versions_for_clang_cuda(param_val_pair_list)
 
     return param_val_pair_list
 
@@ -580,3 +583,61 @@ def _remove_specific_cuda_clang_combinations(parameter_value_pairs: List[Paramet
         value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
         value_version2="!=11.3,!=11.4,!=11.5",
     )
+
+
+def _remove_unsupported_clang_sdk_versions_for_clang_cuda(
+    parameter_value_pairs: List[ParameterValuePair],
+):
+    """Remove all CUDA SDK versions, which are not supported by a specific clang-cuda version.
+    Includes also disabled CUDA backends.
+
+    If clang-cuda version is unknown and older than the oldest supported clang-cuda version, filter
+    out all versions which are not supported by the oldest supported clang-cuda version.
+
+    If clang-cuda version is new, than the latest supported clang-cuda version, do not filter it.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    """
+
+    def filter_func(param_val_pair: ParameterValuePair) -> bool:
+        # pylint: disable=too-many-nested-blocks
+        for param_val1, param_val2 in (
+            (param_val_pair.first, param_val_pair.second),
+            (param_val_pair.second, param_val_pair.first),
+        ):
+            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                if (
+                    param_val1.parameter == compiler_type
+                    and param_val1.parameterValue.name == CLANG_CUDA
+                    and param_val2.parameter == ALPAKA_ACC_GPU_CUDA_ENABLE
+                ):
+                    if param_val2.parameterValue.version == OFF_VER:
+                        return False
+
+                    # if clang-cuda is newer than the latest supported clang-cuda version, we needs
+                    # to assume, that it supports every CUDA SDK version
+                    if (
+                        param_val1.parameterValue.version
+                        > CLANG_CUDA_MAX_CUDA_VERSION[0].clang_cuda
+                    ):
+                        return True
+
+                    # create variable, that it is not unbound in the else branch of the for loop
+                    # create dummy object to avoid None
+                    version_combination = ClangCudaSDKSupport("0", "9999")
+                    for version_combination in CLANG_CUDA_MAX_CUDA_VERSION:
+                        if param_val1.parameterValue.version >= version_combination.clang_cuda:
+                            if param_val2.parameterValue.version > version_combination.cuda:
+                                return False
+                            break
+                    # if clang-cuda versions is older than the last supported clang-cuda version
+                    # every CUDA SDK version can pass, which is not forbidden by the oldest
+                    # supported clang-cuda version
+                    else:
+                        if param_val1.parameterValue.version < version_combination.clang_cuda:
+                            if param_val2.parameterValue.version > version_combination.cuda:
+                                return False
+        return True
+
+    parameter_value_pairs[:] = filter(filter_func, parameter_value_pairs)
