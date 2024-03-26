@@ -15,28 +15,31 @@
 from typing import List
 import os
 import sys
+import packaging.version as pkv
 from bashi.generator import generate_combination_list
 from bashi.utils import (
     check_parameter_value_pair_in_combination_list,
-    # TODO(SimeonEhrig): bring me back, if all GPU backend filter rules was implemented
-    # remove_parameter_value_pairs,
+    remove_parameter_value_pairs,
 )
 from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
     ParameterValuePair,
     ParameterValueTuple,
     ParameterValueMatrix,
+    Combination,
     CombinationList,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.versions import (
     get_parameter_value_matrix,
-    # TODO(SimeonEhrig): bring me back, if all GPU backend filter rules was implemented
-    # VERSIONS,
+    VERSIONS,
+    NVCC_GCC_MAX_VERSION,
+    NVCC_CLANG_MAX_VERSION,
 )
 
 
 # pylint: disable=too-many-branches
+# pylint: disable=too-many-locals
 def verify(combination_list: CombinationList, param_value_matrix: ParameterValueMatrix) -> bool:
     """Check if all expected parameter-value-pairs exists in the combination-list.
 
@@ -52,64 +55,195 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
         param_value_matrix
     )
 
-    # TODO(SimeonEhrig): bring me back, if all GPU backend filter rules was implemented
-    # gpu_backends = set(
-    #     [
-    #         ALPAKA_ACC_GPU_CUDA_ENABLE,
-    #         ALPAKA_ACC_GPU_HIP_ENABLE,
-    #         ALPAKA_ACC_SYCL_ENABLE,
-    #     ]
-    # )
+    gpu_backends = set(
+        [
+            ALPAKA_ACC_GPU_CUDA_ENABLE,
+            ALPAKA_ACC_GPU_HIP_ENABLE,
+            ALPAKA_ACC_SYCL_ENABLE,
+        ]
+    )
+    cpu_backends = set(BACKENDS) - gpu_backends
+    gpu_compilers = set([NVCC, CLANG_CUDA, HIPCC, ICPX])
+    cpu_compilers = set(COMPILERS) - gpu_compilers
 
-    # # if one of the GPU backend is enabled, all other backends needs to be disabled
-    # # special case CUDA backend: instead it has the version on or off, it has off or a version
-    # # number
-    # for gpu_backend in gpu_backends:
-    #     if gpu_backend == ALPAKA_ACC_GPU_CUDA_ENABLE:
-    #         gpu_versions = VERSIONS[NVCC]
-    #     else:
-    #         gpu_versions = [ON]
-    #     for gpu_version in gpu_versions:
-    #         for other_backend in set(BACKENDS) - set([gpu_backend]):
-    #             if other_backend == ALPAKA_ACC_GPU_CUDA_ENABLE:
-    #                 other_backend_versions = VERSIONS[NVCC]
-    #             else:
-    #                 other_backend_versions = [ON]
+    # if one of the GPU backend is enabled, all other backends needs to be disabled
+    # special case CUDA backend: instead it has the version on or off, it has off or a version
+    # number
+    for gpu_backend in gpu_backends:
+        if gpu_backend == ALPAKA_ACC_GPU_CUDA_ENABLE:
+            gpu_versions = VERSIONS[NVCC]
+        else:
+            gpu_versions = [ON]
+        for gpu_version in gpu_versions:
+            for other_backend in set(BACKENDS) - set([gpu_backend]):
+                if other_backend == ALPAKA_ACC_GPU_CUDA_ENABLE:
+                    other_backend_versions = VERSIONS[NVCC]
+                else:
+                    other_backend_versions = [ON]
 
-    #             for other_backend_version in other_backend_versions:
-    #                 remove_parameter_value_pairs(
-    #                     expected_param_val_tuple,
-    #                     parameter1=gpu_backend,
-    #                     value_name1=gpu_backend,
-    #                     value_version1=gpu_version,
-    #                     parameter2=other_backend,
-    #                     value_name2=other_backend,
-    #                     value_version2=other_backend_version,
-    #                 )
+                for other_backend_version in other_backend_versions:
+                    remove_parameter_value_pairs(
+                        expected_param_val_tuple,
+                        parameter1=gpu_backend,
+                        value_name1=gpu_backend,
+                        value_version1=gpu_version,
+                        parameter2=other_backend,
+                        value_name2=other_backend,
+                        value_version2=other_backend_version,
+                    )
 
-    # cpu_backends = set(BACKENDS) - gpu_backends
-    # # remove all pairs, which contains two cpu backends and on of the backends is enabled and the
-    # # other is disabled
-    # for cpu_backend in cpu_backends:
-    #     for other_cpu_backend in cpu_backends:
-    #         if cpu_backend != other_cpu_backend:
-    #             remove_parameter_value_pairs(
-    #                 expected_param_val_tuple,
-    #                 parameter1=cpu_backend,
-    #                 value_name1=cpu_backend,
-    #                 value_version1=ON,
-    #                 parameter2=other_cpu_backend,
-    #                 value_name2=other_cpu_backend,
-    #                 value_version2=OFF,
-    #             )
+    # remove all pairs, which contains two cpu backends and on of the backends is enabled and the
+    # other is disabled
+    for cpu_backend in cpu_backends:
+        for other_cpu_backend in cpu_backends:
+            if cpu_backend != other_cpu_backend:
+                remove_parameter_value_pairs(
+                    expected_param_val_tuple,
+                    parameter1=cpu_backend,
+                    value_name1=cpu_backend,
+                    value_version1=ON,
+                    parameter2=other_cpu_backend,
+                    value_name2=other_cpu_backend,
+                    value_version2=OFF,
+                )
 
-    return check_parameter_value_pair_in_combination_list(
-        combination_list, expected_param_val_tuple
+    # if gpu backend is on, remove all combination with enabled cpu backend
+    for gpu_compiler in gpu_compilers:
+        for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+            for cpu_backend in cpu_backends:
+                remove_parameter_value_pairs(
+                    expected_param_val_tuple,
+                    parameter1=compiler_type,
+                    value_name1=gpu_compiler,
+                    value_version1=ANY_VERSION,
+                    parameter2=cpu_backend,
+                    value_name2=cpu_backend,
+                    value_version2=ON,
+                )
+
+    # remove all combinations with an enabled and disabled cpu backend
+    for cpu_compiler in cpu_compilers:
+        for cpu_backend in cpu_backends:
+            remove_parameter_value_pairs(
+                expected_param_val_tuple,
+                parameter1=DEVICE_COMPILER,
+                value_name1=cpu_compiler,
+                value_version1=ANY_VERSION,
+                parameter2=cpu_backend,
+                value_name2=cpu_backend,
+                value_version2=OFF,
+            )
+
+    # nvcc does not support all gcc and clang versions
+    # therefore there are some gcc and clang host compiler versions which can only works with
+    # enabled cpu backends
+    max_supported_nvcc_gcc_version = max(comb.host for comb in NVCC_GCC_MAX_VERSION).major
+    max_supported_nvcc_clang_version = max(comb.host for comb in NVCC_CLANG_MAX_VERSION).major
+    for cpu_backend in cpu_backends:
+        remove_parameter_value_pairs(
+            expected_param_val_tuple,
+            parameter1=HOST_COMPILER,
+            value_name1=GCC,
+            value_version1=f"<={max_supported_nvcc_gcc_version}",
+            parameter2=cpu_backend,
+            value_name2=cpu_backend,
+            value_version2=OFF,
+        )
+        remove_parameter_value_pairs(
+            expected_param_val_tuple,
+            parameter1=HOST_COMPILER,
+            value_name1=CLANG,
+            value_version1=f"<={max_supported_nvcc_clang_version}",
+            parameter2=cpu_backend,
+            value_name2=cpu_backend,
+            value_version2=OFF,
+        )
+
+    def all_cpu_backends_are(expected_state: pkv.Version, combination: Combination) -> bool:
+        """Check if all cpu backends ether enabled or disabled
+
+        Args:
+            expected_state (pkv.Version): Ether ON_VER or OFF_VER
+            combination (Combination): combination to check
+
+        Returns:
+            bool: True if all cpu backends have the expected state
+        """
+        cpu_backends = set(BACKENDS) - set(
+            [ALPAKA_ACC_GPU_CUDA_ENABLE, ALPAKA_ACC_GPU_HIP_ENABLE, ALPAKA_ACC_SYCL_ENABLE]
+        )
+
+        def version_to_string(version: pkv.Version) -> str:
+            if version == ON_VER:
+                return "ON"
+            if version == OFF_VER:
+                return "OFF"
+            return "unknown"
+
+        all_right = True
+        error_msg = f"ERROR, following combination is wrong:\n  {combination}\n"
+
+        for cpu_backend in cpu_backends:
+            if cpu_backend in combination and combination[cpu_backend].version != expected_state:
+                error_msg += (
+                    f"{cpu_backend} is {version_to_string(combination[cpu_backend].version)} "
+                    f"-> expected was {version_to_string(expected_state)}\n"
+                )
+                all_right = False
+
+        if not all_right:
+            print(error_msg)
+
+        return all_right
+
+    all_right = True
+
+    # this loop checks depending on the device compiler the state of the backends
+    #  - if the device compiler is a cpu compiler: all cpu backends needs to be enabled, all gpu
+    #    backends needs to be disabled
+    #  - if the device compiler is a gpu compiler: all cpu backends needs to be disabled, the
+    #    related gpu backend needs to be enabled and all other gpu backends needs to be disabled
+    # pylint: disable=too-many-nested-blocks
+    for comb in combination_list:
+        if comb[DEVICE_COMPILER].name in (GCC, CLANG):
+            all_right = all_cpu_backends_are(ON_VER, comb) and all_right
+            if not (
+                comb[ALPAKA_ACC_GPU_CUDA_ENABLE].version == OFF_VER
+                and comb[ALPAKA_ACC_GPU_HIP_ENABLE].version == OFF_VER
+                and comb[ALPAKA_ACC_SYCL_ENABLE].version == OFF_VER
+            ):
+                print(f"ERROR: gpu backend is enabled for cpu device compiler:\n  {comb}\n")
+        else:
+            all_right = all_cpu_backends_are(OFF_VER, comb) and all_right
+            for device_compiler, backend_on in (
+                (NVCC, ALPAKA_ACC_GPU_CUDA_ENABLE),
+                (CLANG_CUDA, ALPAKA_ACC_GPU_CUDA_ENABLE),
+                (HIPCC, ALPAKA_ACC_GPU_HIP_ENABLE),
+                (ICPX, ALPAKA_ACC_SYCL_ENABLE),
+            ):
+                if comb[DEVICE_COMPILER].name == device_compiler:
+                    if comb[backend_on].version == OFF_VER:
+                        print(
+                            f"ERROR: {backend_on} needs to be enabled for device compiler "
+                            f"{device_compiler}:  \n {comb}\n"
+                        )
+                        all_right = False
+                    for gpu_backend in gpu_backends:
+                        if gpu_backend != backend_on and comb[gpu_backend].version != OFF_VER:
+                            print(
+                                f"ERROR: {backend_on} needs to be disabled for device compiler "
+                                f"{device_compiler}:  \n {comb}\n"
+                            )
+                            all_right = False
+
+    return (
+        check_parameter_value_pair_in_combination_list(combination_list, expected_param_val_tuple)
+        and all_right
     )
 
 
-# TODO(SimeonEhrig): remove pylint statement
-def custom_filter(row: ParameterValueTuple) -> bool:  # pylint: disable=unused-argument
+# pylint: disable=too-many-return-statements
+def custom_filter(row: ParameterValueTuple) -> bool:
     """Filter function defined by the user. In this case, remove some backend combinations, see
     module documentation.
 
@@ -119,42 +253,63 @@ def custom_filter(row: ParameterValueTuple) -> bool:  # pylint: disable=unused-a
     Returns:
         bool: True if the tuple is valid
     """
+    gpu_compilers = set([NVCC, CLANG_CUDA, HIPCC, ICPX])
+    cpu_compilers = set(COMPILERS) - gpu_compilers
 
-    # TODO(SimeonEhrig): bring me back, if all GPU backend filter rules was implemented
-    # gpu_backends = set(
-    #     [
-    #         ALPAKA_ACC_GPU_CUDA_ENABLE,
-    #         ALPAKA_ACC_GPU_HIP_ENABLE,
-    #         ALPAKA_ACC_SYCL_ENABLE,
-    #     ]
-    # )
-    # for single_gpu_backend in gpu_backends:
-    #     if single_gpu_backend in row and row[single_gpu_backend].version != OFF_VER:
-    #         for backend in BACKENDS:
-    #             if backend != single_gpu_backend:
-    #                 if backend in row and row[backend].version != OFF_VER:
-    #                     return False
+    gpu_backends = set(
+        [
+            ALPAKA_ACC_GPU_CUDA_ENABLE,
+            ALPAKA_ACC_GPU_HIP_ENABLE,
+            ALPAKA_ACC_SYCL_ENABLE,
+        ]
+    )
+    cpu_backends = set(BACKENDS) - gpu_backends
 
-    # gpu_backends = [ALPAKA_ACC_GPU_CUDA_ENABLE, ALPAKA_ACC_GPU_HIP_ENABLE, ALPAKA_ACC_SYCL_ENABLE]
-    # cpu_backends = set(BACKENDS) - set(gpu_backends)
+    # cpu backend cannot be enabled if gpu compiler is used
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        if compiler_type in row and row[compiler_type].name in gpu_compilers:
+            for cpu_backend in cpu_backends:
+                if cpu_backend in row and row[cpu_backend].version == ON_VER:
+                    return False
 
-    # if (HOST_COMPILER in row and row[HOST_COMPILER].name in (HIPCC, ICPX, CLANG_CUDA)) or (
-    #     DEVICE_COMPILER in row and row[DEVICE_COMPILER].name in (NVCC, HIPCC, ICPX, CLANG_CUDA)
-    # ):
-    #     for cpu_backend in cpu_backends:
-    #         if cpu_backend in row and row[cpu_backend].version != OFF_VER:
-    #             return False
+    if DEVICE_COMPILER in row:
+        for cpu_compiler in cpu_compilers:
+            if row[DEVICE_COMPILER].name == cpu_compiler:
+                # if the device compiler is a cpu compiler, all cpu backends needs to be enabled
+                for cpu_backend in cpu_backends:
+                    if cpu_backend in row and row[cpu_backend].version == OFF_VER:
+                        return False
+                # if the device compiler is a cpu compiler, all gpu backends needs to be disabled
+                for gpu_backend in gpu_backends:
+                    if gpu_backend in row and row[gpu_backend].version != OFF_VER:
+                        return False
 
-    # for cpu_backend in cpu_backends:
-    #     if cpu_backend in row and row[cpu_backend].version == ON_VER:
-    #         # all other cpu backends needs to be enabled
-    #         for other_cpu_backend in cpu_backends - set(cpu_backend):
-    #             if other_cpu_backend in row and row[other_cpu_backend].version == OFF_VER:
-    #                 return False
-    #         # all other gpu backends needs to be disabled
-    #         for gpu_backend in gpu_backends:
-    #             if gpu_backend in row and row[gpu_backend].version != OFF_VER:
-    #                 return False
+    for cpu_backend in cpu_backends:
+        # if a single cpu backend is enabled all other cpu backends needs also to be enabled
+        if cpu_backend in row and row[cpu_backend].version == ON_VER:
+            for cpu_backend2 in cpu_backends:
+                if cpu_backend != cpu_backend2:
+                    if cpu_backend2 in row and row[cpu_backend2].version == OFF_VER:
+                        return False
+            # if a single cpu backend is enabled all other gpu backends needs to be disabled
+            for gpu_backend in gpu_backends:
+                if gpu_backend in row and row[gpu_backend].version != OFF_VER:
+                    return False
+
+    # if nvcc does not support a gcc/clang version, the gcc/clang compiler can be only used as cpu
+    # compiler
+    for compiler_name, max_supported_version in (
+        (GCC, max(comb.host for comb in NVCC_GCC_MAX_VERSION)),
+        (CLANG, max(comb.host for comb in NVCC_CLANG_MAX_VERSION)),
+    ):
+        if (
+            HOST_COMPILER in row
+            and row[HOST_COMPILER].name == compiler_name
+            and row[HOST_COMPILER].version > pkv.parse(str(max_supported_version))
+        ):
+            for cpu_backend in cpu_backends:
+                if cpu_backend in row and row[cpu_backend].version == OFF_VER:
+                    return False
 
     return True
 
