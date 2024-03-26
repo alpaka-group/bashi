@@ -8,6 +8,7 @@ from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.versions import VERSIONS, NvccHostSupport
 from bashi.filter_compiler import compiler_filter_typechecked
+from bashi.filter_backend import backend_filter_typechecked
 
 
 class TestNoNvccHostCompiler(unittest.TestCase):
@@ -727,3 +728,684 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                     reason_msg.getvalue(),
                     "clang as host compiler is disabled for nvcc 11.3 to 11.5",
                 )
+
+
+class TestNvccCompilerFilter(unittest.TestCase):
+    def test_nvcc_requires_sane_cuda_backend_version_pass_c15(self):
+        for version in ("10.1", "11.2", "12.3"):
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((NVCC, version)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, version)),
+                        }
+                    )
+                )
+            )
+
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((GCC, 7)),
+                            DEVICE_COMPILER: ppv((NVCC, version)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, version)),
+                        }
+                    )
+                )
+            )
+
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, version)),
+                            HOST_COMPILER: ppv((GCC, 7)),
+                            DEVICE_COMPILER: ppv((NVCC, version)),
+                        }
+                    )
+                )
+            )
+
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            CMAKE: ppv((CMAKE, 3.18)),
+                            HOST_COMPILER: ppv((CLANG, 6)),
+                            DEVICE_COMPILER: ppv((NVCC, version)),
+                            BOOST: ppv((BOOST, "1.78.0")),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, version)),
+                        }
+                    )
+                )
+            )
+
+    def test_nvcc_requires_sane_cuda_backend_version_not_pass_c15(self):
+        for version in ("10.1", "11.2", "12.3"):
+            reason_msg1 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((NVCC, version)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                        }
+                    ),
+                    reason_msg1,
+                )
+            )
+            self.assertEqual(
+                reason_msg1.getvalue(), "nvcc and CUDA backend needs to have the same version"
+            )
+
+            reason_msg2 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((NVCC, version)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "11.8")),
+                        }
+                    ),
+                    reason_msg2,
+                )
+            )
+            self.assertEqual(
+                reason_msg2.getvalue(), "nvcc and CUDA backend needs to have the same version"
+            )
+
+            reason_msg3 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((GCC, 7)),
+                            DEVICE_COMPILER: ppv((NVCC, version)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                        }
+                    ),
+                    reason_msg3,
+                )
+            )
+            self.assertEqual(
+                reason_msg3.getvalue(), "nvcc and CUDA backend needs to have the same version"
+            )
+
+            reason_msg4 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
+                            HOST_COMPILER: ppv((GCC, 7)),
+                            DEVICE_COMPILER: ppv((NVCC, version)),
+                        }
+                    ),
+                    reason_msg4,
+                )
+            )
+            self.assertEqual(
+                reason_msg4.getvalue(), "nvcc and CUDA backend needs to have the same version"
+            )
+
+            reason_msg5 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            CMAKE: ppv((CMAKE, 3.18)),
+                            HOST_COMPILER: ppv((GCC, 7)),
+                            DEVICE_COMPILER: ppv((NVCC, version)),
+                            BOOST: ppv((BOOST, "1.78.0")),
+                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
+                        }
+                    ),
+                    reason_msg5,
+                )
+            )
+            self.assertEqual(
+                reason_msg5.getvalue(), "nvcc and CUDA backend needs to have the same version"
+            )
+
+    def test_nvcc_requires_disabled_hip_backend_c16(self):
+        self.assertTrue(
+            compiler_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 11.2)),
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                    }
+                ),
+            )
+        )
+
+        reason_msg1 = io.StringIO()
+        self.assertFalse(
+            compiler_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 11.3)),
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                    }
+                ),
+                reason_msg1,
+            )
+        )
+        self.assertEqual(reason_msg1.getvalue(), "nvcc does not support the HIP backend.")
+
+    def test_nvcc_requires_disabled_sycl_backend_c17(self):
+        self.assertTrue(
+            compiler_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 11.2)),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                    }
+                ),
+            )
+        )
+
+        reason_msg1 = io.StringIO()
+        self.assertFalse(
+            compiler_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 11.3)),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                    }
+                ),
+                reason_msg1,
+            )
+        )
+        self.assertEqual(reason_msg1.getvalue(), "nvcc does not support the SYCL backend.")
+
+    def test_disallow_disabled_cuda_backend_for_nvcc_device_compiler_b7(self):
+        reason_msg1 = io.StringIO()
+        self.assertFalse(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 12.2)),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                    }
+                ),
+                reason_msg1,
+            )
+        )
+        self.assertEqual(reason_msg1.getvalue(), "CUDA backend needs to be enabled for nvcc")
+
+        reason_msg2 = io.StringIO()
+        self.assertFalse(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 9)),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                        DEVICE_COMPILER: ppv((NVCC, 12.2)),
+                    }
+                ),
+                reason_msg2,
+            )
+        )
+        self.assertEqual(reason_msg2.getvalue(), "CUDA backend needs to be enabled for nvcc")
+
+    def test_check_if_cuda_backend_is_disabled_for_no_cuda_compiler_pass_b7(self):
+        for compiler_name in set(COMPILERS) - set([NVCC, CLANG_CUDA]):
+            self.assertTrue(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((compiler_name, 9999)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                        }
+                    )
+                ),
+                f"ALPAKA_ACC_GPU_CUDA_ENABLE should be off for {compiler_name}",
+            )
+
+            self.assertTrue(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((compiler_name, 9999)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                        }
+                    )
+                ),
+                f"ALPAKA_ACC_GPU_CUDA_ENABLE should be off for {compiler_name}",
+            )
+
+            self.assertTrue(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((compiler_name, 9999)),
+                            DEVICE_COMPILER: ppv((compiler_name, 9999)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                        }
+                    )
+                ),
+                f"ALPAKA_ACC_GPU_CUDA_ENABLE should be off for {compiler_name}",
+            )
+
+            self.assertTrue(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            CMAKE: ppv((CMAKE, 3.18)),
+                            HOST_COMPILER: ppv((compiler_name, 9999)),
+                            DEVICE_COMPILER: ppv((compiler_name, 9999)),
+                            BOOST: ppv((BOOST, "1.78.0")),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                        }
+                    )
+                ),
+                f"ALPAKA_ACC_GPU_CUDA_ENABLE should be off for {compiler_name}",
+            )
+
+    def test_check_if_cuda_backend_is_disabled_for_unsupported_host_compiler_b8(self):
+        for host_compiler, cuda_sdk in (
+            ((GCC, 7), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+            ((CLANG, 7), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
+            ((CLANG_CUDA, 16), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.0)),
+            ((NVCC, 12.0), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
+        ):
+            self.assertTrue(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((host_compiler[0], host_compiler[1])),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((cuda_sdk[0], cuda_sdk[1])),
+                        }
+                    )
+                ),
+                f"{host_compiler[0]} {host_compiler[1]} + CUDA {cuda_sdk[1]}",
+            )
+
+        for host_compiler, cuda_sdk in (
+            ((HIPCC, 5.1), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+            ((ICPX, "2023.1.0"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
+        ):
+            reason_msg1 = io.StringIO()
+
+            self.assertFalse(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((host_compiler[0], host_compiler[1])),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((cuda_sdk[0], cuda_sdk[1])),
+                        }
+                    ),
+                    reason_msg1,
+                ),
+                f"{host_compiler[0]} {host_compiler[1]} + CUDA {cuda_sdk[1]}",
+            )
+            self.assertEqual(
+                reason_msg1.getvalue(),
+                f"host-compiler {host_compiler[0]} does not support the CUDA backend",
+            )
+
+    def test_nvcc_and_cuda_backend_needs_same_version_b9(self):
+        for version in (10.1, 11.2, 12.3):
+            self.assertTrue(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((NVCC, version)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, version)),
+                        }
+                    ),
+                )
+            )
+
+        for version_nvcc, version_cuda in ((10.1, 10.2), (11.2, 10.1), (12.3, 12.2)):
+            reason_msg1 = io.StringIO()
+            self.assertFalse(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((NVCC, version_nvcc)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
+                                (ALPAKA_ACC_GPU_CUDA_ENABLE, version_cuda)
+                            ),
+                        }
+                    ),
+                    reason_msg1,
+                )
+            )
+            self.assertEqual(
+                reason_msg1.getvalue(), "CUDA backend and nvcc needs to have the same version"
+            )
+
+    def test_gcc_host_compiler_support_cuda_sdk_b10(self):
+        for gcc_version, version_cuda in ((5, 10.2), (9, 11.8), (11, 12.2)):
+            self.assertTrue(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((GCC, gcc_version)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
+                                (ALPAKA_ACC_GPU_CUDA_ENABLE, version_cuda)
+                            ),
+                        }
+                    ),
+                ),
+                f"gcc {gcc_version} + CUDA {version_cuda}",
+            )
+
+            self.assertTrue(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((GCC, gcc_version)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
+                                (ALPAKA_ACC_GPU_CUDA_ENABLE, version_cuda)
+                            ),
+                            DEVICE_COMPILER: ppv((NVCC, version_cuda)),
+                        }
+                    ),
+                ),
+                f"gcc {gcc_version} + CUDA {version_cuda}",
+            )
+
+        for gcc_version, version_cuda in ((12, 10.2), (15, 11.8), (13, 12.2)):
+            reason_msg1 = io.StringIO()
+            self.assertFalse(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((GCC, gcc_version)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
+                                (ALPAKA_ACC_GPU_CUDA_ENABLE, version_cuda)
+                            ),
+                        }
+                    ),
+                    reason_msg1,
+                ),
+                f"gcc {gcc_version} + CUDA {version_cuda}",
+            )
+            self.assertEqual(
+                reason_msg1.getvalue(), f"CUDA {version_cuda} does not support gcc {gcc_version}"
+            )
+
+    def test_no_clang_compiler_for_cuda_113_to_115_b11(self):
+        for clang_version in (7, 9, 12):
+            for cuda_version in (11.3, 11.4, 11.5):
+                reason_msg1 = io.StringIO()
+                self.assertFalse(
+                    backend_filter_typechecked(
+                        OD(
+                            {
+                                HOST_COMPILER: ppv((CLANG, clang_version)),
+                                ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
+                                    (ALPAKA_ACC_GPU_CUDA_ENABLE, cuda_version)
+                                ),
+                            }
+                        ),
+                        reason_msg1,
+                    ),
+                    f"clang {clang_version} + CUDA {cuda_version}",
+                )
+                self.assertEqual(
+                    reason_msg1.getvalue(),
+                    "clang as host compiler is disabled for CUDA 11.3 to 11.5",
+                )
+
+    def test_clang_host_compiler_support_cuda_sdk_b12(self):
+        for clang_version, version_cuda in ((5, 10.2), (9, 11.8), (11, 12.2)):
+            self.assertTrue(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((CLANG, clang_version)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
+                                (ALPAKA_ACC_GPU_CUDA_ENABLE, version_cuda)
+                            ),
+                        }
+                    ),
+                ),
+                f"clang {clang_version} + CUDA {version_cuda}",
+            )
+
+            self.assertTrue(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((CLANG, clang_version)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
+                                (ALPAKA_ACC_GPU_CUDA_ENABLE, version_cuda)
+                            ),
+                            DEVICE_COMPILER: ppv((NVCC, version_cuda)),
+                        }
+                    ),
+                ),
+                f"clang {clang_version} + CUDA {version_cuda}",
+            )
+
+        for clang_version, version_cuda in ((12, 10.2), (15, 11.8), (17, 12.2)):
+            reason_msg1 = io.StringIO()
+            self.assertFalse(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((CLANG, clang_version)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
+                                (ALPAKA_ACC_GPU_CUDA_ENABLE, version_cuda)
+                            ),
+                        }
+                    ),
+                    reason_msg1,
+                ),
+                f"clang {clang_version} + CUDA {version_cuda}",
+            )
+            self.assertEqual(
+                reason_msg1.getvalue(),
+                f"CUDA {version_cuda} does not support clang {clang_version}",
+            )
+
+    def test_unsupported_cuda_device_compiler_b13(self):
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 11.2)),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                    }
+                ),
+            ),
+        )
+
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((CLANG_CUDA, 15)),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                    }
+                ),
+            ),
+        )
+
+        for device_compiler in set(COMPILERS) - set([NVCC, CLANG_CUDA]):
+            reason_msg1 = io.StringIO()
+            self.assertFalse(
+                backend_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((device_compiler, 7)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                        }
+                    ),
+                    reason_msg1,
+                ),
+                f"device-compiler {DEVICE_COMPILER} + CUDA 11.2",
+            )
+            self.assertEqual(
+                reason_msg1.getvalue(),
+                f"{device_compiler} does not support the CUDA backend",
+            )
+
+    def test_cuda_and_hip_backend_cannot_be_active_at_the_same_time_b14(self):
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                    }
+                ),
+            )
+        )
+
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                    }
+                ),
+            )
+        )
+
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                    }
+                ),
+            )
+        )
+
+        reason_msg1 = io.StringIO()
+        self.assertFalse(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.7)),
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                    }
+                ),
+                reason_msg1,
+            )
+        )
+        self.assertEqual(
+            reason_msg1.getvalue(), "The HIP and CUDA backend cannot be enabled on the same time."
+        )
+
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        CMAKE: ppv((CMAKE, 3.18)),
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                        BOOST: ppv((BOOST, "1.78.0")),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 10.2)),
+                    }
+                ),
+            )
+        )
+
+        reason_msg2 = io.StringIO()
+        self.assertFalse(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        CMAKE: ppv((CMAKE, 3.18)),
+                        ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                        BOOST: ppv((BOOST, "1.78.0")),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.3)),
+                    }
+                ),
+                reason_msg2,
+            )
+        )
+        self.assertEqual(
+            reason_msg2.getvalue(), "The HIP and CUDA backend cannot be enabled on the same time."
+        )
+
+    def test_cuda_and_sycl_backend_cannot_be_active_at_the_same_time_b15(self):
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                    }
+                ),
+            )
+        )
+
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                    }
+                ),
+            )
+        )
+
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                    }
+                ),
+            )
+        )
+
+        reason_msg1 = io.StringIO()
+        self.assertFalse(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.7)),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                    }
+                ),
+                reason_msg1,
+            )
+        )
+        self.assertEqual(
+            reason_msg1.getvalue(), "The SYCL and CUDA backend cannot be enabled on the same time."
+        )
+
+        self.assertTrue(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        CMAKE: ppv((CMAKE, 3.18)),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                        BOOST: ppv((BOOST, "1.78.0")),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 10.2)),
+                    }
+                ),
+            )
+        )
+
+        reason_msg2 = io.StringIO()
+        self.assertFalse(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        CMAKE: ppv((CMAKE, 3.18)),
+                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                        BOOST: ppv((BOOST, "1.78.0")),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.3)),
+                    }
+                ),
+                reason_msg2,
+            )
+        )
+        self.assertEqual(
+            reason_msg2.getvalue(), "The SYCL and CUDA backend cannot be enabled on the same time."
+        )

@@ -22,6 +22,21 @@ from bashi.types import (
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+# short names for parameter
+PARAMETER_SHORT_NAME: dict[Parameter, str] = {
+    HOST_COMPILER: "host",
+    DEVICE_COMPILER: "device",
+    ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE: "bOpenMP2thread",
+    ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE: "bOpenMP2block",
+    ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: "bSeq",
+    ALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLE: "bThreads",
+    ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE: "bTBB",
+    ALPAKA_ACC_GPU_CUDA_ENABLE: "bCUDA",
+    ALPAKA_ACC_GPU_HIP_ENABLE: "bHIP",
+    ALPAKA_ACC_SYCL_ENABLE: "bSYCL",
+    CXX_STANDARD: "c++",
+}
+
 
 @dataclasses.dataclass
 class FilterAdapter:
@@ -371,40 +386,35 @@ def reason(output: Optional[IO[str]], msg: str):
 
 
 # do not cover code, because the function is only used for debugging
-def print_row_nice(row: ParameterValueTuple, init: str = ""):  # pragma: no cover
+def print_row_nice(
+    row: ParameterValueTuple, init: str = "", bashi_validate: bool = False
+):  # pragma: no cover
     """Prints a parameter-value-tuple in a short and nice way.
 
     Args:
         row (ParameterValueTuple): row with parameter-value-tuple
         init (str, optional): Prefix of the output string. Defaults to "".
+        bashi_validate (bool): If it is set to True, the row is printed in a form that can be passed
+            directly as arguments to bashi-validate. Defaults to False.
     """
     s = init
-    short_name: dict[str, str] = {
-        HOST_COMPILER: "host",
-        DEVICE_COMPILER: "device",
-        ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE: "bOpenMP2thread",
-        ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE: "bOpenMP2block",
-        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: "bSeq",
-        ALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLE: "bThreads",
-        ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE: "bTBB",
-        ALPAKA_ACC_GPU_CUDA_ENABLE: "bCUDA",
-        ALPAKA_ACC_GPU_HIP_ENABLE: "bHIP",
-        ALPAKA_ACC_SYCL_ENABLE: "bSYCL",
-        CXX_STANDARD: "c++",
-    }
+
     nice_version: dict[packaging.version.Version, str] = {
         ON_VER: "ON",
         OFF_VER: "OFF",
     }
 
     for param, val in row.items():
+        parameter_prefix = "" if not bashi_validate else "--"
         if param in [HOST_COMPILER, DEVICE_COMPILER]:
             s += (
-                f"{short_name.get(param, param)}={short_name.get(val.name, val.name)}-"
+                f"{parameter_prefix}{PARAMETER_SHORT_NAME.get(param, param)}="
+                f"{PARAMETER_SHORT_NAME.get(val.name, val.name)}@"
                 f"{nice_version.get(val.version, str(val.version))} "
             )
         else:
             s += (
-                f"{short_name.get(param, param)}={nice_version.get(val.version, str(val.version))} "
+                f"{parameter_prefix}{PARAMETER_SHORT_NAME.get(param, param)}="
+                f"{nice_version.get(val.version, str(val.version))} "
             )
     print(s)
