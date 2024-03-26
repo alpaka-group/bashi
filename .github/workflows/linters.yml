@@ -34,6 +34,9 @@ jobs:
         - name: Run mypy on example
           run: |
             mypy example
+        - name: Run mypy on efficiency.py
+          run: |
+            mypy example/efficiency.py
 
     pylint-linter:
         name: run pylint linter
@@ -57,3 +60,6 @@ jobs:
         - name: Run pylint on example
           run: |
             pylint example/example.py
+        - name: Run pylint on efficiency.py
+          run: |
+            pylint example/efficiency.py
