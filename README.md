@@ -38,6 +38,10 @@ This section contains some hints for developing new functions. The hints are mai
 * The software requirements are defined in `pyproject.toml` and not in an additional `requirements.txt`.
 * It is necessary to increase the version number in `version.txt` before a new feature can be merged in the master branch. Otherwise the upload to pypy.org will fail because existing versions cannot be changed.
 
+## Writing a new Filter rule
+
+Writing a new filter rule can be complicated. That's why we offer a [best practice guide](docs/rules.md).
+
 ## Formatting the Source Code
 
 The source code is formatted using the [black](https://pypi.org/project/black/) formatter and the default style guide. You must install it and run `black /path/to/file` to format a file. A CI job checks that all files are formatted correctly. If the job fails, a PR cannot be merged.
