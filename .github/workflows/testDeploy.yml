@@ -35,3 +35,9 @@ jobs:
                 pip install .
             - name: run integration test
               run: python example/example.py
+            - name: copy example output for reproducible test
+              run: mv example/job.yaml example/first.yaml
+            - name: run example second time
+              run: python example/example.py
+            - name: compare result of example runs (should be equal)
+              run: diff example/job.yaml example/first.yaml
