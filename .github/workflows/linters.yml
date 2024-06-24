@@ -30,7 +30,10 @@ jobs:
             pip install mypy
         - name: Run mypy on bashi source code
           run: |
-            mypy bashi
+            mypy src/bashi
+        - name: Run mypy on bashi-validate
+          run: |
+            mypy src/bashiValidate/validate.py
         - name: Run mypy on example
           run: |
             mypy example
@@ -56,7 +59,10 @@ jobs:
             pip install pylint
         - name: Run pylint on bashi source code
           run: |
-            pylint bashi
+            pylint src/bashi
+        - name: Run pylint on bashi-validate
+          run: |
+            pylint src/bashiValidate/validate.py
         - name: Run pylint on example
           run: |
             pylint example/example.py

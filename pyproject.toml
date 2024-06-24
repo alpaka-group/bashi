@@ -31,7 +31,7 @@ dependencies = [
 [project.scripts]
 # creates a python script named bashi-validate
 # in principal, the script does the following: from bashi.validate import main; main()
-bashi-validate = "bashi.validate:main"
+bashi-validate = "bashiValidate.validate:main"
 
 [tool.setuptools.dynamic]
 version = {file = "version.txt"}
@@ -44,7 +44,7 @@ Issues = "https://github.com/alpaka-group/bashi/issues"
 [tool.coverage.run]
 command_line = "-m unittest discover -s tests/"
 branch = true
-source = ["bashi"]
+source = ["src/bashi"]
 
 [tool.black]
 line-length = 100
