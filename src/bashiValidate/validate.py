@@ -5,7 +5,7 @@
 import argparse
 from argparse import ArgumentParser, Namespace
 
-from typing import Sequence, Any, Callable, Optional, IO, Dict, NamedTuple
+from typing import Sequence, Any, Callable, Optional, IO, Dict, NamedTuple, List
 from collections import OrderedDict
 import io
 import sys
