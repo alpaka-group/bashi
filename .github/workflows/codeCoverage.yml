@@ -16,7 +16,7 @@ jobs:
                 python-version: 3.12
             - name: Install bashi
               run: |
-                pip install .
+                pip install --editable .
             - name: Generate Report
               run: |
                 pip install coverage
