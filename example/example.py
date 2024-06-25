@@ -23,6 +23,7 @@ from bashi.utils import (
 )
 from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
+    ParameterValue,
     ParameterValuePair,
     ParameterValueTuple,
     ParameterValueMatrix,
@@ -366,6 +367,12 @@ def create_yaml(combination_list: CombinationList):
 
 if __name__ == "__main__":
     param_matrix = get_parameter_value_matrix()
+    # append project specific parameter-values
+    param_matrix["SoftwareA"] = [
+        ParameterValue("SoftwareA", ValueVersion("1.0")),
+        ParameterValue("SoftwareA", ValueVersion("2.0")),
+        ParameterValue("SoftwareA", ValueVersion("2.1")),
+    ]
 
     comb_list: CombinationList = generate_combination_list(
         parameter_value_matrix=param_matrix, custom_filter=custom_filter

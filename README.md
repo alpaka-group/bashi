@@ -8,6 +8,14 @@ This project will be the successor to the [alpaka-job-matrix-library](https://gi
 
 A library to provide a job generator for CI's for alpaka based projects.
 
+The library provides everything needed to generate a sparse combination matrix for [alpaka](https://github.com/alpaka-group/alpaka)-based projects, including a set of general-purpose combination rules.
+
+The main function of the library is `generate_combination_list()`. It takes a list of `parameter-values`, creates the `combination-list`, applies the combination filter rules, thins it out and returns the sparse `combination-list`.
+
+The thinning is done according to the principle [all-pairs testing](https://en.wikipedia.org/wiki/All-pairs_testing). The principle means that every combination of the `parameter-values` of at least two `parameters` must be part of a `combination`, unless a filter rule forbids this.
+
+The provision of the input `parameters-values`, adding custom filter rules, the reordering of the jobs, the filtering of the `combination-list` and the generation of the job yaml are project specific. Therefore, the library provides an [example](example/example.py) of how most parts can be implemented.
+
 # Naming
 
 The main component of the `bashi` library is combinatorics. Due to the wide spread of the field, there are different words for the same things. Therefore, `bashi` has introduced a naming guideline that is used for function and parameter names and documentation. Please read the [naming guidelines](docs/naming.md).
@@ -15,6 +23,27 @@ The main component of the `bashi` library is combinatorics. Due to the wide spre
 # Example
 
 An example of the use of the `bashi` library can be found in [example/example.py](example/example.py). It shows how to use the library to create a `combination-list` from a `parameter-value-matrix`. The example also uses a custom filter. For more details, please read the module documentation of [example/example.py](example/example.py).
+
+# Installation
+
+⚠️ Disclaimer ⚠️ Not working yet -> needs to be registered.
+
+Install via pip:
+
+```bash
+pip install bashi
+```
+
+See [pypi.org](https://pypi.org/project/bashi/)
+
+# bashi-validate
+
+`bashi-validate` is a tool which is installed together with the `bashi` library. The tool allows to check whether a combination of parameters passes the different filters and displays the reason if not.
+
+![bashi-validate example](docs/images/bashi-validate-example.png)
+
+**Hint:** The source code of the tool is located in the file [validate.py](src/bashiValidate/validate.py).
+
 
 # Developing
 
@@ -49,3 +78,7 @@ The source code is formatted using the [black](https://pypi.org/project/black/) 
 ## Check Code Coverage locally
 
 The project supports code coverage with [coverage.py](https://coverage.readthedocs.io). To create a coverage report locally, you must first install the package via `pip install coverage`. Then run `coverage run` in the project folder to calculate the coverage and `coverage report` to display the result.
+
+# What is a Bashi?
+
+Bashi is short for caravan bashi, which is the English translation of the Turkish word  `kervanbaşı/karavanbaşı`, head of the caravan.
