@@ -7,6 +7,8 @@ These identifiers are used in the test names, for example, to make it clear whic
 which rule.
 """
 
+import packaging.version as pkv
+from bashi.globals import *
 from typing import Optional, IO
 from typeguard import typechecked
 from bashi.types import ParameterValueTuple
@@ -40,4 +42,11 @@ def software_dependency_filter(
     Returns:
         bool: True, if parameter-value-tuple is valid.
     """
+
+    for compiler in (HOST_COMPILER, DEVICE_COMPILER):
+        if compiler in row and row[compiler].name == GCC:
+            if row[compiler].version == pkv.parse("6"):
+                if UBUNTU in row and row[UBUNTU].version == pkv.parse("20.04"):
+                    return False
+
     return True
