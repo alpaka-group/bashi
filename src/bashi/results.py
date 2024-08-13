@@ -93,7 +93,7 @@ def get_expected_bashi_parameter_value_pairs(
     _remove_device_compiler_gcc_clang_enabled_cuda_backend(param_val_pair_list)
     _remove_specific_cuda_clang_combinations(param_val_pair_list)
     _remove_unsupported_clang_sdk_versions_for_clang_cuda(param_val_pair_list)
-
+    _remove_unsupported_gcc_versions_for_ubuntu2004(param_val_pair_list)
     return param_val_pair_list
 
 
