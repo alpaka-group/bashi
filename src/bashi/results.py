@@ -641,3 +641,23 @@ def _remove_unsupported_clang_sdk_versions_for_clang_cuda(
         return True
 
     parameter_value_pairs[:] = filter(filter_func, parameter_value_pairs)
+
+
+def _remove_unsupported_gcc_versions_for_ubuntu2004(
+    parameter_value_pairs: List[ParameterValuePair],
+):
+    """Remove pairs where GCC version 6 is used with Ubuntu 20.04.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+    """
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        remove_parameter_value_pairs(
+            parameter_value_pairs,
+            parameter1=compiler_type,
+            value_name1=GCC,
+            value_version1="!=6",
+            parameter2=UBUNTU,
+            value_name2=UBUNTU,
+            value_version2="!=20.04",
+        )
