@@ -35,33 +35,10 @@ def get_expected_bashi_parameter_value_pairs(
     Returns:
         List[ParameterValuePair]: list of all parameter-value-pairs supported by bashi
     """
-    local_parameter_matrix = copy.deepcopy(parameter_matrix)
+    param_val_pair_list = get_expected_parameter_value_pairs(parameter_matrix)
 
-    def remove_host_compiler_nvcc(param_val: ParameterValue) -> bool:
-        if param_val.name == NVCC:
-            return False
-        return True
-
-    # remove nvcc as host compiler
-    local_parameter_matrix[HOST_COMPILER] = list(
-        filter(remove_host_compiler_nvcc, local_parameter_matrix[HOST_COMPILER])
-    )
-
-    # remove clang-cuda 13 and older
-    def remove_unsupported_clang_cuda_version(param_val: ParameterValue) -> bool:
-        if param_val.name == CLANG_CUDA and param_val.version < packaging.version.parse("14"):
-            return False
-        return True
-
-    local_parameter_matrix[HOST_COMPILER] = list(
-        filter(remove_unsupported_clang_cuda_version, local_parameter_matrix[HOST_COMPILER])
-    )
-    local_parameter_matrix[DEVICE_COMPILER] = list(
-        filter(remove_unsupported_clang_cuda_version, local_parameter_matrix[DEVICE_COMPILER])
-    )
-
-    param_val_pair_list = get_expected_parameter_value_pairs(local_parameter_matrix)
-
+    _remove_nvcc_host_compiler(param_val_pair_list)
+    _remove_unsupported_clang_cuda_version(param_val_pair_list)
     _remove_unsupported_nvcc_host_compiler(param_val_pair_list)
     _remove_different_compiler_names(param_val_pair_list)
     _remove_different_compiler_versions(param_val_pair_list)
@@ -95,6 +72,34 @@ def get_expected_bashi_parameter_value_pairs(
     _remove_unsupported_clang_sdk_versions_for_clang_cuda(param_val_pair_list)
 
     return param_val_pair_list
+
+
+def _remove_nvcc_host_compiler(parameter_value_pairs: List[ParameterValuePair]):
+    """Remove nvcc as host compiler.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    """
+    remove_parameter_value_pairs(
+        parameter_value_pairs,
+        parameter1=HOST_COMPILER,
+        value_name1=NVCC,
+    )
+
+
+def _remove_unsupported_clang_cuda_version(parameter_value_pairs: List[ParameterValuePair]):
+    """Remove Clang-CUDA 13 and older
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    """
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        remove_parameter_value_pairs(
+            parameter_value_pairs,
+            parameter1=compiler_type,
+            value_name1=CLANG_CUDA,
+            value_version1=">13",
+        )
 
 
 def _remove_unsupported_nvcc_host_compiler(parameter_value_pairs: List[ParameterValuePair]):

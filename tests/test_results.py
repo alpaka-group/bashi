@@ -14,6 +14,8 @@ from bashi.versions import VERSIONS, CLANG_CUDA_MAX_CUDA_VERSION
 
 # pyright: reportPrivateUsage=false
 from bashi.results import (
+    _remove_nvcc_host_compiler,
+    _remove_unsupported_clang_cuda_version,
     _remove_unsupported_nvcc_host_compiler,
     _remove_different_compiler_names,
     _remove_different_compiler_versions,
@@ -42,6 +44,93 @@ from bashi.versions import NvccHostSupport, NVCC_GCC_MAX_VERSION
 
 
 class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
+    def test_remove_nvcc_host_compiler(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (NVCC, 11.2), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (NVCC, 9), DEVICE_COMPILER: (HIPCC, 11.7)}),
+                OD({HOST_COMPILER: (NVCC, 11.1), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (GCC, 10)}),
+                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
+                OD(
+                    {
+                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
+                    }
+                ),
+                OD({HOST_COMPILER: (NVCC, 10.1), DEVICE_COMPILER: (GCC, 11)}),
+            ]
+        )
+
+        _remove_nvcc_host_compiler(test_param_value_pairs)
+
+        test_param_value_pairs.sort()
+        expected_results = sorted(
+            parse_expected_val_pairs(
+                [
+                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (GCC, 10)}),
+                    OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (NVCC, 12.0)}),
+                    OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
+                    OD(
+                        {
+                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
+                                ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
+                                ON,
+                            ),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
+                        }
+                    ),
+                ]
+            )
+        )
+
+        self.assertEqual(
+            test_param_value_pairs,
+            expected_results,
+            create_diff_parameter_value_pairs(test_param_value_pairs, expected_results),
+        )
+
+    def test_remove_unsupported_clang_cuda_version(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (CLANG_CUDA, 13), DEVICE_COMPILER: (CLANG_CUDA, 13)}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 14), DEVICE_COMPILER: (CLANG_CUDA, 14)}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 99), DEVICE_COMPILER: (CLANG_CUDA, 99)}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 7), DEVICE_COMPILER: (CLANG_CUDA, 7)}),
+                OD({HOST_COMPILER: (NVCC, 11.1), DEVICE_COMPILER: (NVCC, 12.0)}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 8), DEVICE_COMPILER: (GCC, 7)}),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                OD({HOST_COMPILER: (CLANG, 7), DEVICE_COMPILER: (CLANG_CUDA, 14)}),
+                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (CLANG_CUDA, 11)}),
+                OD({HOST_COMPILER: (NVCC, 10.1), DEVICE_COMPILER: (GCC, 11)}),
+            ]
+        )
+
+        _remove_unsupported_clang_cuda_version(test_param_value_pairs)
+
+        test_param_value_pairs.sort()
+        expected_results = sorted(
+            parse_expected_val_pairs(
+                [
+                    OD({HOST_COMPILER: (CLANG_CUDA, 14), DEVICE_COMPILER: (CLANG_CUDA, 14)}),
+                    OD({HOST_COMPILER: (CLANG_CUDA, 99), DEVICE_COMPILER: (CLANG_CUDA, 99)}),
+                    OD({HOST_COMPILER: (NVCC, 11.1), DEVICE_COMPILER: (NVCC, 12.0)}),
+                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                    OD({HOST_COMPILER: (CLANG, 7), DEVICE_COMPILER: (CLANG_CUDA, 14)}),
+                    OD({HOST_COMPILER: (NVCC, 10.1), DEVICE_COMPILER: (GCC, 11)}),
+                ]
+            )
+        )
+
+        self.assertEqual(
+            test_param_value_pairs,
+            expected_results,
+            create_diff_parameter_value_pairs(test_param_value_pairs, expected_results),
+        )
+
     def test_nvcc_host_compiler_names(self):
         test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
