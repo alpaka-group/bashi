@@ -368,6 +368,42 @@ def check_parameter_value_pair_in_combination_list(
     return not missing_expected_param
 
 
+@typechecked
+def check_unexpected_parameter_value_pair_in_combination_list(
+    combination_list: CombinationList,
+    parameter_value_pairs: List[ParameterValuePair],
+    output: IO[str] = sys.stdout,
+) -> bool:
+    """Check if the given parameter-values-pairs exist in at least in one combination.
+
+    Args:
+        combination_list (CombinationList): list of given combination
+        parameter_value_pairs (List[ParameterValuePair]): list of parameter-value-pair to be search
+            for
+        output (IO[str], optional): Writes found parameter-values-pairs to it. Defaults to
+            sys.stdout.
+
+    Returns:
+        bool: returns True, if no given parameter-values-pairs was found in the combination-list
+    """
+    found_unexpected_param = False
+
+    for ex_param_val_pair in parameter_value_pairs:
+        param1, param_val1 = ex_param_val_pair[0]
+        param2, param_val2 = ex_param_val_pair[1]
+        for comb in combination_list:
+            # comb contains all parameters, therefore a check is not required
+            if comb[param1] == param_val1 and comb[param2] == param_val2:
+                print(
+                    f"found unexpected parameter-value-pair {ex_param_val_pair} in combination list",
+                    file=output,
+                )
+                found_unexpected_param = True
+                break
+
+    return not found_unexpected_param
+
+
 def reason(output: Optional[IO[str]], msg: str):
     """Write the message to output if it is not None. This function is used
     in filter functions to print additional information about filter decisions.

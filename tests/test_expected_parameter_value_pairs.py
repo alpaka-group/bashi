@@ -5,6 +5,7 @@ from typing import List, Dict
 from collections import OrderedDict as OD
 import io
 import packaging.version as pkv
+import random
 
 from utils_test import (
     parse_param_val,
@@ -25,6 +26,7 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.utils import (
     get_expected_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
+    check_unexpected_parameter_value_pair_in_combination_list,
     remove_parameter_value_pairs,
     create_parameter_value_pair,
 )
@@ -482,6 +484,121 @@ class TestExpectedValuePairs(unittest.TestCase):
         self.assertEqual(len(output_wrong_many_pairs_list), 3)
 
         self.assertEqual(output_wrong_many_pairs_list, expected_output_many_wrong_pairs_list)
+
+    def test_check_unexpected_parameter_value_pair_in_combination_list_all_empty(self):
+        self.assertTrue(
+            check_unexpected_parameter_value_pair_in_combination_list(
+                [],
+                [],
+            )
+        )
+
+    def test_check_unexpected_parameter_value_pair_in_combination_list_empty_input(self):
+        self.assertTrue(
+            check_unexpected_parameter_value_pair_in_combination_list(
+                [],
+                parse_expected_val_pairs(
+                    [
+                        OD({HOST_COMPILER: (GCC, 10), BOOST: (BOOST, 1.82)}),
+                        OD({DEVICE_COMPILER: (CLANG, 16), CMAKE: (CMAKE, 3.23)}),
+                        OD({DEVICE_COMPILER: (CLANG, 16), BOOST: (BOOST, 1.83)}),
+                        OD({HOST_COMPILER: (GCC, 10), CMAKE: (CMAKE, 3.22)}),
+                    ]
+                ),
+            )
+        )
+
+    def test_check_unexpected_parameter_value_pair_in_combination_list_empty_search_list(self):
+        self.assertTrue(
+            check_unexpected_parameter_value_pair_in_combination_list(
+                self.handwritten_comb_list, []
+            ),
+        )
+
+    def test_check_unexpected_parameter_value_pair_in_combination_list_non_existing_entries(self):
+        # non of the pairs are in the combination list
+        self.assertTrue(
+            check_unexpected_parameter_value_pair_in_combination_list(
+                self.handwritten_comb_list,
+                parse_expected_val_pairs(
+                    [
+                        OD({HOST_COMPILER: (NVCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (CLANG, 7)}),
+                        OD({HOST_COMPILER: (NVCC, 12.2), DEVICE_COMPILER: (CMAKE, 3.30)}),
+                    ]
+                ),
+            )
+        )
+
+    def test_check_unexpected_parameter_value_pair_in_combination_list_existing_entries(self):
+        # all of the pairs are in the combination list
+        existing_parameter_value_pairs = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 10), BOOST: (BOOST, 1.82)}),
+                OD({DEVICE_COMPILER: (CLANG, 16), CMAKE: (CMAKE, 3.23)}),
+                OD({DEVICE_COMPILER: (CLANG, 16), BOOST: (BOOST, 1.83)}),
+                OD({HOST_COMPILER: (GCC, 10), CMAKE: (CMAKE, 3.22)}),
+            ]
+        )
+
+        error_output = io.StringIO()
+        self.assertFalse(
+            check_unexpected_parameter_value_pair_in_combination_list(
+                self.handwritten_comb_list,
+                existing_parameter_value_pairs,
+                error_output,
+            )
+        )
+
+        error_list = error_output.getvalue().rstrip().split("\n")
+        self.assertEqual(len(error_list), 4)
+
+        for unexpected_param_val_pair in existing_parameter_value_pairs:
+            self.assertIn(
+                f"found unexpected parameter-value-pair {unexpected_param_val_pair} in combination list",
+                error_list,
+            )
+
+    def test_check_unexpected_parameter_value_pair_in_combination_list_mixed_entries(self):
+        # some of the pairs are in the combination list
+        error_output = io.StringIO()
+
+        existing_parameter_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 10), BOOST: (BOOST, 1.82)}),
+                OD({HOST_COMPILER: (GCC, 10), CMAKE: (CMAKE, 3.22)}),
+            ]
+        )
+
+        not_parameter_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 16), CMAKE: (CMAKE, 3.23)}),
+                OD({DEVICE_COMPILER: (CLANG, 16), BOOST: (UBUNTU, 22.04)}),
+                OD({DEVICE_COMPILER: (GCC, 7), BOOST: (UBUNTU, 22.04)}),
+            ]
+        )
+
+        parameter_value_pairs: List[ParameterValuePair] = (
+            existing_parameter_value_pairs + not_parameter_value_pairs
+        )
+        random.shuffle(parameter_value_pairs)
+
+        self.assertFalse(
+            check_unexpected_parameter_value_pair_in_combination_list(
+                self.handwritten_comb_list,
+                parameter_value_pairs,
+                error_output,
+            )
+        )
+
+        error_list = error_output.getvalue().rstrip().split("\n")
+        self.assertEqual(len(error_list), 2)
+
+        for unexpected_param_val_pair in existing_parameter_value_pairs:
+            self.assertIn(
+                f"found unexpected parameter-value-pair {unexpected_param_val_pair} in combination list",
+                error_list,
+            )
 
     def test_unrestricted_covertable_generator(self):
         comb_list: CombinationList = []
