@@ -1,8 +1,10 @@
 """Different helper functions for bashi tests."""
 
-from typing import List, Union, Tuple
+import unittest
+from typing import List, Union, Tuple, Callable
 from collections import OrderedDict
 import packaging.version as pkv
+from typeguard import typechecked
 from bashi.types import (
     Parameter,
     ParameterValue,
@@ -114,3 +116,48 @@ def create_diff_parameter_value_pairs(
         )
 
     return output
+
+
+@typechecked
+def default_remove_test(
+    function: Callable[[List[ParameterValuePair], List[ParameterValuePair]], None],
+    test_parameter_value_pairs: List[ParameterValuePair],
+    expected_results: List[ParameterValuePair],
+    test_self: unittest.TestCase,
+):
+    """Test template for sub-functions of the get_expected_bashi_parameter_value_pairs() function.
+    Takes a function, an input parameter-value-pair list and a list of expected
+    parameter-value-pairs and compares the result of the function with the expected result. Also
+    checks the unexpected result.
+
+    Args:
+        function (Callable[[List[ParameterValuePair], List[ParameterValuePair]], None]): Function to
+            test
+        test_parameter_value_pairs (List[ParameterValuePair]): Parameter-value-pairs list to filter
+        expected_results (List[ParameterValuePair]): Expected result list after the function was
+            applied on the input list
+        test_self (unittest.TestCase): The function needs to be called in an unittest function. To
+            allow to use the features of the unittest module, the caller function needs to pass the
+            self parameter.
+    """
+    expected_results.sort()
+    unexpected_results: List[ParameterValuePair] = sorted(
+        list(set(test_parameter_value_pairs) - set(expected_results))
+    )
+
+    unexpected_test_param_value_pairs: List[ParameterValuePair] = []
+    function(test_parameter_value_pairs, unexpected_test_param_value_pairs)
+
+    test_parameter_value_pairs.sort()
+    unexpected_test_param_value_pairs.sort()
+
+    test_self.assertEqual(
+        test_parameter_value_pairs,
+        expected_results,
+        create_diff_parameter_value_pairs(test_parameter_value_pairs, expected_results),
+    )
+    test_self.assertEqual(
+        unexpected_test_param_value_pairs,
+        unexpected_results,
+        create_diff_parameter_value_pairs(unexpected_test_param_value_pairs, unexpected_results),
+    )

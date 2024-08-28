@@ -201,10 +201,38 @@ def _loop_over_parameter_values(
             )
 
 
+@typechecked
+def bi_filter(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+    filter_function: Callable[[ParameterValuePair], bool],
+):
+    """Filtering of parameter-value-pairs according to the specified filter function and put the
+    filtered entries in the list of removed parameter-value-pairs.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): List to be filtered
+        removed_parameter_value_pairs (List[ParameterValuePair]): List into which the filtered
+            elements are inserted
+        filter_function (Callable[[ParameterValuePair], bool]): Filter function. Returns true if the
+            element is to remain in parameter_value_pairs.
+    """
+    tmp_parameter_value_pairs: List[ParameterValuePair] = []
+
+    for param_val_pair in parameter_value_pairs:
+        if filter_function(param_val_pair):
+            tmp_parameter_value_pairs.append(param_val_pair)
+        else:
+            removed_parameter_value_pairs.append(param_val_pair)
+
+    parameter_value_pairs[:] = tmp_parameter_value_pairs
+
+
 # pylint: disable=too-many-locals
 @typechecked
 def remove_parameter_value_pairs(  # pylint: disable=too-many-arguments
     parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
     parameter1: Parameter = ANY_PARAM,
     value_name1: ValueName = ANY_NAME,
     value_version1: Union[int, float, str] = ANY_VERSION,
@@ -314,11 +342,12 @@ def remove_parameter_value_pairs(  # pylint: disable=too-many-arguments
         return not return_value
 
     len_before = len(parameter_value_pairs)
-    parameter_value_pairs[:] = list(filter(filter_func, parameter_value_pairs))
+    bi_filter(parameter_value_pairs, removed_parameter_value_pairs, filter_func)
 
     if symmetric:
         remove_parameter_value_pairs(
             parameter_value_pairs,
+            removed_parameter_value_pairs,
             parameter2,
             value_name2,
             value_version2,
@@ -366,6 +395,43 @@ def check_parameter_value_pair_in_combination_list(
             missing_expected_param = True
 
     return not missing_expected_param
+
+
+@typechecked
+def check_unexpected_parameter_value_pair_in_combination_list(
+    combination_list: CombinationList,
+    parameter_value_pairs: List[ParameterValuePair],
+    output: IO[str] = sys.stdout,
+) -> bool:
+    """Check if the given parameter-values-pairs exist in at least in one combination.
+
+    Args:
+        combination_list (CombinationList): list of given combination
+        parameter_value_pairs (List[ParameterValuePair]): list of parameter-value-pair to be search
+            for
+        output (IO[str], optional): Writes found parameter-values-pairs to it. Defaults to
+            sys.stdout.
+
+    Returns:
+        bool: returns True, if no given parameter-values-pairs was found in the combination-list
+    """
+    found_unexpected_param = False
+
+    for ex_param_val_pair in parameter_value_pairs:
+        param1, param_val1 = ex_param_val_pair[0]
+        param2, param_val2 = ex_param_val_pair[1]
+        for comb in combination_list:
+            # comb contains all parameters, therefore a check is not required
+            if comb[param1] == param_val1 and comb[param2] == param_val2:
+                print(
+                    f"found unexpected parameter-value-pair {ex_param_val_pair} "
+                    "in combination list",
+                    file=output,
+                )
+                found_unexpected_param = True
+                break
+
+    return not found_unexpected_param
 
 
 def reason(output: Optional[IO[str]], msg: str):
