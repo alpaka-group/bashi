@@ -1,15 +1,13 @@
 """Create list of expected parameter-value-pairs respecting bashi filter rules"""
 
-import copy
 from typing import List, Optional
 from typeguard import typechecked
 from packaging.specifiers import SpecifierSet
-from bashi.types import ParameterValue, ParameterValuePair, ParameterValueMatrix
+from bashi.types import ParameterValuePair, ParameterValueMatrix
 from bashi.utils import (
     get_expected_parameter_value_pairs,
     remove_parameter_value_pairs,
 )
-
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.versions import (
     COMPILERS,

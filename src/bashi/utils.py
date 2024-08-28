@@ -201,6 +201,33 @@ def _loop_over_parameter_values(
             )
 
 
+@typechecked
+def bi_filter(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+    filter_function: Callable[[ParameterValuePair], bool],
+):
+    """Filtering of parameter-value-pairs according to the specified filter function and put the
+    filtered entries in the list of removed parameter-value-pairs.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): List to be filtered
+        removed_parameter_value_pairs (List[ParameterValuePair]): List into which the filtered
+            elements are inserted
+        filter_function (Callable[[ParameterValuePair], bool]): Filter function. Returns true if the
+            element is to remain in parameter_value_pairs.
+    """
+    tmp_parameter_value_pairs: List[ParameterValuePair] = []
+
+    for param_val_pair in parameter_value_pairs:
+        if filter_function(param_val_pair):
+            tmp_parameter_value_pairs.append(param_val_pair)
+        else:
+            removed_parameter_value_pairs.append(param_val_pair)
+
+    parameter_value_pairs[:] = tmp_parameter_value_pairs
+
+
 # pylint: disable=too-many-locals
 @typechecked
 def remove_parameter_value_pairs(  # pylint: disable=too-many-arguments
@@ -395,7 +422,8 @@ def check_unexpected_parameter_value_pair_in_combination_list(
             # comb contains all parameters, therefore a check is not required
             if comb[param1] == param_val1 and comb[param2] == param_val2:
                 print(
-                    f"found unexpected parameter-value-pair {ex_param_val_pair} in combination list",
+                    f"found unexpected parameter-value-pair {ex_param_val_pair} "
+                    "in combination list",
                     file=output,
                 )
                 found_unexpected_param = True
