@@ -232,6 +232,7 @@ def bi_filter(
 @typechecked
 def remove_parameter_value_pairs(  # pylint: disable=too-many-arguments
     parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
     parameter1: Parameter = ANY_PARAM,
     value_name1: ValueName = ANY_NAME,
     value_version1: Union[int, float, str] = ANY_VERSION,
@@ -341,11 +342,12 @@ def remove_parameter_value_pairs(  # pylint: disable=too-many-arguments
         return not return_value
 
     len_before = len(parameter_value_pairs)
-    parameter_value_pairs[:] = list(filter(filter_func, parameter_value_pairs))
+    bi_filter(parameter_value_pairs, removed_parameter_value_pairs, filter_func)
 
     if symmetric:
         remove_parameter_value_pairs(
             parameter_value_pairs,
+            removed_parameter_value_pairs,
             parameter2,
             value_name2,
             value_version2,
