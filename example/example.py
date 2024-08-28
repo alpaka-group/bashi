@@ -12,13 +12,14 @@
 4. generate a job.yaml from the combination-list
 """
 
-from typing import List
+from typing import List, Tuple
 import os
 import sys
 import packaging.version as pkv
 from bashi.generator import generate_combination_list
 from bashi.utils import (
     check_parameter_value_pair_in_combination_list,
+    check_unexpected_parameter_value_pair_in_combination_list,
     remove_parameter_value_pairs,
 )
 from bashi.results import get_expected_bashi_parameter_value_pairs
@@ -41,6 +42,7 @@ from bashi.versions import (
 
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-locals
+# pylint: disable=too-many-statements
 def verify(combination_list: CombinationList, param_value_matrix: ParameterValueMatrix) -> bool:
     """Check if all expected parameter-value-pairs exists in the combination-list.
 
@@ -52,8 +54,15 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
     Returns:
         bool: True if it found all pairs
     """
-    expected_param_val_tuple: List[ParameterValuePair] = get_expected_bashi_parameter_value_pairs(
-        param_value_matrix
+    bashi_parameter_value_pairs_tuple: Tuple[List[ParameterValuePair], List[ParameterValuePair]] = (
+        get_expected_bashi_parameter_value_pairs(param_value_matrix)
+    )
+
+    expected_param_val_tuple, unexpected_param_val_tuple = bashi_parameter_value_pairs_tuple
+    before_number_of_expected_pairs = len(expected_param_val_tuple)
+    before_number_of_unexpected_pairs = len(unexpected_param_val_tuple)
+    before_total_number_of_pairs = (
+        before_number_of_expected_pairs + before_number_of_unexpected_pairs
     )
 
     gpu_backends = set(
@@ -85,6 +94,7 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
                 for other_backend_version in other_backend_versions:
                     remove_parameter_value_pairs(
                         expected_param_val_tuple,
+                        unexpected_param_val_tuple,
                         parameter1=gpu_backend,
                         value_name1=gpu_backend,
                         value_version1=gpu_version,
@@ -100,6 +110,7 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
             if cpu_backend != other_cpu_backend:
                 remove_parameter_value_pairs(
                     expected_param_val_tuple,
+                    unexpected_param_val_tuple,
                     parameter1=cpu_backend,
                     value_name1=cpu_backend,
                     value_version1=ON,
@@ -114,6 +125,7 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
             for cpu_backend in cpu_backends:
                 remove_parameter_value_pairs(
                     expected_param_val_tuple,
+                    unexpected_param_val_tuple,
                     parameter1=compiler_type,
                     value_name1=gpu_compiler,
                     value_version1=ANY_VERSION,
@@ -127,6 +139,7 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
         for cpu_backend in cpu_backends:
             remove_parameter_value_pairs(
                 expected_param_val_tuple,
+                unexpected_param_val_tuple,
                 parameter1=DEVICE_COMPILER,
                 value_name1=cpu_compiler,
                 value_version1=ANY_VERSION,
@@ -143,6 +156,7 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
     for cpu_backend in cpu_backends:
         remove_parameter_value_pairs(
             expected_param_val_tuple,
+            unexpected_param_val_tuple,
             parameter1=HOST_COMPILER,
             value_name1=GCC,
             value_version1=f"<={max_supported_nvcc_gcc_version}",
@@ -152,6 +166,7 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
         )
         remove_parameter_value_pairs(
             expected_param_val_tuple,
+            unexpected_param_val_tuple,
             parameter1=HOST_COMPILER,
             value_name1=CLANG,
             value_version1=f"<={max_supported_nvcc_clang_version}",
@@ -237,8 +252,28 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
                             )
                             all_right = False
 
+    after_number_of_expected_pairs = len(expected_param_val_tuple)
+    after_number_of_unexpected_pairs = len(unexpected_param_val_tuple)
+    after_total_number_of_pairs = after_number_of_expected_pairs + after_number_of_unexpected_pairs
+
+    if before_total_number_of_pairs != after_total_number_of_pairs:
+        print(
+            "Total number of pairs to check before and after user modification is not equal\n"
+            "total number of pairs from get_expected_bashi_parameter_value_pairs(): "
+            f"{before_total_number_of_pairs}\n"
+            f"     expected pairs: {before_number_of_expected_pairs}\n"
+            f"   unexpected pairs: {before_number_of_unexpected_pairs}\n"
+            f"total number of pairs after user modifications: {after_total_number_of_pairs}\n"
+            f"     expected pairs: {after_number_of_expected_pairs}\n"
+            f"   unexpected pairs: {after_number_of_unexpected_pairs}\n"
+        )
+        return False
+
     return (
         check_parameter_value_pair_in_combination_list(combination_list, expected_param_val_tuple)
+        and check_unexpected_parameter_value_pair_in_combination_list(
+            combination_list, unexpected_param_val_tuple
+        )
         and all_right
     )
 
