@@ -75,7 +75,9 @@ def get_expected_bashi_parameter_value_pairs(
     _remove_unsupported_clang_sdk_versions_for_clang_cuda(
         param_val_pair_list, removed_param_val_pair_list
     )
-
+    _remove_unsupported_gcc_versions_for_ubuntu2004(
+        param_val_pair_list, removed_param_val_pair_list
+    )
     return (param_val_pair_list, removed_param_val_pair_list)
 
 
@@ -747,3 +749,26 @@ def _remove_unsupported_clang_sdk_versions_for_clang_cuda(
         return True
 
     bi_filter(parameter_value_pairs, removed_parameter_value_pairs, filter_func)
+
+
+def _remove_unsupported_gcc_versions_for_ubuntu2004(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    """Remove pairs where GCC version 6 and older is used with Ubuntu 20.04 or newer.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+    """
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        for gcc_version in range(1, 7):
+            remove_parameter_value_pairs(
+                parameter_value_pairs,
+                removed_parameter_value_pairs,
+                parameter1=compiler_type,
+                value_name1=GCC,
+                value_version1=gcc_version,
+                parameter2=UBUNTU,
+                value_name2=UBUNTU,
+                value_version2="<20.04",
+            )

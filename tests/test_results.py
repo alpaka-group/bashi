@@ -42,6 +42,7 @@ from bashi.results import (
     _remove_device_compiler_gcc_clang_enabled_cuda_backend,
     _remove_specific_cuda_clang_combinations,
     _remove_unsupported_clang_sdk_versions_for_clang_cuda,
+    _remove_unsupported_gcc_versions_for_ubuntu2004,
 )
 from bashi.versions import NvccHostSupport, NVCC_GCC_MAX_VERSION
 
@@ -2247,4 +2248,57 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+        )
+
+    def test_remove_unsupported_gcc_versions_for_ubuntu2004_and_later(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({DEVICE_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "20.04")}),
+                OD({HOST_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "20.04")}),
+                OD({DEVICE_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "22.04")}),
+                OD({HOST_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "22.04")}),
+                OD({HOST_COMPILER: (GCC, 3), UBUNTU: (UBUNTU, "22.04")}),
+                OD({HOST_COMPILER: (GCC, 12), UBUNTU: (UBUNTU, "22.04")}),
+                OD({HOST_COMPILER: (GCC, 7), UBUNTU: (UBUNTU, "20.04")}),
+                OD({HOST_COMPILER: (GCC, 3), UBUNTU: (UBUNTU, "20.04")}),
+                OD({HOST_COMPILER: (GCC, 13), UBUNTU: (UBUNTU, "20.04")}),
+                OD({HOST_COMPILER: (GCC, 99), UBUNTU: (UBUNTU, "20.04")}),
+                OD({DEVICE_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "18.04")}),
+                OD({DEVICE_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "18.04")}),
+                OD({HOST_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "18.04")}),
+                OD({HOST_COMPILER: (GCC, 7), UBUNTU: (UBUNTU, "18.04")}),
+                OD({HOST_COMPILER: (GCC, 3), UBUNTU: (UBUNTU, "18.04")}),
+                OD({HOST_COMPILER: (GCC, 6), DEVICE_COMPILER: (GCC, 6)}),
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 6), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 3), DEVICE_COMPILER: (NVCC, 12.2)}),
+            ]
+        )
+        expected_results = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (GCC, 7), UBUNTU: (UBUNTU, "20.04")}),
+                OD({HOST_COMPILER: (GCC, 12), UBUNTU: (UBUNTU, "22.04")}),
+                OD({HOST_COMPILER: (GCC, 13), UBUNTU: (UBUNTU, "20.04")}),
+                OD({HOST_COMPILER: (GCC, 99), UBUNTU: (UBUNTU, "20.04")}),
+                OD({DEVICE_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "18.04")}),
+                OD({HOST_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "18.04")}),
+                OD({DEVICE_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "18.04")}),
+                OD({HOST_COMPILER: (GCC, 7), UBUNTU: (UBUNTU, "18.04")}),
+                OD({HOST_COMPILER: (GCC, 3), UBUNTU: (UBUNTU, "18.04")}),
+                OD({HOST_COMPILER: (GCC, 6), DEVICE_COMPILER: (GCC, 6)}),
+                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 6), DEVICE_COMPILER: (NVCC, 11.2)}),
+                OD({HOST_COMPILER: (GCC, 3), DEVICE_COMPILER: (NVCC, 12.2)}),
+            ]
+        )
+        default_remove_test(
+            _remove_unsupported_gcc_versions_for_ubuntu2004,
+            test_param_value_pairs,
+            expected_results,
+            self,
+        )
+        self.assertEqual(
+            test_param_value_pairs,
+            expected_results,
+            create_diff_parameter_value_pairs(test_param_value_pairs, expected_results),
         )
