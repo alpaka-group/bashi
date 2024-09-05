@@ -133,3 +133,59 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                 reason_msg.getvalue(),
                 f"device compiler GCC {gcc_version} is not available in Ubuntu 22.04",
             )
+
+    def test_valid_cmake_versions_for_clangcuda_d2(self):
+        for cmake_version in ["3.19", "3.26", "3.20", "3.49"]:
+            self.assertTrue(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((CLANG_CUDA, 14)),
+                            CMAKE: ppv((CMAKE, cmake_version)),
+                        }
+                    ),
+                )
+            )
+
+        for cmake_version in ["3.19", "3.26", "3.20", "3.49"]:
+            self.assertTrue(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((CLANG_CUDA, 15)),
+                            CMAKE: ppv((CMAKE, cmake_version)),
+                        }
+                    ),
+                )
+            )
+
+    def test_not_valid_cmake_versions_for_clangcuda_d2(self):
+        for cmake_version in ["3.9", "3.11", "3.17", "3.18"]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD({HOST_COMPILER: ppv((CLANG_CUDA, 14)), CMAKE: ppv((CMAKE, cmake_version))}),
+                    reason_msg,
+                ),
+                f"host compiler CLANG_CUDA + CMAKE {cmake_version}",
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"host compiler CLANG_CUDA is not available in CMAKE {cmake_version}",
+            )
+
+        for cmake_version in ["3.9", "3.11", "3.17", "3.18"]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {DEVICE_COMPILER: ppv((CLANG_CUDA, 15)), CMAKE: ppv((CMAKE, cmake_version))}
+                    ),
+                    reason_msg,
+                ),
+                f"device compiler CLANG_CUDA + CMAKE {cmake_version}",
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"device compiler CLANG_CUDA is not available in CMAKE {cmake_version}",
+            )

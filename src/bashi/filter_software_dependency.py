@@ -11,7 +11,7 @@ from typing import Optional, IO
 import packaging.version as pkv
 from typeguard import typechecked
 from bashi.types import ParameterValueTuple
-from bashi.globals import DEVICE_COMPILER, HOST_COMPILER, GCC, UBUNTU
+from bashi.globals import DEVICE_COMPILER, HOST_COMPILER, GCC, UBUNTU, CLANG_CUDA, CMAKE
 from bashi.utils import reason
 
 
@@ -77,6 +77,7 @@ def software_dependency_filter(
 
     # Rule: d1
     # GCC 6 and older is not available in Ubuntu 20.04 and newer
+
     if UBUNTU in row and row[UBUNTU].version >= pkv.parse("20.04"):
         for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
             if compiler_type in row and row[compiler_type].name == GCC:
@@ -88,5 +89,19 @@ def software_dependency_filter(
                         f"{__ubuntu_version_to_string(row[UBUNTU].version)}",
                     )
                     return False
+
+    # Rule: d2
+    # CMAKE 3.19 and older is not available with clang cuda as device and host compiler
+
+    if CMAKE in row and row[CMAKE].version <= pkv.parse("3.18"):
+        for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+            if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
+                reason(
+                    output,
+                    f"{__pretty_name_compiler(compiler_type)} CLANG_CUDA "
+                    "is not available in CMAKE "
+                    f"{row[CMAKE].version}",
+                )
+                return False
 
     return True

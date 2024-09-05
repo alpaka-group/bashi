@@ -43,6 +43,7 @@ from bashi.results import (
     _remove_specific_cuda_clang_combinations,
     _remove_unsupported_clang_sdk_versions_for_clang_cuda,
     _remove_unsupported_gcc_versions_for_ubuntu2004,
+    _remove_unsupported_cmake_versions_for_clangcuda,
 )
 from bashi.versions import NvccHostSupport, NVCC_GCC_MAX_VERSION
 
@@ -2293,6 +2294,59 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
         default_remove_test(
             _remove_unsupported_gcc_versions_for_ubuntu2004,
+            test_param_value_pairs,
+            expected_results,
+            self,
+        )
+        self.assertEqual(
+            test_param_value_pairs,
+            expected_results,
+            create_diff_parameter_value_pairs(test_param_value_pairs, expected_results),
+        )
+
+    def test_remove_unsupported_cmake_versions_for_clangcuda(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.19")}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.20")}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 15), CMAKE: (CMAKE, "3.18")}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.21")}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.26")}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 12), CMAKE: (CMAKE, "3.18")}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.46")}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 12), CMAKE: (CMAKE, "3.1")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 12), CMAKE: (CMAKE, "3.18")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.19")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 15), CMAKE: (CMAKE, "3.20")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.14")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.12")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.9")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 17), CMAKE: (CMAKE, "3.19")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.17")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.26")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.30")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 16), CMAKE: (CMAKE, "3.40")}),
+                OD({HOST_COMPILER: (GCC, 12), UBUNTU: (UBUNTU, "22.04")}),
+            ]
+        )
+        expected_results = parse_expected_val_pairs(
+            [
+                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.19")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.19")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 17), CMAKE: (CMAKE, "3.19")}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.20")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.30")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 16), CMAKE: (CMAKE, "3.40")}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.21")}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.26")}),
+                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.46")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 15), CMAKE: (CMAKE, "3.20")}),
+                OD({DEVICE_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.26")}),
+                OD({HOST_COMPILER: (GCC, 12), UBUNTU: (UBUNTU, 22.04)}),
+            ]
+        )
+        default_remove_test(
+            _remove_unsupported_cmake_versions_for_clangcuda,
             test_param_value_pairs,
             expected_results,
             self,

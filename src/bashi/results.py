@@ -78,6 +78,9 @@ def get_expected_bashi_parameter_value_pairs(
     _remove_unsupported_gcc_versions_for_ubuntu2004(
         param_val_pair_list, removed_param_val_pair_list
     )
+    _remove_unsupported_cmake_versions_for_clangcuda(
+        param_val_pair_list, removed_param_val_pair_list
+    )
     return (param_val_pair_list, removed_param_val_pair_list)
 
 
@@ -772,3 +775,20 @@ def _remove_unsupported_gcc_versions_for_ubuntu2004(
                 value_name2=UBUNTU,
                 value_version2="<20.04",
             )
+
+
+def _remove_unsupported_cmake_versions_for_clangcuda(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        remove_parameter_value_pairs(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            parameter1=compiler_type,
+            value_name1=CLANG_CUDA,
+            value_version1=ANY_VERSION,
+            parameter2=CMAKE,
+            value_name2=CMAKE,
+            value_version2=">3.18",
+        )
