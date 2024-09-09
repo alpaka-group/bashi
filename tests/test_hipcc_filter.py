@@ -728,6 +728,213 @@ class TestHipccCompilerFilter(unittest.TestCase):
             )
             self.assertEqual(reason_msg5.getvalue(), "hipcc does not support the CUDA backend.")
 
+    def test_hipcc_requires_ubuntu2004_pass_c19(self):
+        for version in (4.5, 5.3, 6.0):
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            UBUNTU: ppv((UBUNTU, "20.04")),
+                        }
+                    )
+                )
+            )
+
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            UBUNTU: ppv((UBUNTU, "20.04")),
+                        }
+                    )
+                )
+            )
+
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            UBUNTU: ppv((UBUNTU, "22.04")),
+                        }
+                    )
+                )
+            )
+
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            UBUNTU: ppv((UBUNTU, "22.04")),
+                        }
+                    )
+                )
+            )
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            UBUNTU: ppv((UBUNTU, "22.04")),
+                        }
+                    )
+                )
+            )
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            UBUNTU: ppv((UBUNTU, "20.04")),
+                        }
+                    )
+                )
+            )
+            self.assertTrue(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((GCC, 1)),
+                            DEVICE_COMPILER: ppv((GCC, 1)),
+                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                            UBUNTU: ppv((UBUNTU, "18.04")),
+                        }
+                    ),
+                )
+            )
+
+    def test_hipcc_requires_ubuntu2004_not_pass_c19(self):
+        for version in (4.5, 5.3, 6.0):
+            reason_msg1 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            UBUNTU: ppv((UBUNTU, "18.04")),
+                        }
+                    ),
+                    reason_msg1,
+                )
+            )
+            self.assertEqual(
+                reason_msg1.getvalue(),
+                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
+            )
+
+            reason_msg2 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            UBUNTU: ppv((UBUNTU, "18.04")),
+                        }
+                    ),
+                    reason_msg2,
+                )
+            )
+            self.assertEqual(
+                reason_msg2.getvalue(),
+                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
+            )
+
+            reason_msg3 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            UBUNTU: ppv((UBUNTU, "18.04")),
+                        }
+                    ),
+                    reason_msg3,
+                )
+            )
+            self.assertEqual(
+                reason_msg3.getvalue(),
+                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
+            )
+
+            reason_msg4 = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((HIPCC, version)),
+                            DEVICE_COMPILER: ppv((HIPCC, version)),
+                            UBUNTU: ppv((UBUNTU, "16.04")),
+                        }
+                    ),
+                    reason_msg4,
+                )
+            )
+            self.assertEqual(
+                reason_msg4.getvalue(),
+                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
+            )
+        for host_name, device_name, hip_backend, ubuntu_version, error_msg in [
+            (
+                HIPCC,
+                HIPCC,
+                ON,
+                "18.04",
+                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
+            ),
+            (
+                HIPCC,
+                GCC,
+                ON,
+                "18.04",
+                "host and device compiler name must be the same (except for nvcc)",
+            ),
+            (
+                CLANG,
+                HIPCC,
+                ON,
+                "18.04",
+                "host and device compiler name must be the same (except for nvcc)",
+            ),
+            (
+                GCC,
+                HIPCC,
+                OFF,
+                "18.04",
+                "host and device compiler name must be the same (except for nvcc)",
+            ),
+            (
+                HIPCC,
+                CLANG,
+                OFF,
+                "18.04",
+                "host and device compiler name must be the same (except for nvcc)",
+            ),
+        ]:
+            test_row = OD(
+                {
+                    HOST_COMPILER: ppv((host_name, 1)),
+                    DEVICE_COMPILER: ppv((device_name, 1)),
+                    ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, hip_backend)),
+                    UBUNTU: ppv((UBUNTU, ubuntu_version)),
+                },
+            )
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                compiler_filter_typechecked(test_row, reason_msg),
+                f"{test_row}",
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                error_msg,
+                f"{test_row}",
+            )
+
     def test_hip_and_cuda_backend_cannot_be_active_at_the_same_time_b3(self):
         self.assertTrue(
             backend_filter_typechecked(
