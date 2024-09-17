@@ -81,6 +81,9 @@ def get_expected_bashi_parameter_value_pairs(
     _remove_unsupported_cmake_versions_for_clangcuda(
         param_val_pair_list, removed_param_val_pair_list
     )
+    _remove_all_rocm_images_older_than_ubuntu2004_based(
+        param_val_pair_list, removed_param_val_pair_list
+    )
     return (param_val_pair_list, removed_param_val_pair_list)
 
 
@@ -791,4 +794,36 @@ def _remove_unsupported_cmake_versions_for_clangcuda(
             parameter2=CMAKE,
             value_name2=CMAKE,
             value_version2=">3.18",
+        )
+
+
+def _remove_all_rocm_images_older_than_ubuntu2004_based(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    """Remove all pairs where Ubuntu is older than 20.04 and the HIP backend is enabled or the host
+    or device compiler is HIPCC.
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+    """
+    remove_parameter_value_pairs(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=UBUNTU,
+        value_name1=UBUNTU,
+        value_version1=">=20.04",
+        parameter2=ALPAKA_ACC_GPU_HIP_ENABLE,
+        value_name2=ALPAKA_ACC_GPU_HIP_ENABLE,
+        value_version2=ON,
+    )
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        remove_parameter_value_pairs(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            parameter1=UBUNTU,
+            value_name1=UBUNTU,
+            value_version1=">=20.04",
+            parameter2=compiler_type,
+            value_name2=HIPCC,
+            value_version2=ANY_VERSION,
         )

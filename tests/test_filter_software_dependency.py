@@ -189,3 +189,116 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                 reason_msg.getvalue(),
                 f"device compiler CLANG_CUDA is not available in CMAKE {cmake_version}",
             )
+
+    def test_valid_ROCm_images_Ubuntu2004_based_d4(self):
+        for UBUNTU_version in ["20.04", "22.04", "21.04"]:
+            self.assertTrue(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                            UBUNTU: ppv((UBUNTU, UBUNTU_version)),
+                        }
+                    ),
+                )
+            )
+
+        for UBUNTU_version in ["16.04", "18.04", "19.04", "20.04", "22.04", "21.04"]:
+            self.assertTrue(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                            UBUNTU: ppv((UBUNTU, UBUNTU_version)),
+                        }
+                    ),
+                ),
+            )
+            self.assertTrue(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((HIPCC, 1)),
+                            DEVICE_COMPILER: ppv((HIPCC, 1)),
+                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                            UBUNTU: ppv((UBUNTU, "18.04")),
+                        }
+                    ),
+                ),
+            )
+
+    def test_non_valid_ROCm_images_Ubuntu2004_based_d4(self):
+        for UBUNTU_version in ["16.04", "18.04", "19.04"]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                            UBUNTU: ppv((UBUNTU, UBUNTU_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+                f"ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
+            )
+
+        for host_name, device_name, hip_backend, ubuntu_version, error_msg in [
+            (
+                HIPCC,
+                HIPCC,
+                ON,
+                "18.04",
+                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
+            ),
+            (
+                HIPCC,
+                GCC,
+                ON,
+                "18.04",
+                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
+            ),
+            (
+                CLANG,
+                HIPCC,
+                ON,
+                "18.04",
+                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
+            ),
+            (
+                GCC,
+                HIPCC,
+                ON,
+                "18.04",
+                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
+            ),
+            (
+                HIPCC,
+                CLANG,
+                ON,
+                "18.04",
+                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
+            ),
+        ]:
+            test_row = OD(
+                {
+                    HOST_COMPILER: ppv((host_name, 1)),
+                    DEVICE_COMPILER: ppv((device_name, 1)),
+                    ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, hip_backend)),
+                    UBUNTU: ppv((UBUNTU, ubuntu_version)),
+                },
+            )
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(test_row, reason_msg),
+                f"{test_row}",
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                error_msg,
+                f"{test_row}",
+            )

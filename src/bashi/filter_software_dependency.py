@@ -11,7 +11,7 @@ from typing import Optional, IO
 import packaging.version as pkv
 from typeguard import typechecked
 from bashi.types import ParameterValueTuple
-from bashi.globals import DEVICE_COMPILER, HOST_COMPILER, GCC, UBUNTU, CLANG_CUDA, CMAKE
+from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.utils import reason
 
 
@@ -103,5 +103,17 @@ def software_dependency_filter(
                     f"{row[CMAKE].version}",
                 )
                 return False
+    # Rule: d3
+    # all ROCm images are Ubuntu 20.04 based or newer
+    # related to rule c19
 
+    if UBUNTU in row and row[UBUNTU].version < pkv.parse("20.04"):
+        if ALPAKA_ACC_GPU_HIP_ENABLE in row and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER:
+            reason(
+                output,
+                "ROCm and also the hipcc compiler "
+                "is not available on Ubuntu "
+                "older than 20.04",
+            )
+            return False
     return True
