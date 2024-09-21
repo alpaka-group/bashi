@@ -484,3 +484,183 @@ def print_row_nice(
                 f"{nice_version.get(val.version, str(val.version))} "
             )
     print(s)
+
+
+def _create_version_range(
+    min_version: Union[int, float, str],
+    min_version_inclusive: bool,
+    max_version: Union[int, float, str],
+    max_version_inclusive: bool,
+) -> SpecifierSet:
+    """Creates Version SpecifierSet depending on the input.
+
+    Args:
+        min_version (Union[int, float, str]): Minimum version of the version range. Must be able
+            to be parsed into a `packaging.version.Version`. Use `ANY_VERSION` if the minimum range
+            should be open and every check for minimum version should return true.
+        min_version_inclusive (bool): If True, the minimum version is within the range and a check
+            for minimum version results in True. If False, the check for the minimum version results
+            in False.
+        max_version (Union[int, float, str]): Maximum version of the version range. Must be able
+            to be parsed into a `packaging.version.Version`. Use `ANY_VERSION` if the maximum range
+            should be open and every check for maximum version should return true.
+        max_version_inclusive (bool): If True, the maximum version is within the range and a check
+            for maximum version results in True. If False, the check for the maximum version results
+            in False.
+
+    Returns:
+        SpecifierSet: A SpecifierSet which can be used to check if version is inside the created
+            range.
+    """
+    # if empty, it matches all versions
+    min_range = SpecifierSet()
+    max_range = SpecifierSet()
+
+    if min_version != ANY_VERSION:
+        # check if valid version number
+        packaging.version.parse(str(min_version))
+        min_range = SpecifierSet(
+            ">=" + str(min_version) if min_version_inclusive else ">" + str(min_version)
+        )
+
+    if max_version != ANY_VERSION:
+        # check if valid version number
+        packaging.version.parse(str(max_version))
+        max_range = SpecifierSet(
+            "<=" + str(max_version) if max_version_inclusive else "<" + str(max_version)
+        )
+
+    return min_range & max_range
+
+
+@typechecked
+def remove_parameter_value_pairs_ranges(  # pylint: disable=too-many-arguments
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+    parameter1: Parameter = ANY_PARAM,
+    value_name1: ValueName = ANY_NAME,
+    value_min_version1: Union[int, float, str] = ANY_VERSION,
+    value_min_version1_inclusive: bool = True,
+    value_max_version1: Union[int, float, str] = ANY_VERSION,
+    value_max_version1_inclusive: bool = True,
+    parameter2: Parameter = ANY_PARAM,
+    value_name2: ValueName = ANY_NAME,
+    value_min_version2: Union[int, float, str] = ANY_VERSION,
+    value_min_version2_inclusive: bool = True,
+    value_max_version2: Union[int, float, str] = ANY_VERSION,
+    value_max_version2_inclusive: bool = True,
+    symmetric: bool = True,
+) -> bool:
+    """Removes all elements from `parameter_value_pairs` and moves them to
+    `removed_parameter_value_pairs` if certain filter requirements are met. The filter properties
+    are defined for the first and/or second parameter-value in a parameter-value-pair. All entries
+    that meet all requirements are removed from “parameter_value_pairs”.
+
+    The default values `ANY_PARAM`, `ANY_NAME` and `ANY_VERSION` match all values of each property,
+    which means if each argument is set to default, all elements of `parameter_value_pairs` are
+    removed.c
+
+    Parameter and value-name are checked for equality.
+
+    value_min_version and value_max_version allow you to define a version range that is to be
+    removed. By default, the version range is open in both directions (minimum and maximum version)
+    and can be restricted. If the version range is defined for both parameter values, the pair must
+    match both version ranges for it to be removed.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): list where parameter-value-pairs will be
+            removed
+        removed_parameter_value_pairs (List[ParameterValuePair]): list where removed
+            parameter-value-pairs will be stored
+        parameter1 (Parameter, optional): Name of the first parameter. Defaults to ANY_PARAM.
+        value_name1 (ValueName, optional): Name of the first value-name. Defaults to ANY_NAME.
+        value_min_version1 (Union[int, float, str], optional): Minimum version of the version range
+            of the first value-version. All versions that are greater than this version are removed.
+            Defaults to ANY_VERSION.
+        value_min_version1_inclusive (bool, optional): If True, `value_min_version1` is removed.
+            Otherwise, all versions greater than `value_min_version1` are removed. Defaults to True.
+        value_max_version1 (Union[int, float, str], optional): Maximum version of the version range
+            of the first value-version. All versions that are smaller than this version are removed.
+            Defaults to ANY_VERSION.
+        value_max_version1_inclusive (bool, optional): If True, `value_max_version1` is removed.
+            Otherwise, all versions smaller than `value_max_version1` are removed. Defaults to True.
+        parameter2 (Parameter, optional): _description_. Defaults to ANY_PARAM.
+        value_name2 (ValueName, optional): _description_. Defaults to ANY_NAME.
+        value_min_version2 (Union[int, float, str], optional): Minimum version of the version range
+            of the second value-version. All versions that are greater than this version are
+            removed. Defaults to ANY_VERSION.
+        value_min_version2_inclusive (bool, optional): If True, `value_min_version2` is removed.
+            Otherwise, all versions greater than `value_min_version2` are removed. Defaults to True.
+        value_max_version2 (Union[int, float, str], optional): Maximum version of the version range
+            of the second value-version. All versions that are smaller than this version are
+            removed. Defaults to ANY_VERSION.
+        value_max_version2_inclusive (bool, optional): If True, `value_max_version2` is removed.
+            Otherwise, all versions smaller than `value_max_version2` are removed. Defaults to True.
+        symmetric (bool, optional): If symmetric is true, it does not matter whether a group of
+            parameters, value-name and value-version was found in the first or second
+            parameter-value. If false, it is taken into account whether the search criterion was
+            found in the first or second parameter value. Defaults to True.
+
+    Returns:
+        bool: Return True, if parameter-value-pair was removed.
+    """
+    filter_list: List[Callable[[ParameterValuePair], bool]] = []
+    if parameter1 != ANY_PARAM:
+        filter_list.append(lambda param_val: param_val.first.parameter == parameter1)
+
+    if value_name1 != ANY_NAME:
+        filter_list.append(lambda param_val: param_val.first.parameterValue.name == value_name1)
+
+    if parameter2 != ANY_PARAM:
+        filter_list.append(lambda param_val: param_val.second.parameter == parameter2)
+
+    if value_name2 != ANY_NAME:
+        filter_list.append(lambda param_val: param_val.second.parameterValue.name == value_name2)
+
+    range_ver1 = _create_version_range(
+        value_min_version1,
+        value_min_version1_inclusive,
+        value_max_version1,
+        value_max_version1_inclusive,
+    )
+    filter_list.append(lambda param_val: param_val.first.parameterValue.version in range_ver1)
+
+    range_ver2 = _create_version_range(
+        value_min_version2,
+        value_min_version2_inclusive,
+        value_max_version2,
+        value_max_version2_inclusive,
+    )
+    filter_list.append(lambda param_val: param_val.second.parameterValue.version in range_ver2)
+
+    def filter_func(param_value_pair: ParameterValuePair) -> bool:
+        return_value = True
+
+        for f in filter_list:
+            return_value = return_value and f(param_value_pair)
+
+        return not return_value
+
+    len_before = len(parameter_value_pairs)
+    bi_filter(parameter_value_pairs, removed_parameter_value_pairs, filter_func)
+
+    if symmetric:
+        remove_parameter_value_pairs_ranges(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            parameter2,
+            value_name2,
+            value_min_version2,
+            value_min_version2_inclusive,
+            value_max_version2,
+            value_max_version2_inclusive,
+            parameter1,
+            value_name1,
+            value_min_version1,
+            value_min_version1_inclusive,
+            value_max_version1,
+            value_max_version1_inclusive,
+            symmetric=False,
+        )
+
+    return len_before != len(parameter_value_pairs)
