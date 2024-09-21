@@ -4,7 +4,12 @@ from typing import List, Optional, Tuple
 from typeguard import typechecked
 from packaging.specifiers import SpecifierSet
 from bashi.types import ParameterValuePair, ParameterValueMatrix
-from bashi.utils import get_expected_parameter_value_pairs, remove_parameter_value_pairs, bi_filter
+from bashi.utils import (
+    get_expected_parameter_value_pairs,
+    remove_parameter_value_pairs,
+    remove_parameter_value_pairs_ranges,
+    bi_filter,
+)
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.versions import (
     COMPILERS,
@@ -96,7 +101,7 @@ def _remove_nvcc_host_compiler(
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
-    remove_parameter_value_pairs(
+    remove_parameter_value_pairs_ranges(
         parameter_value_pairs,
         removed_parameter_value_pairs,
         parameter1=HOST_COMPILER,
@@ -555,15 +560,15 @@ def _remove_enabled_cuda_backend_for_icpx(
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
     for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-        remove_parameter_value_pairs(
+        remove_parameter_value_pairs_ranges(
             parameter_value_pairs,
             removed_parameter_value_pairs,
             parameter1=compiler_type,
             value_name1=ICPX,
-            value_version1=ANY_VERSION,
             parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
             value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
-            value_version2="==0.0.0",
+            value_min_version2=OFF,
+            value_min_version2_inclusive=False,
         )
 
 
@@ -576,15 +581,17 @@ def _remove_enabled_cuda_backend_for_enabled_sycl_backend(
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
-    remove_parameter_value_pairs(
+    remove_parameter_value_pairs_ranges(
         parameter_value_pairs,
         removed_parameter_value_pairs,
         parameter1=ALPAKA_ACC_SYCL_ENABLE,
         value_name1=ALPAKA_ACC_SYCL_ENABLE,
-        value_version1=ON,
+        value_min_version1=ON,
+        value_max_version1=ON,
         parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
         value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
-        value_version2="==0.0.0",
+        value_min_version2=OFF,
+        value_min_version2_inclusive=False,
     )
 
 
@@ -665,15 +672,15 @@ def _remove_device_compiler_gcc_clang_enabled_cuda_backend(
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
     for compiler in (GCC, CLANG):
-        remove_parameter_value_pairs(
+        remove_parameter_value_pairs_ranges(
             parameter_value_pairs,
             removed_parameter_value_pairs,
             parameter1=DEVICE_COMPILER,
             value_name1=compiler,
-            value_version1=ANY_VERSION,
             parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
             value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
-            value_version2="==0.0.0",
+            value_min_version2=OFF,
+            value_min_version2_inclusive=False,
         )
 
 
@@ -767,17 +774,16 @@ def _remove_unsupported_gcc_versions_for_ubuntu2004(
         parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
     """
     for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-        for gcc_version in range(1, 7):
-            remove_parameter_value_pairs(
-                parameter_value_pairs,
-                removed_parameter_value_pairs,
-                parameter1=compiler_type,
-                value_name1=GCC,
-                value_version1=gcc_version,
-                parameter2=UBUNTU,
-                value_name2=UBUNTU,
-                value_version2="<20.04",
-            )
+        remove_parameter_value_pairs_ranges(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            parameter1=compiler_type,
+            value_name1=GCC,
+            value_max_version1=6,
+            parameter2=UBUNTU,
+            value_name2=UBUNTU,
+            value_min_version2="20.04",
+        )
 
 
 def _remove_unsupported_cmake_versions_for_clangcuda(
