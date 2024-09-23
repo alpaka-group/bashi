@@ -29,6 +29,7 @@ from bashi.results import (
     _remove_unsupported_compiler_for_hip_backend,
     _remove_disabled_hip_backend_for_hipcc,
     _remove_enabled_sycl_backend_for_hipcc,
+    _remove_enabled_hip_and_sycl_backend_at_same_time,
     _remove_enabled_cuda_backend_for_hipcc,
     _remove_enabled_cuda_backend_for_enabled_hip_backend,
     _remove_unsupported_compiler_for_sycl_backend,
@@ -1067,6 +1068,92 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
 
         default_remove_test(
             _remove_enabled_sycl_backend_for_hipcc,
+            test_param_value_pairs,
+            expected_results,
+            self,
+        )
+
+    def test_remove_enabled_hip_and_sycl_backend_at_same_time(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+            [
+                OD(
+                    {
+                        HOST_COMPILER: (CLANG_CUDA, 16),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
+                        DEVICE_COMPILER: (HIPCC, 4.3),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                    }
+                ),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+            ]
+        )
+
+        expected_results = parse_expected_val_pairs(
+            [
+                OD(
+                    {
+                        HOST_COMPILER: (CLANG_CUDA, 16),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
+                        DEVICE_COMPILER: (HIPCC, 4.3),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
+                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                    }
+                ),
+                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+            ]
+        )
+
+        default_remove_test(
+            _remove_enabled_hip_and_sycl_backend_at_same_time,
             test_param_value_pairs,
             expected_results,
             self,

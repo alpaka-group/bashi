@@ -49,15 +49,8 @@ def get_expected_bashi_parameter_value_pairs(
     _remove_unsupported_compiler_for_hip_backend(param_val_pair_list, removed_param_val_pair_list)
     _remove_disabled_hip_backend_for_hipcc(param_val_pair_list, removed_param_val_pair_list)
     _remove_enabled_sycl_backend_for_hipcc(param_val_pair_list, removed_param_val_pair_list)
-    remove_parameter_value_pairs(
-        param_val_pair_list,
-        removed_param_val_pair_list,
-        parameter1=ALPAKA_ACC_GPU_HIP_ENABLE,
-        value_name1=ALPAKA_ACC_GPU_HIP_ENABLE,
-        value_version1=ON,
-        parameter2=ALPAKA_ACC_SYCL_ENABLE,
-        value_name2=ALPAKA_ACC_SYCL_ENABLE,
-        value_version2=ON,
+    _remove_enabled_hip_and_sycl_backend_at_same_time(
+        param_val_pair_list, removed_param_val_pair_list
     )
     _remove_enabled_cuda_backend_for_hipcc(param_val_pair_list, removed_param_val_pair_list)
     _remove_enabled_cuda_backend_for_enabled_hip_backend(
@@ -119,12 +112,12 @@ def _remove_unsupported_clang_cuda_version(
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
     for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-        remove_parameter_value_pairs(
+        remove_parameter_value_pairs_ranges(
             parameter_value_pairs,
             removed_parameter_value_pairs,
             parameter1=compiler_type,
             value_name1=CLANG_CUDA,
-            value_version1=">13",
+            value_max_version1=13,
         )
 
 
@@ -139,7 +132,7 @@ def _remove_unsupported_nvcc_host_compiler(
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
     for compiler_name in set(COMPILERS) - set([GCC, CLANG, NVCC]):
-        remove_parameter_value_pairs(
+        remove_parameter_value_pairs_ranges(
             parameter_value_pairs,
             removed_parameter_value_pairs,
             parameter1=HOST_COMPILER,
@@ -164,7 +157,7 @@ def _remove_different_compiler_names(
     for host_compiler_name in set(COMPILERS) - set([NVCC]):
         for device_compiler_name in set(COMPILERS) - set([NVCC]):
             if host_compiler_name != device_compiler_name:
-                remove_parameter_value_pairs(
+                remove_parameter_value_pairs_ranges(
                     parameter_value_pairs,
                     removed_parameter_value_pairs,
                     parameter1=HOST_COMPILER,
@@ -243,6 +236,7 @@ def _remove_nvcc_unsupported_clang_versions(
     )
 
 
+# pylint: disable=too-many-positional-arguments
 def _remove_unsupported_nvcc_cuda_host_compiler_versions(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
@@ -253,6 +247,7 @@ def _remove_unsupported_nvcc_cuda_host_compiler_versions(
 ):
     # pylint: disable=too-few-public-methods
     # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     class _FilterFunctor:
         def __init__(
             self,
@@ -359,15 +354,15 @@ def _remove_specific_nvcc_clang_combinations(
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
-    remove_parameter_value_pairs(
+    remove_parameter_value_pairs_ranges(
         parameter_value_pairs,
         removed_parameter_value_pairs,
         parameter1=HOST_COMPILER,
         value_name1=CLANG,
-        value_version1=ANY_VERSION,
         parameter2=DEVICE_COMPILER,
         value_name2=NVCC,
-        value_version2="!=11.3,!=11.4,!=11.5",
+        value_min_version2="11.3",
+        value_max_version2="11.5",
     )
 
 
@@ -439,33 +434,11 @@ def _remove_enabled_sycl_backend_for_hipcc(
         )
 
 
-def _remove_enabled_cuda_backend_for_hipcc(
+def _remove_enabled_hip_and_sycl_backend_at_same_time(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
 ):
-    """Remove all pairs, where the hipcc is the compiler and the sycl backend is enabled.
-
-    parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
-    removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
-    """
-    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-        remove_parameter_value_pairs(
-            parameter_value_pairs,
-            removed_parameter_value_pairs,
-            parameter1=compiler_type,
-            value_name1=HIPCC,
-            value_version1=ANY_VERSION,
-            parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
-            value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
-            value_version2="==0.0.0",
-        )
-
-
-def _remove_enabled_cuda_backend_for_enabled_hip_backend(
-    parameter_value_pairs: List[ParameterValuePair],
-    removed_parameter_value_pairs: List[ParameterValuePair],
-):
-    """Remove all pairs, where the hipcc is the compiler and the sycl backend is enabled.
+    """Remove all pairs, where the HIP and the sycl backend are enabled at the same time.
 
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
@@ -476,9 +449,54 @@ def _remove_enabled_cuda_backend_for_enabled_hip_backend(
         parameter1=ALPAKA_ACC_GPU_HIP_ENABLE,
         value_name1=ALPAKA_ACC_GPU_HIP_ENABLE,
         value_version1=ON,
+        parameter2=ALPAKA_ACC_SYCL_ENABLE,
+        value_name2=ALPAKA_ACC_SYCL_ENABLE,
+        value_version2=ON,
+    )
+
+
+def _remove_enabled_cuda_backend_for_hipcc(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    """Remove all pairs, where the hipcc is the compiler and the cuda backend is enabled.
+
+    parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
+    """
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        remove_parameter_value_pairs_ranges(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            parameter1=compiler_type,
+            value_name1=HIPCC,
+            parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+            value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+            value_min_version2=OFF,
+            value_min_version2_inclusive=False,
+        )
+
+
+def _remove_enabled_cuda_backend_for_enabled_hip_backend(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    """Remove all pairs, where the HIP and the CUDA backend is enabled at the same time.
+
+    parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
+    removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
+    """
+    remove_parameter_value_pairs_ranges(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=ALPAKA_ACC_GPU_HIP_ENABLE,
+        value_name1=ALPAKA_ACC_GPU_HIP_ENABLE,
+        value_min_version1=OFF,
+        value_min_version1_inclusive=False,
         parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
         value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
-        value_version2="==0.0.0",
+        value_min_version2=OFF,
+        value_min_version2_inclusive=False,
     )
 
 
@@ -486,7 +504,7 @@ def _remove_unsupported_compiler_for_sycl_backend(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
 ):
-    """Remove all pairs, where the hip backend is enabled and the compiler is not hipcc.
+    """Remove all pairs, where the compiler does not support the SYCL backend.
 
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
@@ -510,7 +528,7 @@ def _remove_disabled_sycl_backend_for_icpx(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
 ):
-    """Remove all pairs, where the hipcc is the compiler and the hip backend is disabled.
+    """Remove all pairs, where the ICPX is the compiler and the SYCL backend is disabled.
 
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
@@ -532,7 +550,7 @@ def _remove_enabled_hip_backend_for_icpx(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
 ):
-    """Remove all pairs, where the hipcc is the compiler and the sycl backend is enabled.
+    """Remove all pairs, where ICPX is the compiler and the HIP backend is enabled.
 
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
@@ -554,7 +572,7 @@ def _remove_enabled_cuda_backend_for_icpx(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
 ):
-    """Remove all pairs, where the hipcc is the compiler and the sycl backend is enabled.
+    """Remove all pairs, where ICPX is the compiler and the CUDA backend is enabled.
 
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
@@ -576,7 +594,7 @@ def _remove_enabled_cuda_backend_for_enabled_sycl_backend(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
 ):
-    """Remove all pairs, where the hipcc is the compiler and the sycl backend is enabled.
+    """Remove all pairs, where the SYCL and the CUDA backend is enabled at the same time.
 
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
@@ -693,15 +711,15 @@ def _remove_specific_cuda_clang_combinations(
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
-    remove_parameter_value_pairs(
+    remove_parameter_value_pairs_ranges(
         parameter_value_pairs,
         removed_parameter_value_pairs,
         parameter1=HOST_COMPILER,
         value_name1=CLANG,
-        value_version1=ANY_VERSION,
         parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
         value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
-        value_version2="!=11.3,!=11.4,!=11.5",
+        value_min_version2=11.3,
+        value_max_version2=11.5,
     )
 
 
@@ -771,7 +789,9 @@ def _remove_unsupported_gcc_versions_for_ubuntu2004(
     """Remove pairs where GCC version 6 and older is used with Ubuntu 20.04 or newer.
 
     Args:
-        parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+
+    parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+    removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
     for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
         remove_parameter_value_pairs_ranges(
@@ -790,16 +810,22 @@ def _remove_unsupported_cmake_versions_for_clangcuda(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
 ):
+    """Remove CMake 3.18 if Clang-CUDA is the host or device compiler.
+
+    Args:
+
+    parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+    removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
+    """
     for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-        remove_parameter_value_pairs(
+        remove_parameter_value_pairs_ranges(
             parameter_value_pairs,
             removed_parameter_value_pairs,
             parameter1=compiler_type,
             value_name1=CLANG_CUDA,
-            value_version1=ANY_VERSION,
             parameter2=CMAKE,
             value_name2=CMAKE,
-            value_version2=">3.18",
+            value_max_version2="3.18",
         )
 
 
@@ -812,24 +838,25 @@ def _remove_all_rocm_images_older_than_ubuntu2004_based(
     Args:
         parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
     """
-    remove_parameter_value_pairs(
+    remove_parameter_value_pairs_ranges(
         parameter_value_pairs,
         removed_parameter_value_pairs,
         parameter1=UBUNTU,
         value_name1=UBUNTU,
-        value_version1=">=20.04",
+        value_max_version1="20.04",
+        value_max_version1_inclusive=False,
         parameter2=ALPAKA_ACC_GPU_HIP_ENABLE,
         value_name2=ALPAKA_ACC_GPU_HIP_ENABLE,
-        value_version2=ON,
+        value_min_version2=ON,
     )
     for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-        remove_parameter_value_pairs(
+        remove_parameter_value_pairs_ranges(
             parameter_value_pairs,
             removed_parameter_value_pairs,
             parameter1=UBUNTU,
             value_name1=UBUNTU,
-            value_version1=">=20.04",
+            value_max_version1="20.04",
+            value_max_version1_inclusive=False,
             parameter2=compiler_type,
             value_name2=HIPCC,
-            value_version2=ANY_VERSION,
         )

@@ -98,6 +98,7 @@ class FilterAdapter:
         return self.filter_func(ordered_row)
 
 
+# pylint: disable=too-many-positional-arguments
 @typechecked
 def create_parameter_value_pair(  # pylint: disable=too-many-arguments
     parameter1: str,
@@ -402,6 +403,7 @@ def _create_version_range(
 
 
 # pylint: disable=too-many-locals
+# pylint: disable=too-many-positional-arguments
 @typechecked
 def remove_parameter_value_pairs_ranges(  # pylint: disable=too-many-arguments
     parameter_value_pairs: List[ParameterValuePair],
@@ -540,6 +542,7 @@ def remove_parameter_value_pairs_ranges(  # pylint: disable=too-many-arguments
 
 
 # pylint: disable=too-many-locals
+# pylint: disable=too-many-positional-arguments
 @typechecked
 def remove_parameter_value_pairs(  # pylint: disable=too-many-arguments
     parameter_value_pairs: List[ParameterValuePair],
