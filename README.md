@@ -71,6 +71,10 @@ This section contains some hints for developing new functions. The hints are mai
 
 Writing a new filter rule can be complicated. That's why we offer a [best practice guide](docs/rules.md).
 
+## Removing expected parameter-values
+
+`bashi` offers the option of checking the generated combination-list for expected and unexpected parameter-value-pairs. To do this, `bashi` first generates all possible parameter-value-pairs from the input parameter-values and then removes unexpected parameter-values. `bashi` supports common cases of removing parameter-value-pairs with some util functions. Read the [guide for removing parameter-value-pairs](./docs/remove-parameter-value-pairs.md) for more information about util functions.
+
 ## Formatting the Source Code
 
 The source code is formatted using the [black](https://pypi.org/project/black/) formatter and the default style guide. You must install it and run `black /path/to/file` to format a file. A CI job checks that all files are formatted correctly. If the job fails, a PR cannot be merged.

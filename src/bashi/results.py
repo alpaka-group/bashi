@@ -847,7 +847,8 @@ def _remove_all_rocm_images_older_than_ubuntu2004_based(
         value_max_version1_inclusive=False,
         parameter2=ALPAKA_ACC_GPU_HIP_ENABLE,
         value_name2=ALPAKA_ACC_GPU_HIP_ENABLE,
-        value_min_version2=ON,
+        value_min_version2=OFF,
+        value_min_version2_inclusive=False,
     )
     for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
         remove_parameter_value_pairs_ranges(
