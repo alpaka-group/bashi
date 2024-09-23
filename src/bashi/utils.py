@@ -6,7 +6,7 @@ from collections import OrderedDict
 from typing import IO, Dict, List, Optional, Union, Callable
 
 import packaging.version
-from packaging.specifiers import SpecifierSet, InvalidSpecifier
+from packaging.specifiers import SpecifierSet
 from typeguard import typechecked
 
 from bashi.types import (
@@ -228,138 +228,6 @@ def bi_filter(
     parameter_value_pairs[:] = tmp_parameter_value_pairs
 
 
-# pylint: disable=too-many-locals
-@typechecked
-def remove_parameter_value_pairs(  # pylint: disable=too-many-arguments
-    parameter_value_pairs: List[ParameterValuePair],
-    removed_parameter_value_pairs: List[ParameterValuePair],
-    parameter1: Parameter = ANY_PARAM,
-    value_name1: ValueName = ANY_NAME,
-    value_version1: Union[int, float, str] = ANY_VERSION,
-    parameter2: Parameter = ANY_PARAM,
-    value_name2: ValueName = ANY_NAME,
-    value_version2: Union[int, float, str] = ANY_VERSION,
-    symmetric: bool = True,
-) -> bool:
-    """Removes a parameter-value-pair from a list based on the specified search criteria. A
-    parameter-value pair must match all specified search criteria to be removed if none of the
-    criteria is `ANY_*`. If a criterion is `ANY_*`, it is ignored and it is always a match.
-
-    Args:
-        parameter_value_pairs (List[ParameterValuePair]): list where parameter-value-pairs will be
-            removed
-        parameter1 (Parameter, optional): Name of the first parameter. Defaults to ANY_PARAM.
-        value_name1 (ValueName, optional): Name of the first value-name. Defaults to ANY_NAME.
-        value_version1 (Union[int, float, str], optional): Name of the first value-version. Either
-            as a single version or as a version range that can be parsed into a
-            `packaging.specifier.SpecifierSet`. If it is a version range, all versions that are not
-            within this range are removed. Defaults to ANY_VERSION.
-        parameter2 (Parameter, optional): Name of the second parameter. Defaults to ANY_PARAM.
-        value_name2 (ValueName, optional): Name of the second value-name. Defaults to ANY_NAME.
-        value_version2 (Union[int, float, str], optional): Name of the second value-name. Either as
-            a single version or as a version range that can be parsed into a
-            `packaging.specifier.SpecifierSet`. If it is a version range, all versions that are not
-            within this range are removed. Defaults to ANY_VERSION.
-        symmetric (bool, optional): If symmetric is true, it does not matter whether a group of
-            parameters, value-name and value-version was found in the first or second
-            parameter-value. If false, it is taken into account whether the search criterion was
-            found in the first or second parameter value. Defaults to True.
-
-    Returns:
-        bool: Return True, if parameter-value-pair was removed.
-    """
-    filter_list: List[Callable[[ParameterValuePair], bool]] = []
-    if parameter1 != ANY_PARAM:
-        filter_list.append(lambda param_val: param_val.first.parameter == parameter1)
-
-    if value_name1 != ANY_NAME:
-        filter_list.append(lambda param_val: param_val.first.parameterValue.name == value_name1)
-
-    if parameter2 != ANY_PARAM:
-        filter_list.append(lambda param_val: param_val.second.parameter == parameter2)
-
-    if value_name2 != ANY_NAME:
-        filter_list.append(lambda param_val: param_val.second.parameterValue.name == value_name2)
-
-    def is_specifier_set(version: Union[int, float, str]) -> bool:
-        try:
-            SpecifierSet(str(version))
-            return True
-        except InvalidSpecifier:
-            return False
-
-    if (
-        value_version1 != ANY_VERSION
-        and value_version2 != ANY_VERSION
-        and is_specifier_set(value_version1)
-        and is_specifier_set(value_version2)
-    ):
-        specifier_set_version1 = SpecifierSet(str(value_version1))
-        specifier_set_version2 = SpecifierSet(str(value_version2))
-
-        filter_list.append(
-            lambda param_val: not (
-                param_val.first.parameterValue.version in specifier_set_version1
-                and param_val.second.parameterValue.version in specifier_set_version2
-            )
-        )
-
-    else:
-        if value_version1 != ANY_VERSION:
-            try:
-                specifier_set_version1 = SpecifierSet(str(value_version1))
-                filter_list.append(
-                    lambda param_val: not param_val.first.parameterValue.version
-                    in specifier_set_version1
-                )
-            except InvalidSpecifier:
-                parsed_value_version1 = packaging.version.parse(str(value_version1))
-                filter_list.append(
-                    lambda param_val: param_val.first.parameterValue.version
-                    == parsed_value_version1
-                )
-
-        if value_version2 != ANY_VERSION:
-            try:
-                specifier_set_version2 = SpecifierSet(str(value_version2))
-                filter_list.append(
-                    lambda param_val: not param_val.second.parameterValue.version
-                    in specifier_set_version2
-                )
-            except InvalidSpecifier:
-                parsed_value_version2 = packaging.version.parse(str(value_version2))
-                filter_list.append(
-                    lambda param_val: param_val.second.parameterValue.version
-                    == parsed_value_version2
-                )
-
-    def filter_func(param_value_pair: ParameterValuePair) -> bool:
-        return_value = True
-
-        for f in filter_list:
-            return_value = return_value and f(param_value_pair)
-
-        return not return_value
-
-    len_before = len(parameter_value_pairs)
-    bi_filter(parameter_value_pairs, removed_parameter_value_pairs, filter_func)
-
-    if symmetric:
-        remove_parameter_value_pairs(
-            parameter_value_pairs,
-            removed_parameter_value_pairs,
-            parameter2,
-            value_name2,
-            value_version2,
-            parameter1,
-            value_name1,
-            value_version1,
-            symmetric=False,
-        )
-
-    return len_before != len(parameter_value_pairs)
-
-
 @typechecked
 def check_parameter_value_pair_in_combination_list(
     combination_list: CombinationList,
@@ -533,6 +401,7 @@ def _create_version_range(
     return min_range & max_range
 
 
+# pylint: disable=too-many-locals
 @typechecked
 def remove_parameter_value_pairs_ranges(  # pylint: disable=too-many-arguments
     parameter_value_pairs: List[ParameterValuePair],
@@ -555,6 +424,10 @@ def remove_parameter_value_pairs_ranges(  # pylint: disable=too-many-arguments
     `removed_parameter_value_pairs` if certain filter requirements are met. The filter properties
     are defined for the first and/or second parameter-value in a parameter-value-pair. All entries
     that meet all requirements are removed from “parameter_value_pairs”.
+
+    Use `remove_parameter_value_pairs()` if you want to remove a single version from the first
+    and/or second parameter value. If you want to remove a range of versions, use
+    `remove_parameter_value_pairs_ranges()`.
 
     The default values `ANY_PARAM`, `ANY_NAME` and `ANY_VERSION` match all values of each property,
     which means if each argument is set to default, all elements of `parameter_value_pairs` are
@@ -664,3 +537,68 @@ def remove_parameter_value_pairs_ranges(  # pylint: disable=too-many-arguments
         )
 
     return len_before != len(parameter_value_pairs)
+
+
+# pylint: disable=too-many-locals
+@typechecked
+def remove_parameter_value_pairs(  # pylint: disable=too-many-arguments
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+    parameter1: Parameter = ANY_PARAM,
+    value_name1: ValueName = ANY_NAME,
+    value_version1: Union[int, float, str] = ANY_VERSION,
+    parameter2: Parameter = ANY_PARAM,
+    value_name2: ValueName = ANY_NAME,
+    value_version2: Union[int, float, str] = ANY_VERSION,
+    symmetric: bool = True,
+) -> bool:
+    """Removes a parameter-value-pair from a list based on the specified search criteria. A
+    parameter-value pair must match all specified search criteria to be removed if none of the
+    criteria is `ANY_*`. If a criterion is `ANY_*`, it is ignored and it is always a match.
+
+    Use `remove_parameter_value_pairs()` if you want to remove a single version from the first
+    and/or second parameter value. If you want to remove a range of versions, use
+    `remove_parameter_value_pairs_ranges()`.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): list where parameter-value-pairs will be
+            removed
+        removed_parameter_value_pairs (List[ParameterValuePair]): list where removed
+            parameter-value-pairs will be stored
+        parameter1 (Parameter, optional): Name of the first parameter. Defaults to ANY_PARAM.
+        value_name1 (ValueName, optional): Name of the first value-name. Defaults to ANY_NAME.
+        value_version1 (Union[int, float, str], optional): Name of the first value-version. Needs to
+            be parsable to `Packaging.version.Version`. Defaults to ANY_VERSION.
+        parameter2 (Parameter, optional): Name of the second parameter. Defaults to ANY_PARAM.
+        value_name2 (ValueName, optional): Name of the second value-name. Defaults to ANY_NAME.
+        value_version2 (Union[int, float, str], optional): Name of the second value-name. Needs to
+            be parsable to `Packaging.version.Version`. Defaults to ANY_VERSION.
+        symmetric (bool, optional): If symmetric is true, it does not matter whether a group of
+            parameters, value-name and value-version was found in the first or second
+            parameter-value. If false, it is taken into account whether the search criterion was
+            found in the first or second parameter value. Defaults to True.
+
+    Returns:
+        bool: Return True, if parameter-value-pair was removed.
+    """
+    for v in (value_version1, value_version2):
+        if v != ANY_VERSION:
+            packaging.version.Version(str(v))
+
+    return remove_parameter_value_pairs_ranges(
+        parameter_value_pairs=parameter_value_pairs,
+        removed_parameter_value_pairs=removed_parameter_value_pairs,
+        parameter1=parameter1,
+        value_name1=value_name1,
+        value_min_version1=value_version1,
+        value_min_version1_inclusive=True,
+        value_max_version1=value_version1,
+        value_max_version1_inclusive=True,
+        parameter2=parameter2,
+        value_name2=value_name2,
+        value_min_version2=value_version2,
+        value_min_version2_inclusive=True,
+        value_max_version2=value_version2,
+        value_max_version2_inclusive=True,
+        symmetric=symmetric,
+    )
