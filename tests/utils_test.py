@@ -62,7 +62,7 @@ def parse_expected_val_pairs(
 
     for param_val_pair in input_list:
         if len(param_val_pair) != 2:
-            raise RuntimeError("input_list needs to have two entries")
+            raise RuntimeError(f"{param_val_pair}\ninput_list needs to have two entries")
 
         it = iter(param_val_pair.items())
         param1, param_val1 = next(it)

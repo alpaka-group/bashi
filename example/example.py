@@ -21,6 +21,7 @@ from bashi.utils import (
     check_parameter_value_pair_in_combination_list,
     check_unexpected_parameter_value_pair_in_combination_list,
     remove_parameter_value_pairs,
+    remove_parameter_value_pairs_ranges,
 )
 from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
@@ -154,25 +155,29 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
     max_supported_nvcc_gcc_version = max(comb.host for comb in NVCC_GCC_MAX_VERSION).major
     max_supported_nvcc_clang_version = max(comb.host for comb in NVCC_CLANG_MAX_VERSION).major
     for cpu_backend in cpu_backends:
-        remove_parameter_value_pairs(
+        remove_parameter_value_pairs_ranges(
             expected_param_val_tuple,
             unexpected_param_val_tuple,
             parameter1=HOST_COMPILER,
             value_name1=GCC,
-            value_version1=f"<={max_supported_nvcc_gcc_version}",
+            value_min_version1=max_supported_nvcc_gcc_version,
+            value_min_version1_inclusive=False,
             parameter2=cpu_backend,
             value_name2=cpu_backend,
-            value_version2=OFF,
+            value_min_version2=OFF,
+            value_max_version2=OFF,
         )
-        remove_parameter_value_pairs(
+        remove_parameter_value_pairs_ranges(
             expected_param_val_tuple,
             unexpected_param_val_tuple,
             parameter1=HOST_COMPILER,
             value_name1=CLANG,
-            value_version1=f"<={max_supported_nvcc_clang_version}",
+            value_min_version1=max_supported_nvcc_clang_version,
+            value_min_version1_inclusive=False,
             parameter2=cpu_backend,
             value_name2=cpu_backend,
-            value_version2=OFF,
+            value_min_version2=OFF,
+            value_max_version2=OFF,
         )
 
     def all_cpu_backends_are(expected_state: pkv.Version, combination: Combination) -> bool:

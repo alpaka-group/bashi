@@ -40,8 +40,8 @@ class NvccHostSupport(VersionSupportBase):
 
     def __init__(self, nvcc_version: str, host_version: str):
         VersionSupportBase.__init__(self, nvcc_version, host_version)
-        self.nvcc = self.version1
-        self.host = self.version2
+        self.nvcc: packaging.version.Version = self.version1
+        self.host: packaging.version.Version = self.version2
 
     def __str__(self) -> str:
         return f"nvcc {str(self.nvcc)} + host version {self.host}"
@@ -57,8 +57,8 @@ class ClangCudaSDKSupport(VersionSupportBase):
 
     def __init__(self, clang_cuda_version: str, cuda_version: str):
         VersionSupportBase.__init__(self, clang_cuda_version, cuda_version)
-        self.clang_cuda = self.version1
-        self.cuda = self.version2
+        self.clang_cuda: packaging.version.Version = self.version1
+        self.cuda: packaging.version.Version = self.version2
 
     def __str__(self) -> str:
         return f"Clang-CUDA {str(self.clang_cuda)} + CUDA SDK {self.cuda}"
