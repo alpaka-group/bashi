@@ -232,3 +232,33 @@ def is_supported_version(name: ValueName, version: ValueVersion) -> bool:
             return True
 
     return False
+
+
+def get_oldest_supporting_clang_version_for_cuda(
+    cuda_version: str,
+    clang_cuda_max_cuda_version: List[ClangCudaSDKSupport] = copy.deepcopy(
+        CLANG_CUDA_MAX_CUDA_VERSION
+    ),
+) -> packaging.version.Version:
+    """Returns the first and oldest Clang-CUDA version which supports a given CUDA version.
+    Args:
+        cuda_version (str): CUDA SKD version
+        clang_cuda_max_cuda_version (List[ClangCudaSDKSupport], optional): List Clang version with
+            the maximum supported CUDA SDK version. Defaults to CLANG_CUDA_MAX_CUDA_VERSION.
+    Returns:
+        packaging.version.Version: Returns the first and oldest Clang version which supports the
+        given CUDA SDK version. Returns version 0, if no version supports the CUDA SDK.
+    """
+    parsed_cuda_ver = pkv.parse(cuda_version)
+    # sort the list by the Clang version starting the smallest version
+    # luckily we can assume that the CUDA SDK version is also sorted starting with the smallest
+    # version, because a newer Clang version will also support all version like before plus new
+    # versions
+    clang_cuda_max_cuda_version.sort()
+
+    for sdk_support in clang_cuda_max_cuda_version:
+        if sdk_support.cuda >= parsed_cuda_ver:
+            return sdk_support.clang_cuda
+
+    # return version 0 as not available
+    return OFF_VER

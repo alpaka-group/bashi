@@ -82,6 +82,7 @@ def get_expected_bashi_parameter_value_pairs(
     _remove_all_rocm_images_older_than_ubuntu2004_based(
         param_val_pair_list, removed_param_val_pair_list
     )
+    _remove_unsupported_cuda_versions_for_ubuntu(param_val_pair_list, removed_param_val_pair_list)
     return (param_val_pair_list, removed_param_val_pair_list)
 
 
@@ -860,4 +861,50 @@ def _remove_all_rocm_images_older_than_ubuntu2004_based(
             value_max_version1_inclusive=False,
             parameter2=compiler_type,
             value_name2=HIPCC,
+        )
+
+
+def _remove_unsupported_cuda_versions_for_ubuntu(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    remove_parameter_value_pairs_ranges(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=UBUNTU,
+        value_name1=UBUNTU,
+        value_min_version1=20.04,
+        parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+        value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+        value_min_version2=OFF,
+        value_min_version2_inclusive=False,
+        value_max_version2=11,
+        value_max_version2_inclusive=False,
+    )
+    remove_parameter_value_pairs_ranges(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=UBUNTU,
+        value_name1=UBUNTU,
+        value_min_version1=20.04,
+        parameter2=DEVICE_COMPILER,
+        value_name2=NVCC,
+        value_min_version2=OFF,
+        value_min_version2_inclusive=False,
+        value_max_version2=11,
+        value_max_version2_inclusive=False,
+    )
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        remove_parameter_value_pairs_ranges(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            parameter1=UBUNTU,
+            value_name1=UBUNTU,
+            value_min_version1=20.04,
+            parameter2=compiler_type,
+            value_name2=CLANG_CUDA,
+            value_min_version2=OFF,
+            value_min_version2_inclusive=False,
+            value_max_version2=12,
+            value_max_version2_inclusive=False,
         )
