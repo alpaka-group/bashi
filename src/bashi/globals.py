@@ -54,3 +54,13 @@ ON_VER: ValueVersion = packaging.version.parse(ON)
 ANY_PARAM: Parameter = "*"
 ANY_NAME: ValueName = "*"
 ANY_VERSION: str = "*"
+
+# List of all supported parameters
+PARAMETERS: List[Parameter] = [
+    HOST_COMPILER,
+    DEVICE_COMPILER,
+    UBUNTU,
+    CMAKE,
+    BOOST,
+    CXX_STANDARD,
+] + BACKENDS

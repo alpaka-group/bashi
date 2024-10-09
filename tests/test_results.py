@@ -8,6 +8,7 @@ import packaging.version as pkv
 from utils_test import (
     parse_expected_val_pairs,
     create_diff_parameter_value_pairs,
+    parse_expected_val_pairs2,
     default_remove_test,
 )
 
@@ -2582,238 +2583,54 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_unsupported_cuda_versions_for_ubuntu(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (GCC, 12), UBUNTU: (UBUNTU, 22.04)}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.19")}),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "22.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "22.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "12"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "18.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.2"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "11"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "11.1"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "14.1"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "7.4"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "18.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "18.04"),
-                        DEVICE_COMPILER: (NVCC, "11.2"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        DEVICE_COMPILER: (NVCC, "12"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        DEVICE_COMPILER: (NVCC, "10.1"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "22.04"),
-                        DEVICE_COMPILER: (NVCC, "10"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        DEVICE_COMPILER: (CLANG_CUDA, "10"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        DEVICE_COMPILER: (CLANG_CUDA, "10.2"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "18.04"),
-                        DEVICE_COMPILER: (CLANG_CUDA, "11"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "22.04"),
-                        DEVICE_COMPILER: (CLANG_CUDA, "12"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        DEVICE_COMPILER: (CLANG_CUDA, "13"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "18.04"),
-                        DEVICE_COMPILER: (NVCC, "10.2"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        DEVICE_COMPILER: (NVCC, "10.2"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        DEVICE_COMPILER: (NVCC, "11"),
-                    }
-                ),
+                ((HOST_COMPILER, GCC, 12), (UBUNTU, 22.04)),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
+                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1")),
+                ((UBUNTU, "22.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1")),
+                ((UBUNTU, "22.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "12")),
+                ((UBUNTU, "18.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1")),
+                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.2")),
+                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "11")),
+                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "11.1")),
+                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "14.1")),
+                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "7.4")),
+                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((UBUNTU, "18.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((UBUNTU, "18.04"), (DEVICE_COMPILER, NVCC, "11.2")),
+                ((UBUNTU, "20.04"), (DEVICE_COMPILER, NVCC, "12")),
+                ((UBUNTU, "20.04"), (DEVICE_COMPILER, NVCC, "10.1")),
+                ((UBUNTU, "22.04"), (DEVICE_COMPILER, NVCC, "10")),
+                ((UBUNTU, "20.04"), (DEVICE_COMPILER, CLANG_CUDA, "10")),
+                ((UBUNTU, "20.04"), (DEVICE_COMPILER, CLANG_CUDA, "10.2")),
+                ((UBUNTU, "18.04"), (DEVICE_COMPILER, CLANG_CUDA, "11")),
+                ((UBUNTU, "22.04"), (DEVICE_COMPILER, CLANG_CUDA, "12")),
+                ((UBUNTU, "20.04"), (DEVICE_COMPILER, CLANG_CUDA, "13")),
+                ((UBUNTU, "18.04"), (DEVICE_COMPILER, NVCC, "10.2")),
+                ((UBUNTU, "20.04"), (DEVICE_COMPILER, NVCC, "10.2")),
+                ((UBUNTU, "20.04"), (DEVICE_COMPILER, NVCC, "11")),
             ]
         )
-        expected_results = parse_expected_val_pairs(
+
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        DEVICE_COMPILER: (NVCC, "11"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "11"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "18.04"),
-                        DEVICE_COMPILER: (CLANG_CUDA, "11"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "22.04"),
-                        DEVICE_COMPILER: (CLANG_CUDA, "12"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        DEVICE_COMPILER: (CLANG_CUDA, "13"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "18.04"),
-                        DEVICE_COMPILER: (NVCC, "10.2"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "18.04"),
-                        DEVICE_COMPILER: (NVCC, "11.2"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        DEVICE_COMPILER: (NVCC, "12"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "22.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "12"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "18.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "18.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "14.1"),
-                    }
-                ),
-                OD(
-                    {
-                        UBUNTU: (UBUNTU, "20.04"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, "11.1"),
-                    }
-                ),
-                OD({HOST_COMPILER: (GCC, 12), UBUNTU: (UBUNTU, 22.04)}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.19")}),
+                ((HOST_COMPILER, GCC, 12), (UBUNTU, 22.04)),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
+                ((UBUNTU, "22.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "12")),
+                ((UBUNTU, "18.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1")),
+                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "11")),
+                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "11.1")),
+                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "14.1")),
+                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((UBUNTU, "18.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((UBUNTU, "18.04"), (DEVICE_COMPILER, NVCC, "11.2")),
+                ((UBUNTU, "20.04"), (DEVICE_COMPILER, NVCC, "12")),
+                ((UBUNTU, "18.04"), (DEVICE_COMPILER, CLANG_CUDA, "11")),
+                ((UBUNTU, "22.04"), (DEVICE_COMPILER, CLANG_CUDA, "12")),
+                ((UBUNTU, "20.04"), (DEVICE_COMPILER, CLANG_CUDA, "13")),
+                ((UBUNTU, "18.04"), (DEVICE_COMPILER, NVCC, "10.2")),
+                ((UBUNTU, "20.04"), (DEVICE_COMPILER, NVCC, "11")),
             ]
         )
         default_remove_test(
