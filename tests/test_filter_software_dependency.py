@@ -596,3 +596,139 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                 reason_msg.getvalue(),
                 f"host compiler clang-cuda {clang_cuda_version} is not available in Ubuntu 20.04",
             )
+
+    def test_valid_gcc_cxx_combinations_d5(self):
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 10)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 18)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((GCC, 10)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 19)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 14)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 22)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((GCC, 14)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 22)),
+                    }
+                )
+            )
+        )
+
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 18)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 25)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((GCC, 18)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 25)),
+                    }
+                )
+            )
+        )
+
+    def test_invalid_gcc_cxx_combinations_d5(self):
+        for cxx_version in [20, 21, 28]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((GCC, 10)),
+                            CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"host compiler gcc 10 does not support cxx {cxx_version}",
+            )
+
+        for cxx_version in [20, 21, 28]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((GCC, 10)),
+                            CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"device compiler gcc 10 does not support cxx {cxx_version}",
+            )
+
+        for cxx_version in [24, 25, 30]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((GCC, 14)),
+                            CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"device compiler gcc 14 does not support cxx {cxx_version}",
+            )
+
+        for cxx_version in [24, 25, 30]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((GCC, 14)),
+                            CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"host compiler gcc 14 does not support cxx {cxx_version}",
+            )
