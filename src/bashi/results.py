@@ -83,6 +83,7 @@ def get_expected_bashi_parameter_value_pairs(
         param_val_pair_list, removed_param_val_pair_list
     )
     _remove_unsupported_cuda_versions_for_ubuntu(param_val_pair_list, removed_param_val_pair_list)
+    _remove_unsupported_cxx_versions_for_gcc(param_val_pair_list, removed_param_val_pair_list)
     return (param_val_pair_list, removed_param_val_pair_list)
 
 
@@ -907,4 +908,36 @@ def _remove_unsupported_cuda_versions_for_ubuntu(
             value_min_version2_inclusive=False,
             value_max_version2=12,
             value_max_version2_inclusive=False,
+        )
+
+
+def _remove_unsupported_cxx_versions_for_gcc(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        remove_parameter_value_pairs_ranges(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            parameter1=compiler_type,
+            value_name1=GCC,
+            value_min_version1=10,
+            value_max_version1=14,
+            value_max_version1_inclusive=False,
+            parameter2=CXX_STANDARD,
+            value_name2=CXX_STANDARD,
+            value_min_version2=20,
+            value_min_version2_inclusive=True,
+        )
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        remove_parameter_value_pairs_ranges(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            parameter1=compiler_type,
+            value_name1=GCC,
+            value_min_version1=14,
+            parameter2=CXX_STANDARD,
+            value_name2=CXX_STANDARD,
+            value_min_version2=24,
+            value_min_version2_inclusive=True,
         )
