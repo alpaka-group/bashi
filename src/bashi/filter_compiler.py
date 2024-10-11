@@ -13,7 +13,7 @@ from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValueTuple
 from bashi.versions import NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION, CLANG_CUDA_MAX_CUDA_VERSION
-from bashi.utils import reason
+from bashi.utils import reason, print_row_nice
 
 # uncomment me for debugging
 # from bashi.utils import print_row_nice
@@ -49,7 +49,7 @@ def compiler_filter(
         bool: True, if parameter-value-tuple is valid.
     """
     # uncomment me for debugging
-    # print_row_nice(row, bashi_validate=False)
+    print_row_nice(row, bashi_validate=False)
 
     # Rule: c1
     # NVCC as HOST_COMPILER is not allow
@@ -264,6 +264,14 @@ def compiler_filter(
                                 )
                                 return False
                             break
+                        if row[compiler].version < version_combination.clang_cuda:
+                            if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version > version_combination.cuda:
+                                reason(
+                                    output,
+                                    f"clang-cuda {row[compiler].version} does not support "
+                                    f"CUDA {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version}.",
+                                )
+                                return False
 
             # Rule: c17
             # related to rule b14

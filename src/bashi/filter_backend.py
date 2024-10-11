@@ -12,7 +12,12 @@ import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValueTuple
-from bashi.versions import NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION, CLANG_CUDA_MAX_CUDA_VERSION
+from bashi.versions import (
+    NVCC_GCC_MAX_VERSION,
+    NVCC_CLANG_MAX_VERSION,
+    CLANG_CUDA_MAX_CUDA_VERSION,
+    NVCC_CXX_SUPPORT,
+)
 
 from bashi.utils import reason
 
@@ -206,4 +211,26 @@ def backend_filter(
                                 return False
                             break
 
+        # Rule: b18
+        # related to rule d5
+        if CXX_STANDARD in row:
+            if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version <= NVCC_CXX_SUPPORT[0].nvcc_version:
+                for cuda_cxx_comb in NVCC_CXX_SUPPORT:
+                    if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version >= cuda_cxx_comb.nvcc_version:
+                        if row[CXX_STANDARD].version >= cuda_cxx_comb.cxx_version:
+                            reason(
+                                output,
+                                f"cuda {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} "
+                                f"does not support cxx {row[CXX_STANDARD].version}",
+                            )
+                            return False
+                    if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version >= cuda_cxx_comb.nvcc_version:
+                        if row[CXX_STANDARD].version >= cuda_cxx_comb.cxx_version:
+                            reason(
+                                output,
+                                f"cuda {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} "
+                                f"does not support cxx {row[CXX_STANDARD].version}",
+                            )
+                            return False
+                        break
     return True

@@ -692,7 +692,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             software_dependency_filter_typechecked(
                 OD(
                     {
-                        DEVICE_COMPILER: ppv((NVCC, "10.0")),
+                        DEVICE_COMPILER: ppv((NVCC, 10.0)),
                         CXX_STANDARD: ppv((CXX_STANDARD, 15)),
                     }
                 )
@@ -702,7 +702,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             software_dependency_filter_typechecked(
                 OD(
                     {
-                        DEVICE_COMPILER: ppv((NVCC, "10.2")),
+                        DEVICE_COMPILER: ppv((NVCC, 10.2)),
                         CXX_STANDARD: ppv((CXX_STANDARD, 15)),
                     }
                 )
@@ -712,7 +712,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             software_dependency_filter_typechecked(
                 OD(
                     {
-                        DEVICE_COMPILER: ppv((NVCC, "10.5")),
+                        DEVICE_COMPILER: ppv((NVCC, 10.5)),
                         CXX_STANDARD: ppv((CXX_STANDARD, 15)),
                     }
                 )
@@ -722,7 +722,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             software_dependency_filter_typechecked(
                 OD(
                     {
-                        DEVICE_COMPILER: ppv((NVCC, "11.0")),
+                        DEVICE_COMPILER: ppv((NVCC, 11.0)),
                         CXX_STANDARD: ppv((CXX_STANDARD, 16)),
                     }
                 )
@@ -732,7 +732,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             software_dependency_filter_typechecked(
                 OD(
                     {
-                        DEVICE_COMPILER: ppv((NVCC, "11.0")),
+                        DEVICE_COMPILER: ppv((NVCC, 11.0)),
                         CXX_STANDARD: ppv((CXX_STANDARD, 15)),
                     }
                 )
@@ -742,7 +742,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             software_dependency_filter_typechecked(
                 OD(
                     {
-                        DEVICE_COMPILER: ppv((NVCC, "11.5")),
+                        DEVICE_COMPILER: ppv((NVCC, 11.5)),
                         CXX_STANDARD: ppv((CXX_STANDARD, 15)),
                     }
                 )
@@ -752,7 +752,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             software_dependency_filter_typechecked(
                 OD(
                     {
-                        DEVICE_COMPILER: ppv((NVCC, "12.0")),
+                        DEVICE_COMPILER: ppv((NVCC, 12.0)),
                         CXX_STANDARD: ppv((CXX_STANDARD, 18)),
                     }
                 )
@@ -762,7 +762,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             software_dependency_filter_typechecked(
                 OD(
                     {
-                        DEVICE_COMPILER: ppv((NVCC, "12.0")),
+                        DEVICE_COMPILER: ppv((NVCC, 12.0)),
                         CXX_STANDARD: ppv((CXX_STANDARD, 19)),
                     }
                 )
@@ -770,6 +770,24 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
         )
 
     def test_invalid_gcc_cxx_combinations_d5(self):
+        for cxx_version in [17, 20, 25]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((GCC, 4)),
+                            CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"host compiler gcc 4 does not support cxx {cxx_version}",
+            )
+
         for cxx_version in [17, 20, 25]:
             reason_msg = io.StringIO()
             self.assertFalse(
@@ -804,14 +822,30 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                 reason_msg.getvalue(),
                 f"host compiler gcc 10 does not support cxx {cxx_version}",
             )
-
         for cxx_version in [17, 20, 25]:
             reason_msg = io.StringIO()
             self.assertFalse(
                 software_dependency_filter_typechecked(
                     OD(
                         {
-                            DEVICE_COMPILER: ppv((NVCC, 11.0)),
+                            DEVICE_COMPILER: ppv((NVCC, "10.2")),
+                            CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"device compiler nvcc 10.2 does not support cxx {cxx_version}",
+            )
+        for cxx_version in [17, 20, 25]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((NVCC, "11.0")),
                             CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
                         }
                     ),
@@ -829,7 +863,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                 software_dependency_filter_typechecked(
                     OD(
                         {
-                            DEVICE_COMPILER: ppv((NVCC, 12.0)),
+                            DEVICE_COMPILER: ppv((NVCC, "12.0")),
                             CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
                         }
                     ),

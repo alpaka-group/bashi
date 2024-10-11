@@ -1409,3 +1409,141 @@ class TestNvccCompilerFilter(unittest.TestCase):
         self.assertEqual(
             reason_msg2.getvalue(), "The SYCL and CUDA backend cannot be enabled on the same time."
         )
+
+
+def test_valid_cuda_and_cxx_combinations_b18(self):
+    self.assertTrue(
+        backend_filter_typechecked(
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "10.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 15)),
+                }
+            )
+        )
+    )
+    self.assertTrue(
+        backend_filter_typechecked(
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "10.2")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 15)),
+                }
+            )
+        )
+    )
+    self.assertTrue(
+        backend_filter_typechecked(
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "10.5")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 15)),
+                }
+            )
+        )
+    )
+    self.assertTrue(
+        backend_filter_typechecked(
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "11.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 16)),
+                }
+            )
+        )
+    )
+    self.assertTrue(
+        backend_filter_typechecked(
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "11.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 15)),
+                }
+            )
+        )
+    )
+    self.assertTrue(
+        backend_filter_typechecked(
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "11.5")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 15)),
+                }
+            )
+        )
+    )
+    self.assertTrue(
+        backend_filter_typechecked(
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "12.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 18)),
+                }
+            )
+        )
+    )
+    self.assertTrue(
+        backend_filter_typechecked(
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "12.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 19)),
+                }
+            )
+        )
+    )
+
+
+def test_invalid_cuda_and_cxx_combinations_b18(self):
+    for cxx_version in [17, 20, 25]:
+        reason_msg = io.StringIO()
+        self.assertFalse(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1")),
+                        CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                    }
+                ),
+                reason_msg,
+            ),
+        )
+        self.assertEqual(
+            reason_msg.getvalue(),
+            f"cuda 10.1 does not support cxx {cxx_version}",
+        )
+    for cxx_version in [17, 20, 25]:
+        reason_msg = io.StringIO()
+        self.assertFalse(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "11.0")),
+                        CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                    }
+                ),
+                reason_msg,
+            ),
+        )
+        self.assertEqual(
+            reason_msg.getvalue(),
+            f"cuda 11.0 does not support cxx {cxx_version}",
+        )
+
+    for cxx_version in [20, 21, 28]:
+        reason_msg = io.StringIO()
+        self.assertFalse(
+            backend_filter_typechecked(
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "12.0")),
+                        CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                    }
+                ),
+                reason_msg,
+            ),
+        )
+        self.assertEqual(
+            reason_msg.getvalue(),
+            f"cuda 12.0 does not support cxx {cxx_version}",
+        )

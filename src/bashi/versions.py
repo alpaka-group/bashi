@@ -165,7 +165,6 @@ GCC_CXX_SUPPORT: List[GccCxxSupport] = [
 ]
 GCC_CXX_SUPPORT.sort(reverse=True)
 
-
 # define the maximum supported cxx version for a specific nvcc version
 NVCC_CXX_SUPPORT: List[GccCxxSupport] = [
     NvccCxxSupport("11.0", "17"),  # NVCC versions older than 11.0 does not support C++ 17
