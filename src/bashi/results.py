@@ -915,6 +915,65 @@ def _remove_unsupported_cxx_versions_for_gcc(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
 ):
+    remove_parameter_value_pairs_ranges(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=HOST_COMPILER,
+        value_name1=GCC,
+        value_max_version1=8,
+        parameter2=CXX_STANDARD,
+        value_name2=CXX_STANDARD,
+        value_min_version2=17,
+    )
+    remove_parameter_value_pairs_ranges(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=HOST_COMPILER,
+        value_name1=GCC,
+        value_min_version1=8,
+        value_min_version1_inclusive=True,
+        value_max_version1=10,
+        parameter2=CXX_STANDARD,
+        value_name2=CXX_STANDARD,
+        value_min_version2=20,
+        value_min_version2_inclusive=True,
+    )
+
+
+def _remove_unsupported_cxx_versions_for_nvcc(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    remove_parameter_value_pairs_ranges(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=DEVICE_COMPILER,
+        value_name1=NVCC,
+        value_max_version1=11.0,
+        parameter2=CXX_STANDARD,
+        value_name2=CXX_STANDARD,
+        value_min_version2=17,
+    )
+    remove_parameter_value_pairs_ranges(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=DEVICE_COMPILER,
+        value_name1=NVCC,
+        value_min_version1=11.0,
+        value_min_version1_inclusive=True,
+        value_max_version1=12.0,
+        parameter2=CXX_STANDARD,
+        value_name2=CXX_STANDARD,
+        value_min_version2=20,
+        value_min_version2_inclusive=True,
+    )
+
+
+"""
+def _remove_unsupported_cxx_versions_for_gcc(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
     for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
         remove_parameter_value_pairs_ranges(
             parameter_value_pairs,
@@ -941,3 +1000,4 @@ def _remove_unsupported_cxx_versions_for_gcc(
             value_min_version2=24,
             value_min_version2_inclusive=True,
         )
+"""

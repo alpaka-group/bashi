@@ -49,6 +49,7 @@ from bashi.results import (
     _remove_all_rocm_images_older_than_ubuntu2004_based,
     _remove_unsupported_cuda_versions_for_ubuntu,
     _remove_unsupported_cxx_versions_for_gcc,
+    _remove_unsupported_cxx_versions_for_nvcc,
 )
 from bashi.versions import NvccHostSupport, NVCC_GCC_MAX_VERSION
 
@@ -2556,31 +2557,40 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
     def test_remove_unsupported_cxx_versions_for_gcc(self):
         test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                ((HOST_COMPILER, GCC, 12), (UBUNTU, 22.04)),
-                ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
+                ((HOST_COMPILER, GCC, 6), (CXX_STANDARD, 19)),
+                ((HOST_COMPILER, GCC, 7), (CXX_STANDARD, 19)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 25)),
+                ((HOST_COMPILER, GCC, 5), (CXX_STANDARD, 16)),
+                ((HOST_COMPILER, GCC, 6), (CXX_STANDARD, 15)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 16)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 15)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 16)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 19)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 21)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 25)),
+                ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 17)),
                 ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 19)),
-                ((DEVICE_COMPILER, GCC, 10), (CXX_STANDARD, 15)),
+                ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 20)),
                 ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 21)),
-                ((DEVICE_COMPILER, GCC, 10), (CXX_STANDARD, 23)),
-                ((HOST_COMPILER, GCC, 14), (CXX_STANDARD, 15)),
-                ((DEVICE_COMPILER, GCC, 14), (CXX_STANDARD, 17)),
-                ((HOST_COMPILER, GCC, 14), (CXX_STANDARD, 22)),
-                ((DEVICE_COMPILER, GCC, 14), (CXX_STANDARD, 23)),
-                ((HOST_COMPILER, GCC, 14), (CXX_STANDARD, 26)),
-                ((DEVICE_COMPILER, GCC, 14), (CXX_STANDARD, 27)),
+                ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 25)),
             ]
         )
 
         expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                ((HOST_COMPILER, GCC, 12), (UBUNTU, 22.04)),
-                ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
+                ((HOST_COMPILER, GCC, 5), (CXX_STANDARD, 16)),
+                ((HOST_COMPILER, GCC, 6), (CXX_STANDARD, 15)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 16)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 15)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 16)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 19)),
+                ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 17)),
                 ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 19)),
-                ((DEVICE_COMPILER, GCC, 10), (CXX_STANDARD, 15)),
-                ((HOST_COMPILER, GCC, 14), (CXX_STANDARD, 15)),
-                ((DEVICE_COMPILER, GCC, 14), (CXX_STANDARD, 17)),
-                ((HOST_COMPILER, GCC, 14), (CXX_STANDARD, 22)),
-                ((DEVICE_COMPILER, GCC, 14), (CXX_STANDARD, 23)),
             ]
         )
         default_remove_test(

@@ -13,7 +13,11 @@ from typeguard import typechecked
 from bashi.types import ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.utils import reason
-from bashi.versions import get_oldest_supporting_clang_version_for_cuda, GCC_CXX_SUPPORT
+from bashi.versions import (
+    get_oldest_supporting_clang_version_for_cuda,
+    GCC_CXX_SUPPORT,
+    NVCC_CXX_SUPPORT,
+)
 
 
 def __ubuntu_version_to_string(version: pkv.Version) -> str:
@@ -159,40 +163,39 @@ def software_dependency_filter(
 
         # Rule: d5
         # remove all unsupported gcc cxx version combinations
-        """
-    if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == GCC:
-                if CXX_STANDARD in row:
-                    if row[DEVICE_COMPILER].version <= GCC_CXX_SUPPORT[0].gcc_version:
-                        # check the maximum supported gcc version for the given cxx version
-                        for gcc_cxx_comb in GCC_CXX_SUPPORT:
-                            if row[DEVICE_COMPILER].version >= gcc_cxx_comb.gcc_version:
-                                if row[CXX_STANDARD].version >= gcc_cxx_comb.cxx_version:
-                                    reason(
-                                        output,
-                                        "device compiler"
-                                        f" gcc {row[DEVICE_COMPILER].version} "
-                                        f"does not support cxx {row[CXX_STANDARD].version}"
-                                    )
-                                    return False
-                                break
-         
-    if HOST_COMPILER in row and row[HOST_COMPILER].name == GCC:
-                if CXX_STANDARD in row:
-                    if row[HOST_COMPILER].version <= GCC_CXX_SUPPORT[0].gcc_version:
-                        # check the maximum supported gcc version for the given cxx version
-                        for gcc_cxx_comb in GCC_CXX_SUPPORT:
-                            if row[HOST_COMPILER].version >= gcc_cxx_comb.gcc_version:
-                                if row[CXX_STANDARD].version >= gcc_cxx_comb.cxx_version:
-                                    reason(
-                                        output,
-                                        "host compiler"
-                                        f" gcc {row[HOST_COMPILER].version} "
-                                        f"does not support cxx {row[CXX_STANDARD].version}"
-                                    )
-                                    return False
-                                break    
-          """
 
+    if HOST_COMPILER in row and row[HOST_COMPILER].name == GCC:
+        if CXX_STANDARD in row:
+            if row[HOST_COMPILER].version <= GCC_CXX_SUPPORT[0].gcc_version:
+                # check the maximum supported gcc version for the given cxx version
+                for gcc_cxx_comb in GCC_CXX_SUPPORT:
+                    if row[HOST_COMPILER].version >= gcc_cxx_comb.gcc_version:
+                        if row[CXX_STANDARD].version >= gcc_cxx_comb.cxx_version:
+                            reason(
+                                output,
+                                "host compiler"
+                                f" gcc {row[HOST_COMPILER].version} "
+                                f"does not support cxx {row[CXX_STANDARD].version}",
+                            )
+                            return False
+                        break
+    if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
+        if CXX_STANDARD in row:
+            if row[DEVICE_COMPILER].version <= NVCC_CXX_SUPPORT[0].nvcc_version:
+                # check the maximum supported nvcc version for the given cxx version
+                for nvcc_cxx_comb in NVCC_CXX_SUPPORT:
+                    if row[DEVICE_COMPILER].version >= nvcc_cxx_comb.nvcc_version:
+                        if row[CXX_STANDARD].version >= nvcc_cxx_comb.cxx_version:
+                            reason(
+                                output,
+                                "device compiler"
+                                f" nvcc {row[DEVICE_COMPILER].version} "
+                                f"does not support cxx {row[CXX_STANDARD].version}",
+                            )
+                            return False
+                        break
+
+                    """
     for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
         if compiler_type in row and row[compiler_type].name == GCC:
             if CXX_STANDARD in row:
@@ -209,5 +212,5 @@ def software_dependency_filter(
                                 )
                                 return False
                             break
-
+                        """
     return True

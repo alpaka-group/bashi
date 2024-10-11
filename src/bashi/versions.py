@@ -66,7 +66,7 @@ class ClangCudaSDKSupport(VersionSupportBase):
 
 # pylint: disable=too-few-public-methods
 class GccCxxSupport(VersionSupportBase):
-    """Contains a nvcc version and host compiler version. Does automatically parse the input strings
+    """Contains a gcc version and host compiler version. Does automatically parse the input strings
     to package.version.Version.
 
     Provides comparision operators for sorting.
@@ -79,6 +79,23 @@ class GccCxxSupport(VersionSupportBase):
 
     def __str__(self) -> str:
         return f"GCC {str(self.gcc_version)} + CXX {self.cxx_version}"
+
+
+# pylint: disable=too-few-public-methods
+class NvccCxxSupport(VersionSupportBase):
+    """Contains a nvcc version and host compiler version. Does automatically parse the input strings
+    to package.version.Version.
+
+    Provides comparision operators for sorting.
+    """
+
+    def __init__(self, nvcc_version: str, cxx_version: str):
+        VersionSupportBase.__init__(self, nvcc_version, cxx_version)
+        self.nvcc_version: packaging.version.Version = self.version1
+        self.cxx_version: packaging.version.Version = self.version2
+
+    def __str__(self) -> str:
+        return f"NVCC {str(self.nvcc_version)} + CXX {self.cxx_version}"
 
 
 VERSIONS: Dict[str, List[Union[str, int, float]]] = {
@@ -141,15 +158,21 @@ NVCC_GCC_MAX_VERSION: List[NvccHostSupport] = [
 NVCC_GCC_MAX_VERSION.sort(reverse=True)
 
 
-# define the maximum supported gcc version for a specific cxx version
-# the latest supported cxx version must be added, even if the supported gcc version does not
-# increase
+# define the maximum supported cxx version for a specific gcc version
 GCC_CXX_SUPPORT: List[GccCxxSupport] = [
-    GccCxxSupport("14", "23"),
-    #   GccCxxSupport("18", "26"),
+    GccCxxSupport("8", "17"),
     GccCxxSupport("10", "20"),
 ]
 GCC_CXX_SUPPORT.sort(reverse=True)
+
+
+# define the maximum supported cxx version for a specific nvcc version
+NVCC_CXX_SUPPORT: List[GccCxxSupport] = [
+    NvccCxxSupport("11.0", "17"),  # NVCC versions older than 11.0 does not support C++ 17
+    NvccCxxSupport("12.0", "20"),  # NVCC versions older than 12.0 does not support C++ 20
+]
+NVCC_CXX_SUPPORT.sort(reverse=True)
+
 # define the maximum supported clang version for a specific nvcc version
 # the latest supported nvcc version must be added, even if the supported clang version does not
 # increase
