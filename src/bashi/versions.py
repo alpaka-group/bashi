@@ -74,8 +74,8 @@ class GccCxxSupport(VersionSupportBase):
 
     def __init__(self, gcc_version: str, cxx_version: str):
         VersionSupportBase.__init__(self, gcc_version, cxx_version)
-        self.gcc_version: packaging.version.Version = self.version1
-        self.cxx_version: packaging.version.Version = self.version2
+        self.gcc: packaging.version.Version = self.version1
+        self.cxx: packaging.version.Version = self.version2
 
     def __str__(self) -> str:
         return f"GCC {str(self.gcc_version)} + CXX {self.cxx_version}"
@@ -91,11 +91,31 @@ class NvccCxxSupport(VersionSupportBase):
 
     def __init__(self, nvcc_version: str, cxx_version: str):
         VersionSupportBase.__init__(self, nvcc_version, cxx_version)
-        self.nvcc_version: packaging.version.Version = self.version1
-        self.cxx_version: packaging.version.Version = self.version2
+        self.nvcc: packaging.version.Version = self.version1
+        self.cxx: packaging.version.Version = self.version2
 
     def __str__(self) -> str:
         return f"NVCC {str(self.nvcc_version)} + CXX {self.cxx_version}"
+
+
+class NvccGccCxxSupport(VersionSupportBase):
+    def __init__(self, nvcc_version: str, gcc_version: str):
+        VersionSupportBase.__init__(self, nvcc_version, gcc_version)
+        self.nvcc: packaging.version.Version = self.version1
+        self.gcc: packaging.version.Version = self.version2
+
+    def __str__(self) -> str:
+        return f"NVCC {str(self.gcc_version)} + GCC {self.cxx_version}"
+
+
+class ClangCxxSupport(VersionSupportBase):
+    def __init__(self, clang_version: str, cxx_version: str):
+        VersionSupportBase.__init__(self, clang_version, cxx_version)
+        self.clang: packaging.version.Version = self.version1
+        self.cxx: packaging.version.Version = self.version2
+
+    def __str__(self) -> str:
+        return f"Clang {str(self.clang_version)} + cxx {self.cxx_version}"
 
 
 VERSIONS: Dict[str, List[Union[str, int, float]]] = {
@@ -165,12 +185,28 @@ GCC_CXX_SUPPORT: List[GccCxxSupport] = [
 ]
 GCC_CXX_SUPPORT.sort(reverse=True)
 
+
 # define the maximum supported cxx version for a specific nvcc version
 NVCC_CXX_SUPPORT: List[GccCxxSupport] = [
     NvccCxxSupport("11.0", "17"),  # NVCC versions older than 11.0 does not support C++ 17
     NvccCxxSupport("12.0", "20"),  # NVCC versions older than 12.0 does not support C++ 20
 ]
 NVCC_CXX_SUPPORT.sort(reverse=True)
+
+
+# define the maximum supported cxx version for a specific nvcc gcc combination
+NVCC_GCC_CXX_SUPPORT: List[NvccGccCxxSupport] = [
+    NvccGccCxxSupport("10.1", "8"),
+    NvccGccCxxSupport("11.1", "10"),
+]
+NVCC_CXX_SUPPORT.sort(reverse=True)
+
+
+CLANG_CXX_SUPPORT: List[ClangCxxSupport] = [
+    ClangCxxSupport("9", "17"),
+    ClangCxxSupport("14", "20"),
+]
+CLANG_CXX_SUPPORT.sort(reverse=True)
 
 # define the maximum supported clang version for a specific nvcc version
 # the latest supported nvcc version must be added, even if the supported clang version does not

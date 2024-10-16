@@ -17,6 +17,7 @@ from bashi.versions import (
     NVCC_CLANG_MAX_VERSION,
     CLANG_CUDA_MAX_CUDA_VERSION,
     NVCC_CXX_SUPPORT,
+    NVCC_GCC_CXX_SUPPORT,
 )
 
 from bashi.utils import reason
@@ -148,6 +149,17 @@ def backend_filter(
                             return False
                         break
 
+            if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version <= NVCC_GCC_CXX_SUPPORT[0].nvcc:
+                # check the maximum supported nvcc version for the given cxx version
+                for nvcc_gcc_comb in NVCC_GCC_CXX_SUPPORT:
+                    if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version < nvcc_gcc_comb.nvcc:
+                        if row[HOST_COMPILER].version >= nvcc_gcc_comb.gcc:
+                            return False
+                    if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version >= nvcc_gcc_comb.nvcc:
+                        if row[HOST_COMPILER].version >= nvcc_gcc_comb.gcc:
+                            return False
+                        break
+
         if HOST_COMPILER in row and row[HOST_COMPILER].name == CLANG:
             # Rule: b11
             # related to rule c8
@@ -214,18 +226,18 @@ def backend_filter(
         # Rule: b18
         # related to rule d5
         if CXX_STANDARD in row:
-            if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version <= NVCC_CXX_SUPPORT[0].nvcc_version:
+            if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version <= NVCC_CXX_SUPPORT[0].nvcc:
                 for cuda_cxx_comb in NVCC_CXX_SUPPORT:
-                    if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version >= cuda_cxx_comb.nvcc_version:
-                        if row[CXX_STANDARD].version >= cuda_cxx_comb.cxx_version:
+                    if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version >= cuda_cxx_comb.nvcc:
+                        if row[CXX_STANDARD].version >= cuda_cxx_comb.cxx:
                             reason(
                                 output,
                                 f"cuda {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} "
                                 f"does not support cxx {row[CXX_STANDARD].version}",
                             )
                             return False
-                    if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version >= cuda_cxx_comb.nvcc_version:
-                        if row[CXX_STANDARD].version >= cuda_cxx_comb.cxx_version:
+                    if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version >= cuda_cxx_comb.nvcc:
+                        if row[CXX_STANDARD].version >= cuda_cxx_comb.cxx:
                             reason(
                                 output,
                                 f"cuda {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} "

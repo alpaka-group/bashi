@@ -105,6 +105,21 @@ def compiler_filter(
                             return False
                         break
 
+            # Rule: c21
+            # related to rule:
+            # remove all unsupported nvcc gcc version combinations with cxx
+            """
+            if row[DEVICE_COMPILER].version <= NVCC_GCC_CXX_SUPPORT[0].nvcc:
+                # check the maximum supported nvcc version for the given cxx version
+                for nvcc_gcc_comb in NVCC_GCC_CXX_SUPPORT:
+                    if row[DEVICE_COMPILER].version < nvcc_gcc_comb.nvcc:
+                        if row[HOST_COMPILER].version >= nvcc_gcc_comb.gcc:
+                            return False
+                    if row[DEVICE_COMPILER].version >= nvcc_gcc_comb.nvcc:
+                        if row[HOST_COMPILER].version >= nvcc_gcc_comb.gcc:
+                            return False
+                        break
+       """
         if HOST_COMPILER in row and row[HOST_COMPILER].name == CLANG:
             # Rule: c7
             # related to rule b11
@@ -247,7 +262,7 @@ def compiler_filter(
                 ALPAKA_ACC_GPU_CUDA_ENABLE in row
                 and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
             ):
-                # Rule: c16
+                # Rule: c20
                 # related to rule b17
                 # if a clang-cuda version is newer than the latest known clang-cuda version,
                 # we needs to assume that it supports every CUDA SDK version
