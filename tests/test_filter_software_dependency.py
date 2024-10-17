@@ -596,3 +596,281 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                 reason_msg.getvalue(),
                 f"host compiler clang-cuda {clang_cuda_version} is not available in Ubuntu 20.04",
             )
+
+    def test_valid_gcc_cxx_combinations_d5(self):
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 3)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 16)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 7)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 16)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 8)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 16)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 8)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 15)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 9)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 4)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 9)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 8)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 9)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 16)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 10)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 18)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        HOST_COMPILER: ppv((GCC, 10)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 19)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 10.0)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 15)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 10.2)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 15)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 10.5)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 15)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 11.0)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 16)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 11.0)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 15)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 11.5)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 15)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 12.0)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 18)),
+                    }
+                )
+            )
+        )
+        self.assertTrue(
+            software_dependency_filter_typechecked(
+                OD(
+                    {
+                        DEVICE_COMPILER: ppv((NVCC, 12.0)),
+                        CXX_STANDARD: ppv((CXX_STANDARD, 19)),
+                    }
+                )
+            )
+        )
+
+    def test_invalid_gcc_cxx_combinations_d5(self):
+        for cxx_version in [17, 20, 25]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((GCC, 4)),
+                            CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"host compiler gcc 4 does not support cxx {cxx_version}",
+            )
+
+        for cxx_version in [17, 20, 25]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((GCC, 8)),
+                            CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"host compiler gcc 8 does not support cxx {cxx_version}",
+            )
+        for cxx_version in [20, 21, 28]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            HOST_COMPILER: ppv((GCC, 10)),
+                            CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"host compiler gcc 10 does not support cxx {cxx_version}",
+            )
+        for cxx_version in [17, 20, 25]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((NVCC, "10.2")),
+                            CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"device compiler nvcc 10.2 does not support cxx {cxx_version}",
+            )
+        for cxx_version in [17, 20, 25]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((NVCC, "11.0")),
+                            CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"device compiler nvcc 11.0 does not support cxx {cxx_version}",
+            )
+
+        for cxx_version in [20, 21, 28]:
+            reason_msg = io.StringIO()
+            self.assertFalse(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((NVCC, "12.0")),
+                            CXX_STANDARD: ppv((CXX_STANDARD, cxx_version)),
+                        }
+                    ),
+                    reason_msg,
+                ),
+            )
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"device compiler nvcc 12.0 does not support cxx {cxx_version}",
+            )

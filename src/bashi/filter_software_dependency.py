@@ -13,7 +13,12 @@ from typeguard import typechecked
 from bashi.types import ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.utils import reason
-from bashi.versions import get_oldest_supporting_clang_version_for_cuda
+from bashi.versions import (
+    get_oldest_supporting_clang_version_for_cuda,
+    GCC_CXX_SUPPORT,
+    NVCC_CXX_SUPPORT,
+    CLANG_CXX_SUPPORT,
+)
 
 
 def __ubuntu_version_to_string(version: pkv.Version) -> str:
@@ -156,4 +161,72 @@ def software_dependency_filter(
                         f"{__ubuntu_version_to_string(row[UBUNTU].version)}",
                     )
                     return False
+
+    # Rule: d5
+    # related to rule b18
+    # remove all unsupported gcc cxx and nvcc cxx version combinations
+    if HOST_COMPILER in row and row[HOST_COMPILER].name == CLANG:
+        if CXX_STANDARD in row:
+            if row[HOST_COMPILER].version <= CLANG_CXX_SUPPORT[0].clang:
+                # check the maximum supported gcc version for the given cxx version
+                for clang_cxx_comb in CLANG_CXX_SUPPORT:
+                    if row[HOST_COMPILER].version < clang_cxx_comb.clang:
+                        if row[CXX_STANDARD].version >= clang_cxx_comb.cxx:
+                            return False
+                    if row[HOST_COMPILER].version >= clang_cxx_comb.clang:
+                        if row[CXX_STANDARD].version >= clang_cxx_comb.cxx:
+                            return False
+                        break
+
+    if HOST_COMPILER in row and row[HOST_COMPILER].name == GCC:
+        if CXX_STANDARD in row:
+            if row[HOST_COMPILER].version <= GCC_CXX_SUPPORT[0].gcc:
+                # check the maximum supported gcc version for the given cxx version
+                for gcc_cxx_comb in GCC_CXX_SUPPORT:
+                    if row[HOST_COMPILER].version < gcc_cxx_comb.gcc:
+                        if row[CXX_STANDARD].version >= gcc_cxx_comb.cxx:
+                            reason(
+                                output,
+                                "host compiler"
+                                f" gcc {row[HOST_COMPILER].version} "
+                                f"does not support cxx {row[CXX_STANDARD].version}",
+                            )
+                            return False
+                    if row[HOST_COMPILER].version >= gcc_cxx_comb.gcc:
+                        if row[CXX_STANDARD].version >= gcc_cxx_comb.cxx:
+                            reason(
+                                output,
+                                "host compiler"
+                                f" gcc {row[HOST_COMPILER].version} "
+                                f"does not support cxx {row[CXX_STANDARD].version}",
+                            )
+                            return False
+                        break
+
+    if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
+        if CXX_STANDARD in row:
+            if row[DEVICE_COMPILER].version <= NVCC_CXX_SUPPORT[0].nvcc:
+                # check the maximum supported nvcc version for the given cxx version
+                for nvcc_cxx_comb in NVCC_CXX_SUPPORT:
+                    if row[DEVICE_COMPILER].version < nvcc_cxx_comb.nvcc:
+                        print(nvcc_cxx_comb.nvcc)
+                        if row[CXX_STANDARD].version >= nvcc_cxx_comb.cxx:
+                            reason(
+                                output,
+                                "device compiler"
+                                f" nvcc {row[DEVICE_COMPILER].version} "
+                                f"does not support cxx {row[CXX_STANDARD].version}",
+                            )
+                            return False
+                    if row[DEVICE_COMPILER].version >= nvcc_cxx_comb.nvcc:
+                        if row[CXX_STANDARD].version >= nvcc_cxx_comb.cxx:
+                            reason(
+                                output,
+                                "device compiler"
+                                f" nvcc {row[DEVICE_COMPILER].version} "
+                                f"does not support cxx {row[CXX_STANDARD].version}",
+                            )
+                            return False
+                        break
+    print("passed")
     return True

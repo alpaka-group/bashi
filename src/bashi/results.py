@@ -18,6 +18,8 @@ from bashi.versions import (
     CLANG_CUDA_MAX_CUDA_VERSION,
     NvccHostSupport,
     ClangCudaSDKSupport,
+    GCC_CXX_SUPPORT,
+    GccCxxSupport,
 )
 
 
@@ -83,6 +85,7 @@ def get_expected_bashi_parameter_value_pairs(
         param_val_pair_list, removed_param_val_pair_list
     )
     _remove_unsupported_cuda_versions_for_ubuntu(param_val_pair_list, removed_param_val_pair_list)
+    _remove_unsupported_cxx_versions_for_gcc(param_val_pair_list, removed_param_val_pair_list)
     return (param_val_pair_list, removed_param_val_pair_list)
 
 
@@ -908,3 +911,61 @@ def _remove_unsupported_cuda_versions_for_ubuntu(
             value_max_version2=12,
             value_max_version2_inclusive=False,
         )
+
+
+def _remove_unsupported_cxx_versions_for_gcc(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    remove_parameter_value_pairs_ranges(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=HOST_COMPILER,
+        value_name1=GCC,
+        value_max_version1=8,
+        parameter2=CXX_STANDARD,
+        value_name2=CXX_STANDARD,
+        value_min_version2=17,
+    )
+    remove_parameter_value_pairs_ranges(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=HOST_COMPILER,
+        value_name1=GCC,
+        value_min_version1=8,
+        value_min_version1_inclusive=True,
+        value_max_version1=10,
+        parameter2=CXX_STANDARD,
+        value_name2=CXX_STANDARD,
+        value_min_version2=20,
+        value_min_version2_inclusive=True,
+    )
+
+
+def _remove_unsupported_cxx_versions_for_nvcc(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    remove_parameter_value_pairs_ranges(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=DEVICE_COMPILER,
+        value_name1=NVCC,
+        value_max_version1=11.0,
+        parameter2=CXX_STANDARD,
+        value_name2=CXX_STANDARD,
+        value_min_version2=17,
+    )
+    remove_parameter_value_pairs_ranges(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=DEVICE_COMPILER,
+        value_name1=NVCC,
+        value_min_version1=11.0,
+        value_min_version1_inclusive=True,
+        value_max_version1=12.0,
+        parameter2=CXX_STANDARD,
+        value_name2=CXX_STANDARD,
+        value_min_version2=20,
+        value_min_version2_inclusive=True,
+    )

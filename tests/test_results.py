@@ -48,6 +48,8 @@ from bashi.results import (
     _remove_unsupported_cmake_versions_for_clangcuda,
     _remove_all_rocm_images_older_than_ubuntu2004_based,
     _remove_unsupported_cuda_versions_for_ubuntu,
+    _remove_unsupported_cxx_versions_for_gcc,
+    _remove_unsupported_cxx_versions_for_nvcc,
 )
 from bashi.versions import NvccHostSupport, NVCC_GCC_MAX_VERSION
 
@@ -2448,128 +2450,35 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_all_rocm_images_older_than_ubuntu2004_based(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "4"),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "6"),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "6"),
-                        UBUNTU: (UBUNTU, "16.04"),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "8"),
-                        UBUNTU: (UBUNTU, "22.04"),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, "7"),
-                        UBUNTU: (UBUNTU, "18.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        UBUNTU: (UBUNTU, "22.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        UBUNTU: (UBUNTU, "22.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        UBUNTU: (UBUNTU, "18.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        UBUNTU: (UBUNTU, "18.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (UBUNTU, "20.04")),
+                ((HOST_COMPILER, HIPCC, "4"), (UBUNTU, "20.04")),
+                ((HOST_COMPILER, HIPCC, "6"), (UBUNTU, "20.04")),
+                ((HOST_COMPILER, HIPCC, "6"), (UBUNTU, "16.04")),
+                ((HOST_COMPILER, HIPCC, "8"), (UBUNTU, "22.04")),
+                ((DEVICE_COMPILER, HIPCC, "7"), (UBUNTU, "18.04")),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (UBUNTU, "22.04")),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (UBUNTU, "22.04")),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (UBUNTU, "18.04")),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (UBUNTU, "18.04")),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (UBUNTU, "20.04")),
             ]
         )
-        expected_results = parse_expected_val_pairs(
+
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "8"),
-                        UBUNTU: (UBUNTU, "22.04"),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "4"),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "6"),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        UBUNTU: (UBUNTU, "22.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        UBUNTU: (UBUNTU, "22.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        UBUNTU: (UBUNTU, "18.04"),
-                    }
-                ),
+                ((HOST_COMPILER, HIPCC, "8"), (UBUNTU, "22.04")),
+                ((HOST_COMPILER, HIPCC, "4"), (UBUNTU, "20.04")),
+                ((HOST_COMPILER, HIPCC, "6"), (UBUNTU, "20.04")),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (UBUNTU, "20.04")),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (UBUNTU, "20.04")),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (UBUNTU, "22.04")),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (UBUNTU, "22.04")),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (UBUNTU, "18.04")),
             ]
         )
+
         default_remove_test(
             _remove_all_rocm_images_older_than_ubuntu2004_based,
             test_param_value_pairs,
@@ -2635,6 +2544,57 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
         default_remove_test(
             _remove_unsupported_cuda_versions_for_ubuntu,
+            test_param_value_pairs,
+            expected_results,
+            self,
+        )
+        self.assertEqual(
+            test_param_value_pairs,
+            expected_results,
+            create_diff_parameter_value_pairs(test_param_value_pairs, expected_results),
+        )
+
+    def test_remove_unsupported_cxx_versions_for_gcc(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+            [
+                ((HOST_COMPILER, GCC, 6), (CXX_STANDARD, 19)),
+                ((HOST_COMPILER, GCC, 7), (CXX_STANDARD, 19)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 25)),
+                ((HOST_COMPILER, GCC, 5), (CXX_STANDARD, 16)),
+                ((HOST_COMPILER, GCC, 6), (CXX_STANDARD, 15)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 16)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 15)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 16)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 19)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 21)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 25)),
+                ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 19)),
+                ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 21)),
+                ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 25)),
+            ]
+        )
+
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+            [
+                ((HOST_COMPILER, GCC, 5), (CXX_STANDARD, 16)),
+                ((HOST_COMPILER, GCC, 6), (CXX_STANDARD, 15)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 16)),
+                ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 15)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 16)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 19)),
+                ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, GCC, 10), (CXX_STANDARD, 19)),
+            ]
+        )
+        default_remove_test(
+            _remove_unsupported_cxx_versions_for_gcc,
             test_param_value_pairs,
             expected_results,
             self,
