@@ -98,16 +98,6 @@ class NvccCxxSupport(VersionSupportBase):
         return f"NVCC {str(self.nvcc_version)} + CXX {self.cxx_version}"
 
 
-class NvccGccCxxSupport(VersionSupportBase):
-    def __init__(self, nvcc_version: str, gcc_version: str):
-        VersionSupportBase.__init__(self, nvcc_version, gcc_version)
-        self.nvcc: packaging.version.Version = self.version1
-        self.gcc: packaging.version.Version = self.version2
-
-    def __str__(self) -> str:
-        return f"NVCC {str(self.gcc_version)} + GCC {self.cxx_version}"
-
-
 class ClangCxxSupport(VersionSupportBase):
     def __init__(self, clang_version: str, cxx_version: str):
         VersionSupportBase.__init__(self, clang_version, cxx_version)
@@ -122,9 +112,6 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
     GCC: [6, 7, 8, 9, 10, 11, 12, 13],
     CLANG: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
     NVCC: [
-        10.0,
-        10.1,
-        10.2,
         11.0,
         11.1,
         11.2,
@@ -172,8 +159,6 @@ NVCC_GCC_MAX_VERSION: List[NvccHostSupport] = [
     NvccHostSupport("11.4", "11"),
     NvccHostSupport("11.1", "10"),
     NvccHostSupport("11.0", "9"),
-    NvccHostSupport("10.1", "8"),
-    NvccHostSupport("10.0", "7"),
 ]
 NVCC_GCC_MAX_VERSION.sort(reverse=True)
 
@@ -187,17 +172,9 @@ GCC_CXX_SUPPORT.sort(reverse=True)
 
 
 # define the maximum supported cxx version for a specific nvcc version
-NVCC_CXX_SUPPORT: List[GccCxxSupport] = [
+NVCC_CXX_SUPPORT: List[NvccCxxSupport] = [
     NvccCxxSupport("11.0", "17"),  # NVCC versions older than 11.0 does not support C++ 17
     NvccCxxSupport("12.0", "20"),  # NVCC versions older than 12.0 does not support C++ 20
-]
-NVCC_CXX_SUPPORT.sort(reverse=True)
-
-
-# define the maximum supported cxx version for a specific nvcc gcc combination
-NVCC_GCC_CXX_SUPPORT: List[NvccGccCxxSupport] = [
-    NvccGccCxxSupport("10.1", "8"),
-    NvccGccCxxSupport("11.1", "10"),
 ]
 NVCC_CXX_SUPPORT.sort(reverse=True)
 
@@ -225,8 +202,6 @@ NVCC_CLANG_MAX_VERSION: List[NvccHostSupport] = [
     NvccHostSupport("11.2", "11"),
     NvccHostSupport("11.1", "10"),
     NvccHostSupport("11.0", "9"),
-    NvccHostSupport("10.1", "8"),
-    NvccHostSupport("10.0", "6"),
 ]
 NVCC_CLANG_MAX_VERSION.sort(reverse=True)
 

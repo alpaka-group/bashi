@@ -108,18 +108,7 @@ def compiler_filter(
             # Rule: c21
             # related to rule:
             # remove all unsupported nvcc gcc version combinations with cxx
-            """
-            if row[DEVICE_COMPILER].version <= NVCC_GCC_CXX_SUPPORT[0].nvcc:
-                # check the maximum supported nvcc version for the given cxx version
-                for nvcc_gcc_comb in NVCC_GCC_CXX_SUPPORT:
-                    if row[DEVICE_COMPILER].version < nvcc_gcc_comb.nvcc:
-                        if row[HOST_COMPILER].version >= nvcc_gcc_comb.gcc:
-                            return False
-                    if row[DEVICE_COMPILER].version >= nvcc_gcc_comb.nvcc:
-                        if row[HOST_COMPILER].version >= nvcc_gcc_comb.gcc:
-                            return False
-                        break
-       """
+
         if HOST_COMPILER in row and row[HOST_COMPILER].name == CLANG:
             # Rule: c7
             # related to rule b11

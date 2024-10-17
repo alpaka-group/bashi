@@ -17,7 +17,6 @@ from bashi.versions import (
     get_oldest_supporting_clang_version_for_cuda,
     GCC_CXX_SUPPORT,
     NVCC_CXX_SUPPORT,
-    NVCC_GCC_CXX_SUPPORT,
     CLANG_CXX_SUPPORT,
 )
 
@@ -210,6 +209,7 @@ def software_dependency_filter(
                 # check the maximum supported nvcc version for the given cxx version
                 for nvcc_cxx_comb in NVCC_CXX_SUPPORT:
                     if row[DEVICE_COMPILER].version < nvcc_cxx_comb.nvcc:
+                        print(nvcc_cxx_comb.nvcc)
                         if row[CXX_STANDARD].version >= nvcc_cxx_comb.cxx:
                             reason(
                                 output,
@@ -228,35 +228,5 @@ def software_dependency_filter(
                             )
                             return False
                         break
-
-        if HOST_COMPILER in row and row[HOST_COMPILER].name == GCC:
-            if row[DEVICE_COMPILER].version <= NVCC_GCC_CXX_SUPPORT[0].nvcc:
-                # check the maximum supported nvcc version for the given cxx version
-                for nvcc_gcc_comb in NVCC_GCC_CXX_SUPPORT:
-                    if row[DEVICE_COMPILER].version < nvcc_gcc_comb.nvcc:
-                        if row[HOST_COMPILER].version >= nvcc_gcc_comb.gcc:
-                            return False
-                    if row[DEVICE_COMPILER].version >= nvcc_gcc_comb.nvcc:
-                        if row[HOST_COMPILER].version >= nvcc_gcc_comb.gcc:
-                            return False
-                        break
-
-                    """
-    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-        if compiler_type in row and row[compiler_type].name == GCC:
-            if CXX_STANDARD in row:
-                if row[compiler_type].version <= GCC_CXX_SUPPORT[0].gcc_version:
-                    # check the maximum supported gcc version for the given cxx version
-                    for gcc_cxx_comb in GCC_CXX_SUPPORT:
-                        if row[compiler_type].version >= gcc_cxx_comb.gcc_version:
-                            if row[CXX_STANDARD].version >= gcc_cxx_comb.cxx_version:
-                                reason(
-                                    output,
-                                    f"{__pretty_name_compiler(compiler_type)}"
-                                    f" gcc {row[compiler_type].version} "
-                                    f"does not support cxx {row[CXX_STANDARD].version}",
-                                )
-                                return False
-                            break
-                        """
+    print("passed")
     return True
