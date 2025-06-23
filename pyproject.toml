@@ -42,7 +42,7 @@ Repository = "https://github.com/alpaka-group/bashi"
 Issues = "https://github.com/alpaka-group/bashi/issues"
 
 [tool.coverage.run]
-command_line = "-m unittest discover -s tests/"
+command_line = "-m unittest discover -s tests/ -p \"*.py\""
 branch = true
 source = ["src"]
 

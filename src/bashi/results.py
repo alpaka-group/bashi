@@ -923,22 +923,37 @@ def _remove_unsupported_cxx_versions_for_gcc(
     parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
+    sorted_gcc_cxx_supported_version = sorted(GCC_CXX_SUPPORT_VERSION)
     for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-        max_gcc_ver = packaging.version.Version("9999")
-        for gcc_cxx_ver in sorted(GCC_CXX_SUPPORT_VERSION, reverse=True):
-            min_gcc_version = gcc_cxx_ver.gcc
+        gcc_cxx_ver = GCC_CXX_SUPPORT_VERSION[0]
+        gcc_min_ver: str = ANY_VERSION
+        cxx_min_ver: int = int(str(gcc_cxx_ver.cxx)) - 3
+
+        if cxx_min_ver < 11:
+            raise (RuntimeError("Does not support minium C++ version older than 11."))
+
+        for i in range(len(sorted_gcc_cxx_supported_version) + 1):
+            if i < len(sorted_gcc_cxx_supported_version):
+                gcc_cxx_ver = GCC_CXX_SUPPORT_VERSION[i]
+                gcc_max_ver: str = str(gcc_cxx_ver.gcc)
+            else:
+                gcc_max_ver = ANY_VERSION
+
             remove_parameter_value_pairs_ranges(
                 parameter_value_pairs,
                 removed_parameter_value_pairs,
                 parameter1=compiler_type,
                 value_name1=GCC,
-                value_min_version1=str(min_gcc_version),
-                value_max_version1=str(max_gcc_ver),
+                value_min_version1=gcc_min_ver,
+                value_max_version1=gcc_max_ver,
                 value_min_version1_inclusive=True,
                 value_max_version1_inclusive=False,
                 parameter2=CXX_STANDARD,
-                value_min_version2=str(gcc_cxx_ver.cxx),
+                value_min_version2=cxx_min_ver,
                 value_min_version2_inclusive=False,
                 value_max_version2_inclusive=False,
             )
-            max_gcc_ver = min_gcc_version
+
+            if i < len(sorted_gcc_cxx_supported_version):
+                gcc_min_ver = str(gcc_cxx_ver.gcc)
+                cxx_min_ver = int(str(gcc_cxx_ver.cxx))
