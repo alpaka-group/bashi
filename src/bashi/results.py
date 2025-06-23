@@ -18,6 +18,7 @@ from bashi.versions import (
     CLANG_CUDA_MAX_CUDA_VERSION,
     NvccHostSupport,
     ClangCudaSDKSupport,
+    GCC_CXX_SUPPORT_VERSION,
 )
 
 
@@ -83,6 +84,7 @@ def get_expected_bashi_parameter_value_pairs(
         param_val_pair_list, removed_param_val_pair_list
     )
     _remove_unsupported_cuda_versions_for_ubuntu(param_val_pair_list, removed_param_val_pair_list)
+    # _remove_unsupported_cxx_versions_for_gcc(param_val_pair_list, removed_param_val_pair_list)
     return (param_val_pair_list, removed_param_val_pair_list)
 
 
@@ -908,3 +910,35 @@ def _remove_unsupported_cuda_versions_for_ubuntu(
             value_max_version2=12,
             value_max_version2_inclusive=False,
         )
+
+
+def _remove_unsupported_cxx_versions_for_gcc(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    """Remove unsupported combinations of GCC compiler versions and C++ standard.
+
+    Args:
+
+    parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+    removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
+    """
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        max_gcc_ver = packaging.version.Version("9999")
+        for gcc_cxx_ver in sorted(GCC_CXX_SUPPORT_VERSION, reverse=True):
+            min_gcc_version = gcc_cxx_ver.gcc
+            remove_parameter_value_pairs_ranges(
+                parameter_value_pairs,
+                removed_parameter_value_pairs,
+                parameter1=compiler_type,
+                value_name1=GCC,
+                value_min_version1=str(min_gcc_version),
+                value_max_version1=str(max_gcc_ver),
+                value_min_version1_inclusive=True,
+                value_max_version1_inclusive=False,
+                parameter2=CXX_STANDARD,
+                value_min_version2=str(gcc_cxx_ver.cxx),
+                value_min_version2_inclusive=False,
+                value_max_version2_inclusive=False,
+            )
+            max_gcc_ver = min_gcc_version
