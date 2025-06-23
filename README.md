@@ -53,7 +53,7 @@ It is strongly recommended to use a Python environment for developing the code, 
 2. Activate the environment: `source env/bin/activate`
 3. Install the library: `pip install --editable .`
 4. Test the installation with the example: `python3 example/example.py`
-5. You can run the unit tests by going to the `test` directory and running `python -m unittest discover -s tests`
+5. You can run the unit tests by going to the `test` directory and running `python -m unittest discover -s tests -p "*.py"`
 
 If the example works correctly, a `job.yml` will be created in the current directory. You can also run `python3 example/example.py --help` to see additional options.
 
