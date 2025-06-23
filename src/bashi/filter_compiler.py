@@ -1,9 +1,9 @@
 """Filter rules basing on host and device compiler names and versions.
 
-All rules implemented in this filter have an identifier that begins with "c" and follows a number. 
+All rules implemented in this filter have an identifier that begins with "c" and follows a number.
 Examples: c1, c42, c678 ...
 
-These identifiers are used in the test names, for example, to make it clear which test is testing 
+These identifiers are used in the test names, for example, to make it clear which test is testing
 which rule.
 """
 
@@ -12,7 +12,12 @@ import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValueTuple
-from bashi.versions import NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION, CLANG_CUDA_MAX_CUDA_VERSION
+from bashi.versions import (
+    NVCC_GCC_MAX_VERSION,
+    NVCC_CLANG_MAX_VERSION,
+    CLANG_CUDA_MAX_CUDA_VERSION,
+    GCC_CXX_SUPPORT_VERSION,
+)
 from bashi.utils import reason
 
 # uncomment me for debugging
@@ -280,4 +285,32 @@ def compiler_filter(
                 reason(output, "clang-cuda does not support the SYCL backend.")
                 return False
 
+        if CXX_STANDARD in row:
+            for compiler in (HOST_COMPILER, DEVICE_COMPILER):
+                # Rule: c21
+                if compiler in row and row[compiler].name == GCC:
+                    for gcc_cxx_ver in GCC_CXX_SUPPORT_VERSION:
+                        if row[compiler].version >= gcc_cxx_ver.gcc:
+                            if row[CXX_STANDARD].version > gcc_cxx_ver.cxx:
+                                reason(
+                                    output,
+                                    f"{compiler} GCC {row[compiler].version} does not support "
+                                    f"C++{row[CXX_STANDARD].version}",
+                                )
+                                return False
+                            # break loop otherwise the C++ support of an older GCC version is
+                            # applied
+                            break
+                    # handle case, if GCC version is older, than the oldest defined GCC C++ support
+                    # entry
+                    if (
+                        row[compiler].version < GCC_CXX_SUPPORT_VERSION[-1].gcc
+                        and row[CXX_STANDARD].version >= GCC_CXX_SUPPORT_VERSION[-1].cxx
+                    ):
+                        reason(
+                            output,
+                            f"{compiler} GCC {row[compiler].version} does not support "
+                            f"C++{row[CXX_STANDARD].version}",
+                        )
+                        return False
     return True

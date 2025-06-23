@@ -84,7 +84,7 @@ def get_expected_bashi_parameter_value_pairs(
         param_val_pair_list, removed_param_val_pair_list
     )
     _remove_unsupported_cuda_versions_for_ubuntu(param_val_pair_list, removed_param_val_pair_list)
-    # _remove_unsupported_cxx_versions_for_gcc(param_val_pair_list, removed_param_val_pair_list)
+    _remove_unsupported_cxx_versions_for_gcc(param_val_pair_list, removed_param_val_pair_list)
     return (param_val_pair_list, removed_param_val_pair_list)
 
 
@@ -924,17 +924,21 @@ def _remove_unsupported_cxx_versions_for_gcc(
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
     sorted_gcc_cxx_supported_version = sorted(GCC_CXX_SUPPORT_VERSION)
+    # loop over version ranges
+    # first iteration: handle all GCC version older then the oldest defined version
+    # n+1 iterations: handle versions between the defined supported GCC versions
+    # last iteration: handle all GCC versions younger than the latest defined GCC version
     for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-        gcc_cxx_ver = GCC_CXX_SUPPORT_VERSION[0]
+        gcc_cxx_ver = sorted_gcc_cxx_supported_version[0]
         gcc_min_ver: str = ANY_VERSION
         cxx_min_ver: int = int(str(gcc_cxx_ver.cxx)) - 3
 
         if cxx_min_ver < 11:
-            raise (RuntimeError("Does not support minium C++ version older than 11."))
+            raise RuntimeError("Does not support minium C++ version older than 11.")
 
         for i in range(len(sorted_gcc_cxx_supported_version) + 1):
             if i < len(sorted_gcc_cxx_supported_version):
-                gcc_cxx_ver = GCC_CXX_SUPPORT_VERSION[i]
+                gcc_cxx_ver = sorted_gcc_cxx_supported_version[i]
                 gcc_max_ver: str = str(gcc_cxx_ver.gcc)
             else:
                 gcc_max_ver = ANY_VERSION

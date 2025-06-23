@@ -82,7 +82,7 @@ class GccCxxSupport(VersionSupportBase):
 
 
 VERSIONS: Dict[str, List[Union[str, int, float]]] = {
-    GCC: [6, 7, 8, 9, 10, 11, 12, 13],
+    GCC: [8, 9, 10, 11, 12, 13],
     CLANG: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
     NVCC: [
         10.0,
@@ -180,7 +180,7 @@ GCC_CXX_SUPPORT_VERSION: List[GccCxxSupport] = [
     GccCxxSupport("10", "20"),
     GccCxxSupport("11", "23"),
 ]
-GCC_CXX_SUPPORT_VERSION.sort()
+GCC_CXX_SUPPORT_VERSION.sort(reverse=True)
 
 
 # pylint: disable=too-many-branches
