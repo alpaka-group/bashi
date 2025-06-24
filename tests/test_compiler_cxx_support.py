@@ -194,6 +194,89 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
             self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
             self.assertEqual(
                 reason_msg.getvalue(),
-                f"{compiler_type} GCC {row[compiler_type].version} does not support "
+                f"{compiler_type} gcc {row[compiler_type].version} does not support "
+                f"C++{row[CXX_STANDARD].version}",
+            )
+
+    def test_valid_in_range_nvcc_cxx_support_c23(self):
+        for row in [
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((NVCC, 10.1)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 0)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((NVCC, 11.0)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 14)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((NVCC, 11.0)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((NVCC, 12.3)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 14)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((NVCC, 12.8)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((NVCC, 12.0)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((NVCC, 99.0)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                }
+            ),
+        ]:
+            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+
+    def test_invalid_in_range_nvcc_cxx_support_c23(self):
+        for row in [
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((NVCC, 10.2)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 9999)),
+                },
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((NVCC, 10.2)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                },
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((NVCC, 11.8)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                },
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((NVCC, 12.9)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                },
+            ),
+        ]:
+            reason_msg = io.StringIO()
+
+            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"{DEVICE_COMPILER} nvcc {row[DEVICE_COMPILER].version} does not support "
                 f"C++{row[CXX_STANDARD].version}",
             )

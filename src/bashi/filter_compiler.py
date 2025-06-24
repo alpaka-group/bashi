@@ -7,16 +7,18 @@ These identifiers are used in the test names, for example, to make it clear whic
 which rule.
 """
 
-from typing import Optional, IO
+from typing import Optional, IO, List
 import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.types import ParameterValueTuple
+from bashi.types import ParameterValueTuple, Parameter, ValueName
 from bashi.versions import (
+    CompilerCxxSupport,
     NVCC_GCC_MAX_VERSION,
     NVCC_CLANG_MAX_VERSION,
     CLANG_CUDA_MAX_CUDA_VERSION,
     GCC_CXX_SUPPORT_VERSION,
+    NVCC_CXX_SUPPORT_VERSION,
 )
 from bashi.utils import reason
 
@@ -33,6 +35,58 @@ def compiler_filter_typechecked(
     is why the non type-checked version is used for the pairwise generator.
     """
     return compiler_filter(row, output)
+
+
+def _remove_unsupported_compiler_cxx_combination(
+    row: ParameterValueTuple,
+    compiler_name: ValueName,
+    compiler_type: Parameter,
+    compiler_cxx_list: List[CompilerCxxSupport],
+    output: Optional[IO[str]] = None,
+):
+    """Return True, if the compiler version C++ standard combination is not supported.
+
+    Attention: Because of performance reasons, does not check if CXX_STANDARD is in the row.
+
+    Args:
+        row (ParameterValueTuple): current row with parameter value
+        compiler_name (ValueName): name of the compiler
+        compiler_type (Parameter): HOST_COMPILER or DEVICE_COMPILER
+        compiler_cxx_list (List[CompilerCxxSupport]): list containing which compiler version added
+            support for a new C++ standard
+        output (Optional[IO[str]], optional): Writes the reason in the io object why the parameter
+            value tuple does not pass the filter. If None, no information is provided. The default
+            value is None.
+
+    Returns:
+        bool: true if not supported
+    """
+    if compiler_type in row and row[compiler_type].name == compiler_name:
+        for compiler_cxx_ver in compiler_cxx_list:
+            if row[compiler_type].version >= compiler_cxx_ver.compiler:
+                if row[CXX_STANDARD].version > compiler_cxx_ver.cxx:
+                    reason(
+                        output,
+                        f"{compiler_type} {compiler_name} {row[compiler_type].version} does not "
+                        f"support C++{row[CXX_STANDARD].version}",
+                    )
+                    return True
+                # break loop otherwise the C++ support of an older GCC version is
+                # applied
+                break
+        # handle case, if GCC version is older, than the oldest defined GCC C++ support
+        # entry
+        if (
+            row[compiler_type].version < compiler_cxx_list[-1].compiler
+            and row[CXX_STANDARD].version >= compiler_cxx_list[-1].cxx
+        ):
+            reason(
+                output,
+                f"{compiler_type} {compiler_name} {row[compiler_type].version} does not "
+                f"support C++{row[CXX_STANDARD].version}",
+            )
+            return True
+    return False
 
 
 # pylint: disable=too-many-branches
@@ -288,29 +342,15 @@ def compiler_filter(
         if CXX_STANDARD in row:
             for compiler in (HOST_COMPILER, DEVICE_COMPILER):
                 # Rule: c21
-                if compiler in row and row[compiler].name == GCC:
-                    for gcc_cxx_ver in GCC_CXX_SUPPORT_VERSION:
-                        if row[compiler].version >= gcc_cxx_ver.compiler:
-                            if row[CXX_STANDARD].version > gcc_cxx_ver.cxx:
-                                reason(
-                                    output,
-                                    f"{compiler} GCC {row[compiler].version} does not support "
-                                    f"C++{row[CXX_STANDARD].version}",
-                                )
-                                return False
-                            # break loop otherwise the C++ support of an older GCC version is
-                            # applied
-                            break
-                    # handle case, if GCC version is older, than the oldest defined GCC C++ support
-                    # entry
-                    if (
-                        row[compiler].version < GCC_CXX_SUPPORT_VERSION[-1].compiler
-                        and row[CXX_STANDARD].version >= GCC_CXX_SUPPORT_VERSION[-1].cxx
-                    ):
-                        reason(
-                            output,
-                            f"{compiler} GCC {row[compiler].version} does not support "
-                            f"C++{row[CXX_STANDARD].version}",
-                        )
-                        return False
+                if _remove_unsupported_compiler_cxx_combination(
+                    row, GCC, compiler, GCC_CXX_SUPPORT_VERSION, output
+                ):
+                    return False
+
+            # Rule: c23
+            if _remove_unsupported_compiler_cxx_combination(
+                row, NVCC, DEVICE_COMPILER, NVCC_CXX_SUPPORT_VERSION, output
+            ):
+                return False
+
     return True

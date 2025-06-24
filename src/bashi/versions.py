@@ -85,9 +85,6 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
     GCC: [8, 9, 10, 11, 12, 13],
     CLANG: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
     NVCC: [
-        10.0,
-        10.1,
-        10.2,
         11.0,
         11.1,
         11.2,
@@ -189,6 +186,14 @@ CLANG_CXX_SUPPORT: List[CompilerCxxSupport] = [
     CompilerCxxSupport("17", "23"),
 ]
 CLANG_CXX_SUPPORT.sort(reverse=True)
+
+# define the maximum supported cxx version for a specific nvcc version
+NVCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = [
+    CompilerCxxSupport("10.0", "14"),
+    CompilerCxxSupport("11.0", "17"),
+    CompilerCxxSupport("12.0", "20"),
+]
+NVCC_CXX_SUPPORT_VERSION.sort(reverse=True)
 
 
 # pylint: disable=too-many-branches

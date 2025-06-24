@@ -3,12 +3,11 @@
 import unittest
 
 # pyright: reportPrivateUsage=false
-from bashi.result_modules.cxx_compiler_support import _remove_unsupported_cxx_version_for_compiler
-
-# pyright: reportPrivateUsage=false
 from bashi.result_modules.cxx_compiler_support import (
+    _remove_unsupported_cxx_version_for_compiler,
     _remove_unsupported_cxx_versions_for_gcc,
     _remove_unsupported_cxx_versions_for_clang,
+    _remove_unsupported_cxx_versions_for_nvcc,
 )
 from bashi.types import ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -203,6 +202,48 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
 
         default_remove_test(
             _remove_unsupported_cxx_versions_for_clang,
+            test_param_value_pairs,
+            expected_results,
+            self,
+        )
+        self.assertEqual(
+            test_param_value_pairs,
+            expected_results,
+            create_diff_parameter_value_pairs(test_param_value_pairs, expected_results),
+        )
+
+    def test_remove_unsupported_cxx_versions_for_nvcc(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+            [
+                ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, NVCC, 10.1), (CXX_STANDARD, 17)),
+                ((DEVICE_COMPILER, NVCC, 10.2), (CXX_STANDARD, 20)),
+                ((DEVICE_COMPILER, NVCC, 11.0), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, NVCC, 11.8), (CXX_STANDARD, 17)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (CXX_STANDARD, 20)),
+                ((DEVICE_COMPILER, NVCC, 11.8), (CXX_STANDARD, 23)),
+                ((DEVICE_COMPILER, NVCC, 12.0), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, NVCC, 12.8), (CXX_STANDARD, 17)),
+                ((DEVICE_COMPILER, NVCC, 12.2), (CXX_STANDARD, 20)),
+                ((DEVICE_COMPILER, NVCC, 12.8), (CXX_STANDARD, 23)),
+                ((DEVICE_COMPILER, NVCC, 99.8), (CXX_STANDARD, 20)),
+            ]
+        )
+
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+            [
+                ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, NVCC, 11.0), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, NVCC, 11.8), (CXX_STANDARD, 17)),
+                ((DEVICE_COMPILER, NVCC, 12.0), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, NVCC, 12.8), (CXX_STANDARD, 17)),
+                ((DEVICE_COMPILER, NVCC, 12.2), (CXX_STANDARD, 20)),
+                ((DEVICE_COMPILER, NVCC, 99.8), (CXX_STANDARD, 20)),
+            ]
+        )
+
+        default_remove_test(
+            _remove_unsupported_cxx_versions_for_nvcc,
             test_param_value_pairs,
             expected_results,
             self,
