@@ -3,7 +3,12 @@
 from typing import List
 from bashi.types import ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import CompilerCxxSupport, GCC_CXX_SUPPORT_VERSION, CLANG_CXX_SUPPORT
+from bashi.versions import (
+    CompilerCxxSupport,
+    GCC_CXX_SUPPORT_VERSION,
+    CLANG_CXX_SUPPORT,
+    NVCC_CXX_SUPPORT_VERSION,
+)
 from bashi.utils import remove_parameter_value_pairs_ranges
 
 
@@ -104,3 +109,23 @@ def _remove_unsupported_cxx_versions_for_clang(
             CLANG_CXX_SUPPORT,
             compiler_type,
         )
+
+
+def _remove_unsupported_cxx_versions_for_nvcc(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    """Remove unsupported combinations of Nvcc compiler versions and C++ standard.
+
+    Args:
+
+    parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+    removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
+    """
+    _remove_unsupported_cxx_version_for_compiler(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        NVCC,
+        NVCC_CXX_SUPPORT_VERSION,
+        DEVICE_COMPILER,
+    )
