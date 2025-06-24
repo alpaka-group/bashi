@@ -65,20 +65,20 @@ class ClangCudaSDKSupport(VersionSupportBase):
 
 
 # pylint: disable=too-few-public-methods
-class GccCxxSupport(VersionSupportBase):
-    """Contains a gcc version and host compiler version. Does automatically parse the input strings
-    to package.version.Version.
+class CompilerCxxSupport(VersionSupportBase):
+    """Contains a compiler version and host compiler version. Does automatically parse the input
+    strings to package.version.Version.
 
     Provides comparision operators for sorting.
     """
 
     def __init__(self, gcc_version: str, cxx_version: str):
         VersionSupportBase.__init__(self, gcc_version, cxx_version)
-        self.gcc: packaging.version.Version = self.version1
+        self.compiler: packaging.version.Version = self.version1
         self.cxx: packaging.version.Version = self.version2
 
     def __str__(self) -> str:
-        return f"GCC {str(self.gcc)} + CXX {self.cxx}"
+        return f"compiler {str(self.compiler)} + CXX {self.cxx}"
 
 
 VERSIONS: Dict[str, List[Union[str, int, float]]] = {
@@ -175,12 +175,20 @@ CLANG_CUDA_MAX_CUDA_VERSION: List[ClangCudaSDKSupport] = [
 CLANG_CUDA_MAX_CUDA_VERSION.sort(reverse=True)
 
 # define the maximum supported cxx version for a specific gcc version
-GCC_CXX_SUPPORT_VERSION: List[GccCxxSupport] = [
-    GccCxxSupport("8", "17"),
-    GccCxxSupport("10", "20"),
-    GccCxxSupport("11", "23"),
+GCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = [
+    CompilerCxxSupport("8", "17"),
+    CompilerCxxSupport("10", "20"),
+    CompilerCxxSupport("11", "23"),
 ]
 GCC_CXX_SUPPORT_VERSION.sort(reverse=True)
+
+# define the maximum supported cxx version for a specific clang version
+CLANG_CXX_SUPPORT: List[CompilerCxxSupport] = [
+    CompilerCxxSupport("9", "17"),
+    CompilerCxxSupport("14", "20"),
+    CompilerCxxSupport("17", "23"),
+]
+CLANG_CXX_SUPPORT.sort(reverse=True)
 
 
 # pylint: disable=too-many-branches
