@@ -290,7 +290,7 @@ def compiler_filter(
                 # Rule: c21
                 if compiler in row and row[compiler].name == GCC:
                     for gcc_cxx_ver in GCC_CXX_SUPPORT_VERSION:
-                        if row[compiler].version >= gcc_cxx_ver.gcc:
+                        if row[compiler].version >= gcc_cxx_ver.compiler:
                             if row[CXX_STANDARD].version > gcc_cxx_ver.cxx:
                                 reason(
                                     output,
@@ -304,7 +304,7 @@ def compiler_filter(
                     # handle case, if GCC version is older, than the oldest defined GCC C++ support
                     # entry
                     if (
-                        row[compiler].version < GCC_CXX_SUPPORT_VERSION[-1].gcc
+                        row[compiler].version < GCC_CXX_SUPPORT_VERSION[-1].compiler
                         and row[CXX_STANDARD].version >= GCC_CXX_SUPPORT_VERSION[-1].cxx
                     ):
                         reason(
