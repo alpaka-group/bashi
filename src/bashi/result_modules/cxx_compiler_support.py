@@ -6,8 +6,10 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.versions import (
     CompilerCxxSupport,
     GCC_CXX_SUPPORT_VERSION,
-    CLANG_CXX_SUPPORT,
+    CLANG_CXX_SUPPORT_VERSION,
     NVCC_CXX_SUPPORT_VERSION,
+    CLANG_CUDA_CXX_SUPPORT_VERSION,
+    MAX_CUDA_SDK_CXX_SUPPORT,
 )
 from bashi.utils import remove_parameter_value_pairs_ranges
 
@@ -106,7 +108,7 @@ def _remove_unsupported_cxx_versions_for_clang(
             parameter_value_pairs,
             removed_parameter_value_pairs,
             CLANG,
-            CLANG_CXX_SUPPORT,
+            CLANG_CXX_SUPPORT_VERSION,
             compiler_type,
         )
 
@@ -128,4 +130,44 @@ def _remove_unsupported_cxx_versions_for_nvcc(
         NVCC,
         NVCC_CXX_SUPPORT_VERSION,
         DEVICE_COMPILER,
+    )
+
+
+def _remove_unsupported_cxx_versions_for_cuda(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    if len(MAX_CUDA_SDK_CXX_SUPPORT) == 0:
+        return
+    max_cuda_sdk_cxx_support_sorted = sorted(MAX_CUDA_SDK_CXX_SUPPORT)
+
+    min_cuda_sdk_version = ON
+    for cuda_cxx in max_cuda_sdk_cxx_support_sorted:
+        # print(f"B{min_cuda_sdk_version} - {cuda_cxx.compiler} + {cuda_cxx.cxx}")
+        remove_parameter_value_pairs_ranges(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            parameter1=ALPAKA_ACC_GPU_CUDA_ENABLE,
+            value_name1=ALPAKA_ACC_GPU_CUDA_ENABLE,
+            value_min_version1=min_cuda_sdk_version,
+            value_min_version1_inclusive=False,
+            value_max_version1=str(cuda_cxx.compiler),
+            value_max_version1_inclusive=True,
+            parameter2=CXX_STANDARD,
+            value_name2=CXX_STANDARD,
+            value_min_version2=str(cuda_cxx.cxx),
+            value_min_version2_inclusive=False,
+        )
+        min_cuda_sdk_version = str(cuda_cxx.compiler)
+    remove_parameter_value_pairs_ranges(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        parameter1=ALPAKA_ACC_GPU_CUDA_ENABLE,
+        value_name1=ALPAKA_ACC_GPU_CUDA_ENABLE,
+        value_min_version1=str(max_cuda_sdk_cxx_support_sorted[-1].compiler),
+        value_min_version1_inclusive=False,
+        parameter2=CXX_STANDARD,
+        value_name2=CXX_STANDARD,
+        value_min_version2=str(max_cuda_sdk_cxx_support_sorted[-1].cxx),
+        value_min_version2_inclusive=True,
     )
