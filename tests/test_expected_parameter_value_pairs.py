@@ -26,6 +26,7 @@ from bashi.utils import (
     check_parameter_value_pair_in_combination_list,
     check_unexpected_parameter_value_pair_in_combination_list,
     create_parameter_value_pair,
+    get_nice_paremter_value_pair_str,
 )
 
 
@@ -400,7 +401,8 @@ class TestExpectedValuePairs(unittest.TestCase):
             )
         )
         output_wrong_single_pair_expected_str = (
-            str(single_wrong_pair[0]) + " is missing in combination list"
+            f"MISSING in combination list: "
+            f"{get_nice_paremter_value_pair_str(single_wrong_pair[0])}"
         )
         self.assertTrue(
             output_wrong_single_pair.getvalue().rstrip() == output_wrong_single_pair_expected_str,
@@ -422,7 +424,7 @@ class TestExpectedValuePairs(unittest.TestCase):
         expected_output_many_wrong_pairs_list: List[str] = []
         for pair in many_wrong_pairs:
             expected_output_many_wrong_pairs_list.append(
-                str(pair) + " is missing in combination list"
+                f"MISSING in combination list: {get_nice_paremter_value_pair_str(pair)}",
             )
 
         expected_output_many_wrong_pairs_list.sort()
@@ -459,7 +461,7 @@ class TestExpectedValuePairs(unittest.TestCase):
         expected_output_many_wrong_pairs_list: List[str] = []
         for pair in many_wrong_pairs:
             expected_output_many_wrong_pairs_list.append(
-                str(pair) + " is missing in combination list"
+                f"MISSING in combination list: {get_nice_paremter_value_pair_str(pair)}",
             )
 
         expected_output_many_wrong_pairs_list.sort()
@@ -552,7 +554,8 @@ class TestExpectedValuePairs(unittest.TestCase):
 
         for unexpected_param_val_pair in existing_parameter_value_pairs:
             self.assertIn(
-                f"found unexpected parameter-value-pair {unexpected_param_val_pair} in combination list",
+                f"FOUND unexpected parameter-value-pair in combination list: "
+                f"{get_nice_paremter_value_pair_str(unexpected_param_val_pair)}",
                 error_list,
             )
 
@@ -593,7 +596,8 @@ class TestExpectedValuePairs(unittest.TestCase):
 
         for unexpected_param_val_pair in existing_parameter_value_pairs:
             self.assertIn(
-                f"found unexpected parameter-value-pair {unexpected_param_val_pair} in combination list",
+                f"FOUND unexpected parameter-value-pair in combination list: "
+                f"{get_nice_paremter_value_pair_str(unexpected_param_val_pair)}",
                 error_list,
             )
 
