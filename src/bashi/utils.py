@@ -5,7 +5,6 @@ import sys
 from collections import OrderedDict
 from typing import IO, Dict, List, Optional, Union, Callable
 
-import packaging.version
 from packaging.specifiers import SpecifierSet
 from typeguard import typechecked
 
@@ -229,6 +228,29 @@ def bi_filter(
     parameter_value_pairs[:] = tmp_parameter_value_pairs
 
 
+def get_nice_paremter_value_pair_str(param_val_pair: ParameterValuePair) -> str:
+    """Take Parameter value pair and return a nice string representation.
+
+    Args:
+        param_val_pair (ParameterValuePair): Parameter value pair
+
+    Returns:
+        str: string representation
+    """
+    output = "( "
+    for i, param_val_single in enumerate(param_val_pair):
+        if param_val_single.parameter in (HOST_COMPILER, DEVICE_COMPILER):
+            output += f"{param_val_single.parameter} "
+        output += (
+            f"{param_val_single.parameterValue.name}"
+            f"@{str(param_val_single.parameterValue.version)} "
+        )
+        if i == 0:
+            output += ", "
+    output += ")"
+    return output
+
+
 @typechecked
 def check_parameter_value_pair_in_combination_list(
     combination_list: CombinationList,
@@ -260,7 +282,11 @@ def check_parameter_value_pair_in_combination_list(
                 break
 
         if not found:
-            print(f"{ex_param_val_pair} is missing in combination list", file=output)
+            print(
+                f"MISSING in combination list: "
+                f"{get_nice_paremter_value_pair_str(ex_param_val_pair)}",
+                file=output,
+            )
             missing_expected_param = True
 
     return not missing_expected_param
@@ -293,8 +319,8 @@ def check_unexpected_parameter_value_pair_in_combination_list(
             # comb contains all parameters, therefore a check is not required
             if comb[param1] == param_val1 and comb[param2] == param_val2:
                 print(
-                    f"found unexpected parameter-value-pair {ex_param_val_pair} "
-                    "in combination list",
+                    f"FOUND unexpected parameter-value-pair in combination list: "
+                    f"{get_nice_paremter_value_pair_str(ex_param_val_pair)}",
                     file=output,
                 )
                 found_unexpected_param = True
