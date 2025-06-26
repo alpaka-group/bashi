@@ -198,6 +198,114 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
                 f"C++{row[CXX_STANDARD].version}",
             )
 
+    def test_valid_in_range_clang_cxx_support_c22(self):
+        for row in [
+            OD(
+                {
+                    HOST_COMPILER: ppv((CLANG, 7)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 0)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG, 8)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 14)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG, 9)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG, 13)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG, 14)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG, 14)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG, 17)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG, 9999)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                }
+            ),
+        ]:
+            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+
+    def test_invalid_in_range_clang_cxx_support_c22(self):
+        for row in [
+            OD(
+                {
+                    HOST_COMPILER: ppv((CLANG, 7)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 9999)),
+                },
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG, 7)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                },
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG, 8)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                },
+            ),
+            OD(
+                {
+                    HOST_COMPILER: ppv((CLANG, 13)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                },
+            ),
+            OD(
+                {
+                    HOST_COMPILER: ppv((CLANG, 16)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                },
+            ),
+            OD(
+                {
+                    HOST_COMPILER: ppv((CLANG, 9999)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 9999)),
+                },
+            ),
+        ]:
+            if HOST_COMPILER in row:
+                compiler_type = HOST_COMPILER
+            elif DEVICE_COMPILER in row:
+                compiler_type = DEVICE_COMPILER
+            else:
+                compiler_type = ""
+
+            reason_msg = io.StringIO()
+
+            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"{compiler_type} clang {row[compiler_type].version} does not support "
+                f"C++{row[CXX_STANDARD].version}",
+            )
+
     def test_valid_in_range_nvcc_cxx_support_c23(self):
         for row in [
             OD(

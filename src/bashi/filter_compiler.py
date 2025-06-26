@@ -345,6 +345,13 @@ def compiler_filter(
                 if _remove_unsupported_compiler_cxx_combination(
                     row, GCC, compiler, GCC_CXX_SUPPORT_VERSION, output
                 ):
+                    # reason() is inside _remove_unsupported_compiler_cxx_combination
+                    return False
+                # Rule: c22
+                if _remove_unsupported_compiler_cxx_combination(
+                    row, CLANG, compiler, CLANG_CXX_SUPPORT_VERSION, output
+                ):
+                    # reason() is inside _remove_unsupported_compiler_cxx_combination
                     return False
 
             # Rule: c23

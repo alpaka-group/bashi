@@ -121,7 +121,7 @@ def _get_clang_cuda_cuda_sdk_cxx_support(
 
 VERSIONS: Dict[str, List[Union[str, int, float]]] = {
     GCC: [8, 9, 10, 11, 12, 13],
-    CLANG: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+    CLANG: [9, 10, 11, 12, 13, 14, 15, 16, 17],
     NVCC: [
         11.0,
         11.1,
@@ -152,7 +152,7 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
         "1.81.0",
         "1.82.0",
     ],
-    CXX_STANDARD: [17, 20],
+    CXX_STANDARD: [17, 20, 23],
 }
 # Clang and Clang-CUDA has the same version numbers
 VERSIONS[CLANG_CUDA] = copy.copy(VERSIONS[CLANG])
