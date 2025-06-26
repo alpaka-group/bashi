@@ -18,6 +18,8 @@ from bashi.versions import (
     NVCC_CLANG_MAX_VERSION,
     CLANG_CUDA_MAX_CUDA_VERSION,
     GCC_CXX_SUPPORT_VERSION,
+    CLANG_CXX_SUPPORT_VERSION,
+    CLANG_CUDA_CXX_SUPPORT_VERSION,
     NVCC_CXX_SUPPORT_VERSION,
     MAX_CUDA_SDK_CXX_SUPPORT,
 )
@@ -351,6 +353,13 @@ def compiler_filter(
                 # Rule: c22
                 if _remove_unsupported_compiler_cxx_combination(
                     row, CLANG, compiler, CLANG_CXX_SUPPORT_VERSION, output
+                ):
+                    # reason() is inside _remove_unsupported_compiler_cxx_combination
+                    return False
+
+                # Rule: c25
+                if _remove_unsupported_compiler_cxx_combination(
+                    row, CLANG_CUDA, compiler, CLANG_CUDA_CXX_SUPPORT_VERSION, output
                 ):
                     # reason() is inside _remove_unsupported_compiler_cxx_combination
                     return False

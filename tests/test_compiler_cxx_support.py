@@ -471,3 +471,81 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
                 f"C++ {row[CXX_STANDARD].version}: "
                 f"there is no Nvcc version which support this combination",
             )
+
+    def test_valid_in_range_clang_cuda_cxx_support_c25(self):
+        for row in [
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG_CUDA, 14)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 14)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG_CUDA, 14)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG_CUDA, 14)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG_CUDA, 17)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((CLANG_CUDA, 9999)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                }
+            ),
+        ]:
+            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+
+    def test_invalid_in_range_clang_cuda_cxx_support_c25(self):
+        for row in [
+            OD(
+                {
+                    HOST_COMPILER: ppv((CLANG_CUDA, 14)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                },
+            ),
+            OD(
+                {
+                    HOST_COMPILER: ppv((CLANG_CUDA, 16)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                },
+            ),
+            OD(
+                {
+                    HOST_COMPILER: ppv((CLANG_CUDA, 18)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 26)),
+                },
+            ),
+            OD(
+                {
+                    HOST_COMPILER: ppv((CLANG_CUDA, 9999)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 9999)),
+                },
+            ),
+        ]:
+            if HOST_COMPILER in row:
+                compiler_type = HOST_COMPILER
+            elif DEVICE_COMPILER in row:
+                compiler_type = DEVICE_COMPILER
+            else:
+                compiler_type = ""
+
+            reason_msg = io.StringIO()
+
+            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"{compiler_type} clang-cuda {row[compiler_type].version} does not support "
+                f"C++{row[CXX_STANDARD].version}",
+            )
