@@ -133,10 +133,39 @@ def _remove_unsupported_cxx_versions_for_nvcc(
     )
 
 
+def _remove_unsupported_cxx_versions_for_clang_cuda(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    """Remove unsupported combinations of Clang-CUDA compiler versions and C++ standard.
+
+    Args:
+
+    parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+    removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
+    """
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        _remove_unsupported_cxx_version_for_compiler(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            CLANG_CUDA,
+            CLANG_CUDA_CXX_SUPPORT_VERSION,
+            compiler_type,
+        )
+
+
 def _remove_unsupported_cxx_versions_for_cuda(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
 ):
+    """Remove all combinations of the CUDA backend and the C++ standard, which are not possible with
+    the Nvcc or Clang-CUDA compiler.
+
+    Args:
+
+    parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+    removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
+    """
     if len(MAX_CUDA_SDK_CXX_SUPPORT) == 0:
         return
     max_cuda_sdk_cxx_support_sorted = sorted(MAX_CUDA_SDK_CXX_SUPPORT)

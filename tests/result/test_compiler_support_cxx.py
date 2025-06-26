@@ -8,6 +8,7 @@ from bashi.result_modules.cxx_compiler_support import (
     _remove_unsupported_cxx_versions_for_gcc,
     _remove_unsupported_cxx_versions_for_clang,
     _remove_unsupported_cxx_versions_for_nvcc,
+    _remove_unsupported_cxx_versions_for_clang_cuda,
     _remove_unsupported_cxx_versions_for_cuda,
 )
 from bashi.types import ParameterValuePair
@@ -234,6 +235,57 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
 
         default_remove_test(
             _remove_unsupported_cxx_versions_for_nvcc,
+            test_param_value_pairs,
+            expected_results,
+            self,
+        )
+
+    def test_remove_unsupported_cxx_versions_for_clang_cuda(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+            [
+                ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 8), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 8), (CXX_STANDARD, 17)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 9), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 9), (CXX_STANDARD, 17)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 10), (CXX_STANDARD, 14)),
+                ((HOST_COMPILER, CLANG_CUDA, 12), (CXX_STANDARD, 14)),
+                ((HOST_COMPILER, CLANG_CUDA, 12), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, CLANG_CUDA, 12), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CXX_STANDARD, 14)),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (CXX_STANDARD, 23)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 17), (CXX_STANDARD, 20)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 17), (CXX_STANDARD, 23)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 17), (CXX_STANDARD, 26)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 9999), (CXX_STANDARD, 23)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 9999), (CXX_STANDARD, 99)),
+            ]
+        )
+
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+            [
+                ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 8), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 10), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 9), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 9), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, CLANG_CUDA, 12), (CXX_STANDARD, 14)),
+                ((HOST_COMPILER, CLANG_CUDA, 12), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CXX_STANDARD, 14)),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CXX_STANDARD, 17)),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (CXX_STANDARD, 20)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 17), (CXX_STANDARD, 20)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 17), (CXX_STANDARD, 23)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 9999), (CXX_STANDARD, 23)),
+            ]
+        )
+
+        default_remove_test(
+            _remove_unsupported_cxx_versions_for_clang_cuda,
             test_param_value_pairs,
             expected_results,
             self,
