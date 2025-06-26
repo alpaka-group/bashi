@@ -19,6 +19,7 @@ from bashi.versions import (
     CLANG_CUDA_MAX_CUDA_VERSION,
     GCC_CXX_SUPPORT_VERSION,
     NVCC_CXX_SUPPORT_VERSION,
+    MAX_CUDA_SDK_CXX_SUPPORT,
 )
 from bashi.utils import reason
 
@@ -358,6 +359,33 @@ def compiler_filter(
             if _remove_unsupported_compiler_cxx_combination(
                 row, NVCC, DEVICE_COMPILER, NVCC_CXX_SUPPORT_VERSION, output
             ):
+                # reason() is inside _remove_unsupported_compiler_cxx_combination
                 return False
+
+            if (
+                ALPAKA_ACC_GPU_CUDA_ENABLE in row
+                and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
+            ):
+                # Rule: c24
+                # If we know that the CUDA backend is enabled and the host compiler is GCC or Clang,
+                # the device compiler must be Nvcc.
+                # In this case, we know that the CUDA SDK and Nvcc has the same version number and
+                # therefore we can determine which is the maximum supported C++ standard.
+                if HOST_COMPILER in row and row[HOST_COMPILER].name in (GCC, CLANG):
+                    if _remove_unsupported_compiler_cxx_combination(
+                        row,
+                        ALPAKA_ACC_GPU_CUDA_ENABLE,
+                        ALPAKA_ACC_GPU_CUDA_ENABLE,
+                        NVCC_CXX_SUPPORT_VERSION,
+                        None,
+                    ):
+                        reason(
+                            output,
+                            f"{row[HOST_COMPILER].name} {row[HOST_COMPILER].version} + "
+                            f"CUDA {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} + "
+                            f"C++ {row[CXX_STANDARD].version}: "
+                            f"there is no Nvcc version which support this combination",
+                        )
+                        return False
 
     return True
