@@ -92,6 +92,78 @@ def _remove_unsupported_compiler_cxx_combination(
     return False
 
 
+def _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(
+    cuda_sdk_version: pkv.Version,
+    nvcc_compiler_cxx_support_list: List[CompilerCxxSupport],
+) -> pkv.Version:
+    """Maximum support C++ standard for given CUDA SDK version if the nvcc compiler is used.
+
+    Args:
+        cuda_sdk_version (pkv.Version): CUDA backend version
+        nvcc_compiler_cxx_support_list (List[CompilerCxxSupport]): Only for testing
+        purpose. Use NVCC_CXX_SUPPORT_VERSION.
+
+    Returns:
+        pkv.Version: C++ version
+    """
+    nvcc_cxx_support_version_sorted = sorted(nvcc_compiler_cxx_support_list, reverse=True)
+    for nvcc_cxx_version in nvcc_cxx_support_version_sorted:
+        if cuda_sdk_version >= nvcc_cxx_version.compiler:
+            return nvcc_cxx_version.cxx
+
+    return nvcc_cxx_support_version_sorted[-1].cxx
+
+
+def _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
+    cuda_sdk_version: pkv.Version,
+    max_cuda_sdk_cxx_support: List[CompilerCxxSupport],
+) -> pkv.Version:
+    """Maximum support C++ standard for given CUDA SDK version if the Clang-CUDA compiler is used.
+
+    Args:
+        cuda_sdk_version (pkv.Version): CUDA backend version
+        max_cuda_sdk_cxx_support (List[CompilerCxxSupport]): Only for testing
+        purpose. Use MAX_CUDA_SDK_CXX_SUPPORT.
+
+    Returns:
+        pkv.Version: C++ version
+    """
+    max_cuda_sdk_cxx_support_sorted = sorted(max_cuda_sdk_cxx_support, reverse=True)
+    for cuda_sdk_cxx in max_cuda_sdk_cxx_support_sorted:
+        if cuda_sdk_version >= cuda_sdk_cxx.compiler:
+            return cuda_sdk_cxx.cxx
+
+    # fallback, return oldest C++ standard
+    return max_cuda_sdk_cxx_support_sorted[-1].cxx
+
+
+def _get_max_supported_cxx_version_for_cuda_sdk(
+    cuda_sdk_version: pkv.Version,
+    nvcc_compiler_cxx_support_list: List[CompilerCxxSupport],
+    max_cuda_sdk_cxx_support: List[CompilerCxxSupport],
+) -> pkv.Version:
+    """Get the maximum possible supported C++ standard for a given CUDA SDK version.
+
+    Args:
+        cuda_sdk_version (pkv.Version): CUDA backen version
+        nvcc_compiler_cxx_support_list (List[CompilerCxxSupport]): Only for testing
+        purpose. Use NVCC_CXX_SUPPORT_VERSION.
+                max_cuda_sdk_cxx_support (List[CompilerCxxSupport]): Only for testing
+        purpose. Use MAX_CUDA_SDK_CXX_SUPPORT.
+
+    Returns:
+        pkv.Version: C++ version
+    """
+    return max(
+        _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(
+            cuda_sdk_version, nvcc_compiler_cxx_support_list
+        ),
+        _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
+            cuda_sdk_version, max_cuda_sdk_cxx_support
+        ),
+    )
+
+
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-return-statements
 # pylint: disable=too-many-statements
@@ -375,6 +447,24 @@ def compiler_filter(
                 ALPAKA_ACC_GPU_CUDA_ENABLE in row
                 and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
             ):
+                # Rule: c26
+                # With the given CUDA backend version we can restrict the possible C++ standard
+                # already. If there is no Nvcc or Clang-CUDA version which supports the given
+                # C++ standard with the given CUDA SDK, we can return false before the host or
+                # device compiler was added to the row.
+                if row[CXX_STANDARD].version > _get_max_supported_cxx_version_for_cuda_sdk(
+                    row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
+                    NVCC_CXX_SUPPORT_VERSION,
+                    MAX_CUDA_SDK_CXX_SUPPORT,
+                ):
+                    reason(
+                        output,
+                        f"There is not Nvcc or Clang-CUDA version which supports "
+                        f"C++-{row[CXX_STANDARD].version} + CUDA "
+                        f"{row[ALPAKA_ACC_GPU_CUDA_ENABLE].version}",
+                    )
+                    return False
+
                 # Rule: c24
                 # If we know that the CUDA backend is enabled and the host compiler is GCC or Clang,
                 # the device compiler must be Nvcc.

@@ -3,9 +3,178 @@
 import unittest
 import io
 from collections import OrderedDict as OD
+import packaging.version as pkv
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.filter_compiler import compiler_filter_typechecked
+from bashi.versions import (
+    CompilerCxxSupport,
+    ClangCudaSDKSupport,
+    _get_clang_cuda_cuda_sdk_cxx_support,
+)
+from bashi.filter_compiler import (
+    compiler_filter_typechecked,
+    _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc,
+    _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda,
+    _get_max_supported_cxx_version_for_cuda_sdk,
+)
+
+
+class TestGetMaximumSupportedCXXStandardForCUDASdk(unittest.TestCase):
+    def test_get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(self):
+        support_list = [
+            CompilerCxxSupport("10.0", "14"),
+            CompilerCxxSupport("11.0", "17"),
+            CompilerCxxSupport("12.0", "20"),
+        ]
+        for sdk_version, expected_cxx in [
+            (10.0, 14),
+            (11.0, 17),
+            (12.0, 20),
+            (10.2, 14),
+            (11.8, 17),
+            (12.8, 20),
+            (9.0, 14),
+            (13.0, 20),
+        ]:
+            p_sdk_version = pkv.parse(str(sdk_version))
+            p_expected_cxx = pkv.parse(str(expected_cxx))
+            self.assertEqual(
+                _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(p_sdk_version, support_list),
+                p_expected_cxx,
+                f"CUDA {sdk_version}",
+            )
+
+    def test_get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(self):
+        support_list = [
+            CompilerCxxSupport("12.1", "23"),
+            CompilerCxxSupport("11.5", "20"),
+            CompilerCxxSupport("10.0", "17"),
+        ]
+        for sdk_version, expected_cxx in [
+            (9.0, 17),
+            (10.0, 17),
+            (10.2, 17),
+            (11.0, 17),
+            (11.5, 20),
+            (11.8, 20),
+            (12.0, 20),
+            (12.1, 23),
+            (12.8, 23),
+            (13.0, 23),
+        ]:
+            p_sdk_version = pkv.parse(str(sdk_version))
+            p_expected_cxx = pkv.parse(str(expected_cxx))
+            self.assertEqual(
+                _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
+                    p_sdk_version, support_list
+                ),
+                p_expected_cxx,
+                f"CUDA {sdk_version}",
+            )
+
+    def test__get_max_supported_cxx_version_for_cuda_sdk(self):
+        nvcc_support_list = [
+            CompilerCxxSupport("10.0", "14"),
+            CompilerCxxSupport("11.0", "17"),
+            CompilerCxxSupport("12.0", "20"),
+        ]
+        clang_cuda_support_list = [
+            CompilerCxxSupport("12.1", "23"),
+            CompilerCxxSupport("11.5", "20"),
+            CompilerCxxSupport("10.0", "17"),
+        ]
+        for sdk_version, expected_cxx in [
+            (9.0, 17),
+            (10.0, 17),
+            (10.2, 17),
+            (11.0, 17),
+            (11.5, 20),
+            (11.8, 20),
+            (12.0, 20),
+            (12.1, 23),
+            (12.8, 23),
+            (13.0, 23),
+        ]:
+            p_sdk_version = pkv.parse(str(sdk_version))
+            p_expected_cxx = pkv.parse(str(expected_cxx))
+            self.assertEqual(
+                _get_max_supported_cxx_version_for_cuda_sdk(
+                    p_sdk_version, nvcc_support_list, clang_cuda_support_list
+                ),
+                p_expected_cxx,
+                f"CUDA {sdk_version}",
+            )
+
+    def test_get_clang_cuda_cuda_sdk_cxx_support_1(self):
+        clang_cuda_max_cuda_version: List[ClangCudaSDKSupport] = [
+            ClangCudaSDKSupport("7", "9.2"),
+            ClangCudaSDKSupport("8", "10.0"),
+            ClangCudaSDKSupport("10", "10.1"),
+            ClangCudaSDKSupport("12", "11.0"),
+            ClangCudaSDKSupport("13", "11.2"),
+            ClangCudaSDKSupport("14", "11.5"),
+            ClangCudaSDKSupport("16", "11.8"),
+            ClangCudaSDKSupport("17", "12.1"),
+        ]
+
+        clang_cxx_support_version: List[CompilerCxxSupport] = [
+            CompilerCxxSupport("9", "17"),
+            CompilerCxxSupport("14", "20"),
+            CompilerCxxSupport("17", "23"),
+        ]
+
+        expected_list: List[CompilerCxxSupport] = [
+            CompilerCxxSupport("12.1", "23"),
+            CompilerCxxSupport("11.5", "20"),
+            CompilerCxxSupport("10.0", "17"),
+        ]
+        result = _get_clang_cuda_cuda_sdk_cxx_support(
+            clang_cxx_support_version, clang_cuda_max_cuda_version
+        )
+
+        self.assertEqual(
+            result,
+            expected_list,
+            f"\nresult: \n{'\n'.join([str(x) for x in result])}"
+            f"\nexpected: \n{'\n'.join([str(x) for x in expected_list])}",
+        )
+
+    def test_get_clang_cuda_cuda_sdk_cxx_support_2(self):
+        clang_cuda_max_cuda_version: List[ClangCudaSDKSupport] = [
+            ClangCudaSDKSupport("7", "9.2"),
+            ClangCudaSDKSupport("8", "10.0"),
+            ClangCudaSDKSupport("10", "10.1"),
+            ClangCudaSDKSupport("12", "11.0"),
+            ClangCudaSDKSupport("13", "11.2"),
+            ClangCudaSDKSupport("14", "11.5"),
+            ClangCudaSDKSupport("16", "11.8"),
+            ClangCudaSDKSupport("17", "12.1"),
+        ]
+
+        clang_cxx_support_version: List[CompilerCxxSupport] = [
+            CompilerCxxSupport("4", "14"),
+            CompilerCxxSupport("9", "17"),
+            CompilerCxxSupport("14", "20"),
+            CompilerCxxSupport("17", "23"),
+            CompilerCxxSupport("19", "26"),
+        ]
+
+        expected_list: List[CompilerCxxSupport] = [
+            CompilerCxxSupport("12.1", "26"),
+            CompilerCxxSupport("12.1", "23"),
+            CompilerCxxSupport("11.5", "20"),
+            CompilerCxxSupport("10.0", "17"),
+        ]
+        result = _get_clang_cuda_cuda_sdk_cxx_support(
+            clang_cxx_support_version, clang_cuda_max_cuda_version
+        )
+
+        self.assertEqual(
+            result,
+            expected_list,
+            f"\nresult: \n{'\n'.join([str(x) for x in result])}"
+            f"\nexpected: \n{'\n'.join([str(x) for x in expected_list])}",
+        )
 
 
 class TestCompilerCXXSupportFilterRules(unittest.TestCase):
@@ -548,4 +717,88 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
                 reason_msg.getvalue(),
                 f"{compiler_type} clang-cuda {row[compiler_type].version} does not support "
                 f"C++{row[CXX_STANDARD].version}",
+            )
+
+    def test_valid_cuda_sdk_max_supported_cxx_c26(self):
+        for row in [
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 9)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 11)),
+                }
+            ),
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 14)),
+                }
+            ),
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 10.2)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                }
+            ),
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                }
+            ),
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.5)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                }
+            ),
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                }
+            ),
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                }
+            ),
+        ]:
+            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+
+    def test_invalid_cuda_sdk_max_supported_cxx_c26(self):
+        for row in [
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                }
+            ),
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                }
+            ),
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                }
+            ),
+            OD(
+                {
+                    ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 9999.0)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 99)),
+                }
+            ),
+        ]:
+            reason_msg = io.StringIO()
+
+            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"There is not Nvcc or Clang-CUDA version which supports "
+                f"C++-{row[CXX_STANDARD].version} + CUDA "
+                f"{row[ALPAKA_ACC_GPU_CUDA_ENABLE].version}",
             )
