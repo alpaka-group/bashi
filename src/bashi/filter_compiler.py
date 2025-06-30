@@ -465,6 +465,34 @@ def compiler_filter(
                     )
                     return False
 
+                # Rule: c27
+                # Normally Clang-CUDA support earlier a new C++ standard for a given CUDA SDK, than
+                # Nvcc. The rule cover the corner case, that Clang-CUDA supports a later C++ version
+                # than Nvcc. But Clang-CUDA does not automatically cover the latest CUDA SDK
+                # version. Therefore there is the case, that a specific CUDA SDK version supports
+                # a higher C++ standard than it successor.
+                # Example: Clang-CUDA 17 supports CUDA 12.1 and C++ 23. Therefore CUDA 12.1 and C++
+                # 23 is possible. But Clang-CUDA 17 does not support CUDA 12.2. Therefore CUDA 12.2
+                # can be only compiled with Nvcc and the maximum standard is C++20.
+                if row[CXX_STANDARD].version > _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(
+                    row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
+                    NVCC_CXX_SUPPORT_VERSION,
+                ) and row[
+                    CXX_STANDARD
+                ].version <= _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
+                    row[ALPAKA_ACC_GPU_CUDA_ENABLE].version, MAX_CUDA_SDK_CXX_SUPPORT
+                ):
+                    if (
+                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version
+                        > CLANG_CUDA_MAX_CUDA_VERSION[0].cuda
+                    ):
+                        reason(
+                            output,
+                            f"For the potential combination of C++-{row[CXX_STANDARD].version} + "
+                            f"CUDA {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} there is no "
+                            f"Clang-CUDA compiler which support this.",
+                        )
+                        return False
                 # Rule: c24
                 # If we know that the CUDA backend is enabled and the host compiler is GCC or Clang,
                 # the device compiler must be Nvcc.

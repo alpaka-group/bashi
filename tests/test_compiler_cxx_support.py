@@ -10,6 +10,8 @@ from bashi.versions import (
     CompilerCxxSupport,
     ClangCudaSDKSupport,
     _get_clang_cuda_cuda_sdk_cxx_support,
+    MAX_CUDA_SDK_CXX_SUPPORT,
+    NVCC_CXX_SUPPORT_VERSION,
 )
 from bashi.filter_compiler import (
     compiler_filter_typechecked,
@@ -802,3 +804,42 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
                 f"C++-{row[CXX_STANDARD].version} + CUDA "
                 f"{row[ALPAKA_ACC_GPU_CUDA_ENABLE].version}",
             )
+
+    def test_cuda_sdk_cxx_support_of_clang_cuda_c27(self):
+        max_clang_cuda_support_cxx = sorted(MAX_CUDA_SDK_CXX_SUPPORT, reverse=True)[0]
+        max_nvcc_supported_cxx = sorted(NVCC_CXX_SUPPORT_VERSION, reverse=True)[0]
+
+        # The test only works, if this true. If this assumption does not match the real world use
+        # case anymore, the test needs to be modified.
+        self.assertGreater(max_clang_cuda_support_cxx.cxx, max_nvcc_supported_cxx.cxx)
+
+        valid_row = OD(
+            {
+                ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
+                    (ALPAKA_ACC_GPU_CUDA_ENABLE, str(max_clang_cuda_support_cxx.compiler))
+                ),
+                CXX_STANDARD: ppv((CXX_STANDARD, str(max_clang_cuda_support_cxx.cxx))),
+            }
+        )
+        self.assertTrue(compiler_filter_typechecked(valid_row), f"{valid_row}")
+
+        invalid_cuda_sdk_version = float(str(max_clang_cuda_support_cxx.compiler)) + 0.1
+        invalid_row = OD(
+            {
+                ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
+                    (
+                        ALPAKA_ACC_GPU_CUDA_ENABLE,
+                        invalid_cuda_sdk_version,
+                    )
+                ),
+                CXX_STANDARD: ppv((CXX_STANDARD, str(max_clang_cuda_support_cxx.cxx))),
+            }
+        )
+        reason_msg = io.StringIO()
+        self.assertFalse(compiler_filter_typechecked(invalid_row, reason_msg), f"{invalid_row}")
+        self.assertEqual(
+            reason_msg.getvalue(),
+            f"For the potential combination of C++-{max_clang_cuda_support_cxx.cxx} + "
+            f"CUDA {invalid_cuda_sdk_version} there is no "
+            f"Clang-CUDA compiler which support this.",
+        )
