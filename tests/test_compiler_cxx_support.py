@@ -892,3 +892,63 @@ class TestClangBasedCompilerCXXSupport(unittest.TestCase):
             f"\nresult: \n{new_line.join([str(x) for x in result])}"
             f"\nexpected: \n{new_line.join([str(x) for x in expected])}",
         )
+
+    def test_valid_icpx_supported_cxx_c27(self):
+        for row in [
+            OD(
+                {
+                    HOST_COMPILER: ppv((ICPX, "2025.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 14)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((ICPX, "2025.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((ICPX, "2025.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                }
+            ),
+            OD(
+                {
+                    HOST_COMPILER: ppv((ICPX, "2025.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                }
+            ),
+        ]:
+            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+
+    def test_invalid_icpx_supported_cxx_c27(self):
+        for row in [
+            OD(
+                {
+                    HOST_COMPILER: ppv((ICPX, "2025.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 26)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((ICPX, "2025.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 99)),
+                }
+            ),
+        ]:
+            if HOST_COMPILER in row:
+                compiler_type = HOST_COMPILER
+            elif DEVICE_COMPILER in row:
+                compiler_type = DEVICE_COMPILER
+            else:
+                compiler_type = ""
+
+            reason_msg = io.StringIO()
+
+            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"{compiler_type} icpx {row[compiler_type].version} does not support "
+                f"C++{row[CXX_STANDARD].version}",
+            )
