@@ -10,6 +10,7 @@ from bashi.result_modules.cxx_compiler_support import (
     _remove_unsupported_cxx_versions_for_nvcc,
     _remove_unsupported_cxx_versions_for_clang_cuda,
     _remove_unsupported_cxx_versions_for_cuda,
+    _remove_unsupported_cxx_versions_for_icpx,
 )
 from bashi.types import ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -357,3 +358,32 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
                 output += f"  {str(v)}\n"
             e.add_note(output)
             raise (e)
+
+    def test_remove_unsupported_cxx_versions_for_icpx(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+            [
+                ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, ICPX, "2025.0"), (CXX_STANDARD, 14)),
+                ((HOST_COMPILER, ICPX, "2025.0"), (CXX_STANDARD, 17)),
+                ((DEVICE_COMPILER, ICPX, "2025.0"), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, ICPX, "2025.0"), (CXX_STANDARD, 23)),
+                ((DEVICE_COMPILER, ICPX, "2025.0"), (CXX_STANDARD, 26)),
+            ]
+        )
+
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+            [
+                ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, ICPX, "2025.0"), (CXX_STANDARD, 14)),
+                ((HOST_COMPILER, ICPX, "2025.0"), (CXX_STANDARD, 17)),
+                ((DEVICE_COMPILER, ICPX, "2025.0"), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, ICPX, "2025.0"), (CXX_STANDARD, 23)),
+            ]
+        )
+
+        default_remove_test(
+            _remove_unsupported_cxx_versions_for_icpx,
+            test_param_value_pairs,
+            expected_results,
+            self,
+        )

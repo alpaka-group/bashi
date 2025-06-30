@@ -12,6 +12,8 @@ from bashi.versions import (
     _get_clang_cuda_cuda_sdk_cxx_support,
     MAX_CUDA_SDK_CXX_SUPPORT,
     NVCC_CXX_SUPPORT_VERSION,
+    ClangBase,
+    _get_clang_base_compiler_cxx_support,
 )
 from bashi.filter_compiler import (
     compiler_filter_typechecked,
@@ -850,3 +852,103 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
             f"CUDA {invalid_cuda_sdk_version} there is no "
             f"Clang-CUDA compiler which support this.",
         )
+
+
+class TestClangBasedCompilerCXXSupport(unittest.TestCase):
+    def test_get_clang_base_compiler_cxx_support(self):
+        clang_cxx_support_version: List[CompilerCxxSupport] = [
+            CompilerCxxSupport("9", "17"),
+            CompilerCxxSupport("14", "20"),
+            CompilerCxxSupport("17", "23"),
+        ]
+
+        given: List[ClangBase] = [
+            ClangBase("2017.1", "7"),
+            ClangBase("2018.1", "9"),
+            ClangBase("2019.3", "10"),
+            ClangBase("2020.0", "14"),
+            ClangBase("2021.0", "15"),
+            ClangBase("2025.0", "19"),
+        ]
+        expected: List[CompilerCxxSupport] = sorted(
+            [
+                CompilerCxxSupport("2017.1", "17"),
+                CompilerCxxSupport("2018.1", "17"),
+                CompilerCxxSupport("2019.3", "17"),
+                CompilerCxxSupport("2020.0", "20"),
+                CompilerCxxSupport("2021.0", "20"),
+                CompilerCxxSupport("2025.0", "23"),
+            ]
+        )
+
+        result = sorted(_get_clang_base_compiler_cxx_support(given, clang_cxx_support_version))
+
+        # workaround for Python <= 3.11
+        # SyntaxError: f-string expression part cannot include a backslash
+        new_line = "\n"
+        self.assertEqual(
+            result,
+            expected,
+            f"\nresult: \n{new_line.join([str(x) for x in result])}"
+            f"\nexpected: \n{new_line.join([str(x) for x in expected])}",
+        )
+
+    def test_valid_icpx_supported_cxx_c27(self):
+        for row in [
+            OD(
+                {
+                    HOST_COMPILER: ppv((ICPX, "2025.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 14)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((ICPX, "2025.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((ICPX, "2025.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                }
+            ),
+            OD(
+                {
+                    HOST_COMPILER: ppv((ICPX, "2025.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                }
+            ),
+        ]:
+            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+
+    def test_invalid_icpx_supported_cxx_c27(self):
+        for row in [
+            OD(
+                {
+                    HOST_COMPILER: ppv((ICPX, "2025.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 26)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((ICPX, "2025.0")),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 99)),
+                }
+            ),
+        ]:
+            if HOST_COMPILER in row:
+                compiler_type = HOST_COMPILER
+            elif DEVICE_COMPILER in row:
+                compiler_type = DEVICE_COMPILER
+            else:
+                compiler_type = ""
+
+            reason_msg = io.StringIO()
+
+            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"{compiler_type} icpx {row[compiler_type].version} does not support "
+                f"C++{row[CXX_STANDARD].version}",
+            )

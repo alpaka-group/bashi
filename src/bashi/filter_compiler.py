@@ -22,6 +22,7 @@ from bashi.versions import (
     CLANG_CUDA_CXX_SUPPORT_VERSION,
     NVCC_CXX_SUPPORT_VERSION,
     MAX_CUDA_SDK_CXX_SUPPORT,
+    ICPX_CXX_SUPPORT_VERSION,
 )
 from bashi.utils import reason
 
@@ -432,6 +433,13 @@ def compiler_filter(
                 # Rule: c25
                 if _remove_unsupported_compiler_cxx_combination(
                     row, CLANG_CUDA, compiler, CLANG_CUDA_CXX_SUPPORT_VERSION, output
+                ):
+                    # reason() is inside _remove_unsupported_compiler_cxx_combination
+                    return False
+
+                # Rule: c28
+                if _remove_unsupported_compiler_cxx_combination(
+                    row, ICPX, compiler, ICPX_CXX_SUPPORT_VERSION, output
                 ):
                     # reason() is inside _remove_unsupported_compiler_cxx_combination
                     return False
