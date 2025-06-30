@@ -134,11 +134,14 @@ class TestGetMaximumSupportedCXXStandardForCUDASdk(unittest.TestCase):
             clang_cxx_support_version, clang_cuda_max_cuda_version
         )
 
+        # workaround for Python <= 3.11
+        # SyntaxError: f-string expression part cannot include a backslash
+        new_line = "\n"
         self.assertEqual(
             result,
             expected_list,
-            f"\nresult: \n{'\n'.join([str(x) for x in result])}"
-            f"\nexpected: \n{'\n'.join([str(x) for x in expected_list])}",
+            f"\nresult: \n{new_line.join([str(x) for x in result])}"
+            f"\nexpected: \n{new_line.join([str(x) for x in expected_list])}",
         )
 
     def test_get_clang_cuda_cuda_sdk_cxx_support_2(self):
@@ -171,11 +174,15 @@ class TestGetMaximumSupportedCXXStandardForCUDASdk(unittest.TestCase):
             clang_cxx_support_version, clang_cuda_max_cuda_version
         )
 
+        # workaround for Python <= 3.11
+        # SyntaxError: f-string expression part cannot include a backslash
+        new_line = "\n"
+
         self.assertEqual(
             result,
             expected_list,
-            f"\nresult: \n{'\n'.join([str(x) for x in result])}"
-            f"\nexpected: \n{'\n'.join([str(x) for x in expected_list])}",
+            f"\nresult: \n{new_line.join([str(x) for x in result])}"
+            f"\nexpected: \n{new_line.join([str(x) for x in expected_list])}",
         )
 
 
