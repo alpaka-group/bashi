@@ -72,8 +72,8 @@ class CompilerCxxSupport(VersionSupportBase):
     Provides comparision operators for sorting.
     """
 
-    def __init__(self, gcc_version: str, cxx_version: str):
-        VersionSupportBase.__init__(self, gcc_version, cxx_version)
+    def __init__(self, compiler_version: str, cxx_version: str):
+        VersionSupportBase.__init__(self, compiler_version, cxx_version)
         self.compiler: packaging.version.Version = self.version1
         self.cxx: packaging.version.Version = self.version2
 
@@ -81,9 +81,47 @@ class CompilerCxxSupport(VersionSupportBase):
         return f"compiler {str(self.compiler)} + CXX {self.cxx}"
 
 
+def _get_clang_cuda_cuda_sdk_cxx_support(
+    clang_cuda_cxx_support: List[CompilerCxxSupport],
+    clang_cuda_max_cuda_support: List[ClangCudaSDKSupport],
+) -> List[CompilerCxxSupport]:
+    """Generate a list containing the latest Clang CUDA version that supports a specific C++
+    standard. Two factors must be taken into account. Which C++ standard does a Clang-CUDA version
+    support and up to which CUDA SDK version does a Clang-CUDA version support.
+
+    Args:
+        clang_cuda_cxx_support (List[CompilerCxxSupport]): Contains which Clang-CUDA version
+        supports which C++ standard.
+        clang_cuda_max_cuda_support (List[ClangCudaSDKSupport]): Contains which CUDA SDK version
+        does a Clang-CUDA version support.
+
+    Returns:
+        List[CompilerCxxSupport]: List of Clang-CUDA version with C++ standard. Up to the given
+        Clang-CUDA version the related C++ standard is possible. If Clang-CUDA version is younger
+        than the latest entry, no C++ standard is possible. If a Clang-CUDA version is older, than
+        the oldest version, we assume the older version can have the same C++ standard like the
+        oldest defined version. The List is ordered from latest to oldest Clang-CUDA release.
+    """
+    clang_cuda_cxx_support_sorted: List[CompilerCxxSupport] = sorted(
+        clang_cuda_cxx_support, reverse=True
+    )
+    clang_cuda_max_cuda_support_sorted: List[ClangCudaSDKSupport] = sorted(
+        clang_cuda_max_cuda_support, reverse=True
+    )
+    comb: List[CompilerCxxSupport] = []
+
+    for clang_cuda_cxx in clang_cuda_cxx_support_sorted:
+        for clang_cuda_sdk in clang_cuda_max_cuda_support_sorted:
+            if clang_cuda_cxx.compiler >= clang_cuda_sdk.clang_cuda:
+                comb.append(CompilerCxxSupport(str(clang_cuda_sdk.cuda), str(clang_cuda_cxx.cxx)))
+                break
+
+    return comb
+
+
 VERSIONS: Dict[str, List[Union[str, int, float]]] = {
     GCC: [8, 9, 10, 11, 12, 13],
-    CLANG: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+    CLANG: [9, 10, 11, 12, 13, 14, 15, 16, 17],
     NVCC: [
         11.0,
         11.1,
@@ -114,7 +152,7 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
         "1.81.0",
         "1.82.0",
     ],
-    CXX_STANDARD: [17, 20],
+    CXX_STANDARD: [17, 20, 23],
 }
 # Clang and Clang-CUDA has the same version numbers
 VERSIONS[CLANG_CUDA] = copy.copy(VERSIONS[CLANG])
@@ -180,12 +218,14 @@ GCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = [
 GCC_CXX_SUPPORT_VERSION.sort(reverse=True)
 
 # define the maximum supported cxx version for a specific clang version
-CLANG_CXX_SUPPORT: List[CompilerCxxSupport] = [
+CLANG_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = [
     CompilerCxxSupport("9", "17"),
     CompilerCxxSupport("14", "20"),
     CompilerCxxSupport("17", "23"),
 ]
-CLANG_CXX_SUPPORT.sort(reverse=True)
+CLANG_CXX_SUPPORT_VERSION.sort(reverse=True)
+
+CLANG_CUDA_CXX_SUPPORT_VERSION = CLANG_CXX_SUPPORT_VERSION
 
 # define the maximum supported cxx version for a specific nvcc version
 NVCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = [
@@ -194,6 +234,19 @@ NVCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = [
     CompilerCxxSupport("12.0", "20"),
 ]
 NVCC_CXX_SUPPORT_VERSION.sort(reverse=True)
+
+# specify maximum possible C++ standard up to a specific CUDA version
+# e.g.
+# expected_list: List[CompilerCxxSupport] = [
+#            CompilerCxxSupport("12.1", "23"),
+#            CompilerCxxSupport("11.5", "20"),
+#            CompilerCxxSupport("10.0", "17"),
+#        ]
+# up to CUDA 12.1 C++23 is possible, up to CUDA 11.5 C++20 is possible and up to CUDA 10.0 C++17
+# is possible
+MAX_CUDA_SDK_CXX_SUPPORT: List[CompilerCxxSupport] = _get_clang_cuda_cuda_sdk_cxx_support(
+    CLANG_CUDA_CXX_SUPPORT_VERSION, CLANG_CUDA_MAX_CUDA_VERSION
+)
 
 
 # pylint: disable=too-many-branches

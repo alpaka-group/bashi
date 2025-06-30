@@ -23,7 +23,10 @@ from bashi.versions import (
 # pyright: reportPrivateUsage=false
 from bashi.result_modules.cxx_compiler_support import (
     _remove_unsupported_cxx_versions_for_gcc,
+    _remove_unsupported_cxx_versions_for_clang,
     _remove_unsupported_cxx_versions_for_nvcc,
+    _remove_unsupported_cxx_versions_for_clang_cuda,
+    _remove_unsupported_cxx_versions_for_cuda,
 )
 
 
@@ -90,7 +93,12 @@ def get_expected_bashi_parameter_value_pairs(
     )
     _remove_unsupported_cuda_versions_for_ubuntu(param_val_pair_list, removed_param_val_pair_list)
     _remove_unsupported_cxx_versions_for_gcc(param_val_pair_list, removed_param_val_pair_list)
+    _remove_unsupported_cxx_versions_for_clang(param_val_pair_list, removed_param_val_pair_list)
     _remove_unsupported_cxx_versions_for_nvcc(param_val_pair_list, removed_param_val_pair_list)
+    _remove_unsupported_cxx_versions_for_clang_cuda(
+        param_val_pair_list, removed_param_val_pair_list
+    )
+    _remove_unsupported_cxx_versions_for_cuda(param_val_pair_list, removed_param_val_pair_list)
     return (param_val_pair_list, removed_param_val_pair_list)
 
 

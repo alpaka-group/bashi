@@ -18,7 +18,10 @@ from bashi.versions import (
     NVCC_CLANG_MAX_VERSION,
     CLANG_CUDA_MAX_CUDA_VERSION,
     GCC_CXX_SUPPORT_VERSION,
+    CLANG_CXX_SUPPORT_VERSION,
+    CLANG_CUDA_CXX_SUPPORT_VERSION,
     NVCC_CXX_SUPPORT_VERSION,
+    MAX_CUDA_SDK_CXX_SUPPORT,
 )
 from bashi.utils import reason
 
@@ -87,6 +90,78 @@ def _remove_unsupported_compiler_cxx_combination(
             )
             return True
     return False
+
+
+def _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(
+    cuda_sdk_version: pkv.Version,
+    nvcc_compiler_cxx_support_list: List[CompilerCxxSupport],
+) -> pkv.Version:
+    """Maximum support C++ standard for given CUDA SDK version if the nvcc compiler is used.
+
+    Args:
+        cuda_sdk_version (pkv.Version): CUDA backend version
+        nvcc_compiler_cxx_support_list (List[CompilerCxxSupport]): Only for testing
+        purpose. Use NVCC_CXX_SUPPORT_VERSION.
+
+    Returns:
+        pkv.Version: C++ version
+    """
+    nvcc_cxx_support_version_sorted = sorted(nvcc_compiler_cxx_support_list, reverse=True)
+    for nvcc_cxx_version in nvcc_cxx_support_version_sorted:
+        if cuda_sdk_version >= nvcc_cxx_version.compiler:
+            return nvcc_cxx_version.cxx
+
+    return nvcc_cxx_support_version_sorted[-1].cxx
+
+
+def _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
+    cuda_sdk_version: pkv.Version,
+    max_cuda_sdk_cxx_support: List[CompilerCxxSupport],
+) -> pkv.Version:
+    """Maximum support C++ standard for given CUDA SDK version if the Clang-CUDA compiler is used.
+
+    Args:
+        cuda_sdk_version (pkv.Version): CUDA backend version
+        max_cuda_sdk_cxx_support (List[CompilerCxxSupport]): Only for testing
+        purpose. Use MAX_CUDA_SDK_CXX_SUPPORT.
+
+    Returns:
+        pkv.Version: C++ version
+    """
+    max_cuda_sdk_cxx_support_sorted = sorted(max_cuda_sdk_cxx_support, reverse=True)
+    for cuda_sdk_cxx in max_cuda_sdk_cxx_support_sorted:
+        if cuda_sdk_version >= cuda_sdk_cxx.compiler:
+            return cuda_sdk_cxx.cxx
+
+    # fallback, return oldest C++ standard
+    return max_cuda_sdk_cxx_support_sorted[-1].cxx
+
+
+def _get_max_supported_cxx_version_for_cuda_sdk(
+    cuda_sdk_version: pkv.Version,
+    nvcc_compiler_cxx_support_list: List[CompilerCxxSupport],
+    max_cuda_sdk_cxx_support: List[CompilerCxxSupport],
+) -> pkv.Version:
+    """Get the maximum possible supported C++ standard for a given CUDA SDK version.
+
+    Args:
+        cuda_sdk_version (pkv.Version): CUDA backen version
+        nvcc_compiler_cxx_support_list (List[CompilerCxxSupport]): Only for testing
+        purpose. Use NVCC_CXX_SUPPORT_VERSION.
+                max_cuda_sdk_cxx_support (List[CompilerCxxSupport]): Only for testing
+        purpose. Use MAX_CUDA_SDK_CXX_SUPPORT.
+
+    Returns:
+        pkv.Version: C++ version
+    """
+    return max(
+        _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(
+            cuda_sdk_version, nvcc_compiler_cxx_support_list
+        ),
+        _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
+            cuda_sdk_version, max_cuda_sdk_cxx_support
+        ),
+    )
 
 
 # pylint: disable=too-many-branches
@@ -345,12 +420,99 @@ def compiler_filter(
                 if _remove_unsupported_compiler_cxx_combination(
                     row, GCC, compiler, GCC_CXX_SUPPORT_VERSION, output
                 ):
+                    # reason() is inside _remove_unsupported_compiler_cxx_combination
+                    return False
+                # Rule: c22
+                if _remove_unsupported_compiler_cxx_combination(
+                    row, CLANG, compiler, CLANG_CXX_SUPPORT_VERSION, output
+                ):
+                    # reason() is inside _remove_unsupported_compiler_cxx_combination
+                    return False
+
+                # Rule: c25
+                if _remove_unsupported_compiler_cxx_combination(
+                    row, CLANG_CUDA, compiler, CLANG_CUDA_CXX_SUPPORT_VERSION, output
+                ):
+                    # reason() is inside _remove_unsupported_compiler_cxx_combination
                     return False
 
             # Rule: c23
             if _remove_unsupported_compiler_cxx_combination(
                 row, NVCC, DEVICE_COMPILER, NVCC_CXX_SUPPORT_VERSION, output
             ):
+                # reason() is inside _remove_unsupported_compiler_cxx_combination
                 return False
+
+            if (
+                ALPAKA_ACC_GPU_CUDA_ENABLE in row
+                and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
+            ):
+                # Rule: c26
+                # With the given CUDA backend version we can restrict the possible C++ standard
+                # already. If there is no Nvcc or Clang-CUDA version which supports the given
+                # C++ standard with the given CUDA SDK, we can return false before the host or
+                # device compiler was added to the row.
+                if row[CXX_STANDARD].version > _get_max_supported_cxx_version_for_cuda_sdk(
+                    row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
+                    NVCC_CXX_SUPPORT_VERSION,
+                    MAX_CUDA_SDK_CXX_SUPPORT,
+                ):
+                    reason(
+                        output,
+                        f"There is not Nvcc or Clang-CUDA version which supports "
+                        f"C++-{row[CXX_STANDARD].version} + CUDA "
+                        f"{row[ALPAKA_ACC_GPU_CUDA_ENABLE].version}",
+                    )
+                    return False
+
+                # Rule: c27
+                # Normally Clang-CUDA support earlier a new C++ standard for a given CUDA SDK, than
+                # Nvcc. The rule cover the corner case, that Clang-CUDA supports a later C++ version
+                # than Nvcc. But Clang-CUDA does not automatically cover the latest CUDA SDK
+                # version. Therefore there is the case, that a specific CUDA SDK version supports
+                # a higher C++ standard than it successor.
+                # Example: Clang-CUDA 17 supports CUDA 12.1 and C++ 23. Therefore CUDA 12.1 and C++
+                # 23 is possible. But Clang-CUDA 17 does not support CUDA 12.2. Therefore CUDA 12.2
+                # can be only compiled with Nvcc and the maximum standard is C++20.
+                if row[CXX_STANDARD].version > _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(
+                    row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
+                    NVCC_CXX_SUPPORT_VERSION,
+                ) and row[
+                    CXX_STANDARD
+                ].version <= _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
+                    row[ALPAKA_ACC_GPU_CUDA_ENABLE].version, MAX_CUDA_SDK_CXX_SUPPORT
+                ):
+                    if (
+                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version
+                        > CLANG_CUDA_MAX_CUDA_VERSION[0].cuda
+                    ):
+                        reason(
+                            output,
+                            f"For the potential combination of C++-{row[CXX_STANDARD].version} + "
+                            f"CUDA {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} there is no "
+                            f"Clang-CUDA compiler which support this.",
+                        )
+                        return False
+                # Rule: c24
+                # If we know that the CUDA backend is enabled and the host compiler is GCC or Clang,
+                # the device compiler must be Nvcc.
+                # In this case, we know that the CUDA SDK and Nvcc has the same version number and
+                # therefore we can determine which is the maximum supported C++ standard.
+                if HOST_COMPILER in row and row[HOST_COMPILER].name in (GCC, CLANG):
+                    if _remove_unsupported_compiler_cxx_combination(
+                        row,
+                        ALPAKA_ACC_GPU_CUDA_ENABLE,
+                        ALPAKA_ACC_GPU_CUDA_ENABLE,
+                        NVCC_CXX_SUPPORT_VERSION,
+                        None,
+                    ):
+                        reason(
+                            output,
+                            f"{row[HOST_COMPILER].name} {row[HOST_COMPILER].version} + "
+                            f"CUDA {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} + "
+                            f"C++ {row[CXX_STANDARD].version}: "
+                            f"there is no Nvcc version which support this combination",
+                        )
+                        return False
 
     return True
