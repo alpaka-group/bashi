@@ -28,6 +28,7 @@ from bashi.result_modules.cxx_compiler_support import (
     _remove_unsupported_cxx_versions_for_clang_cuda,
     _remove_unsupported_cxx_versions_for_cuda,
     _remove_unsupported_cxx_versions_for_icpx,
+    _remove_unsupported_cxx_versions_for_hipcc,
 )
 
 
@@ -101,6 +102,7 @@ def get_expected_bashi_parameter_value_pairs(
     )
     _remove_unsupported_cxx_versions_for_cuda(param_val_pair_list, removed_param_val_pair_list)
     _remove_unsupported_cxx_versions_for_icpx(param_val_pair_list, removed_param_val_pair_list)
+    _remove_unsupported_cxx_versions_for_hipcc(param_val_pair_list, removed_param_val_pair_list)
     return (param_val_pair_list, removed_param_val_pair_list)
 
 

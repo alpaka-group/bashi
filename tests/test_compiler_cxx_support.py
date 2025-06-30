@@ -952,3 +952,63 @@ class TestClangBasedCompilerCXXSupport(unittest.TestCase):
                 f"{compiler_type} icpx {row[compiler_type].version} does not support "
                 f"C++{row[CXX_STANDARD].version}",
             )
+
+    def test_valid_hipcc_supported_cxx_c28(self):
+        for row in [
+            OD(
+                {
+                    HOST_COMPILER: ppv((HIPCC, 5.7)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 14)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((HIPCC, 6.0)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 17)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((HIPCC, 6.1)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 20)),
+                }
+            ),
+            OD(
+                {
+                    HOST_COMPILER: ppv((HIPCC, 5.7)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 23)),
+                }
+            ),
+        ]:
+            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+
+    def test_invalid_hipcc_supported_cxx_c28(self):
+        for row in [
+            OD(
+                {
+                    HOST_COMPILER: ppv((HIPCC, 6.3)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 26)),
+                }
+            ),
+            OD(
+                {
+                    DEVICE_COMPILER: ppv((HIPCC, 6.8)),
+                    CXX_STANDARD: ppv((CXX_STANDARD, 99)),
+                }
+            ),
+        ]:
+            if HOST_COMPILER in row:
+                compiler_type = HOST_COMPILER
+            elif DEVICE_COMPILER in row:
+                compiler_type = DEVICE_COMPILER
+            else:
+                compiler_type = ""
+
+            reason_msg = io.StringIO()
+
+            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"{compiler_type} hipcc {row[compiler_type].version} does not support "
+                f"C++{row[CXX_STANDARD].version}",
+            )

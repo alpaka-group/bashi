@@ -182,7 +182,7 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
         12.5,
         12.6,
     ],
-    HIPCC: [5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 6.0, 6.1, 6.2],
+    HIPCC: [5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 6.0, 6.1, 6.2],
     ICPX: ["2025.0"],
     UBUNTU: [18.04, 20.04, 22.04, 24.04],
     CMAKE: [
@@ -321,6 +321,25 @@ ICPX_CLANG_VERSION: List[ClangBase] = [ClangBase("2025.0", "19")]
 
 ICPX_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = _get_clang_base_compiler_cxx_support(
     ICPX_CLANG_VERSION, CLANG_CXX_SUPPORT_VERSION
+)
+
+# This list stores which HIPCC version based on which Clang
+# The list allows to reuse the knowledge of Clang and apply it on HIPCC like the C++ standard
+# support.
+HIPCC_CLANG_VERSION: List[ClangBase] = [
+    ClangBase("5.1", "14"),
+    ClangBase("5.2", "14"),
+    ClangBase("5.3", "15"),
+    ClangBase("5.5", "16"),
+    ClangBase("5.6", "16"),
+    ClangBase("5.7", "17"),
+    ClangBase("6.0", "17"),
+    ClangBase("6.1", "17"),
+    ClangBase("6.2", "18"),
+]
+
+HIPCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = _get_clang_base_compiler_cxx_support(
+    HIPCC_CLANG_VERSION, CLANG_CXX_SUPPORT_VERSION
 )
 
 

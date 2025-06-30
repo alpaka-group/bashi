@@ -11,6 +11,7 @@ from bashi.result_modules.cxx_compiler_support import (
     _remove_unsupported_cxx_versions_for_clang_cuda,
     _remove_unsupported_cxx_versions_for_cuda,
     _remove_unsupported_cxx_versions_for_icpx,
+    _remove_unsupported_cxx_versions_for_hipcc,
 )
 from bashi.types import ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -383,6 +384,34 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
 
         default_remove_test(
             _remove_unsupported_cxx_versions_for_icpx,
+            test_param_value_pairs,
+            expected_results,
+            self,
+        )
+
+    def test_remove_unsupported_cxx_versions_for_hipcc(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+            [
+                ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, HIPCC, 5.3), (CXX_STANDARD, 20)),
+                ((DEVICE_COMPILER, HIPCC, 5.3), (CXX_STANDARD, 23)),
+                ((HOST_COMPILER, HIPCC, 6.3), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, HIPCC, 6.3), (CXX_STANDARD, 23)),
+                ((HOST_COMPILER, HIPCC, 6.3), (CXX_STANDARD, 26)),
+            ]
+        )
+
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+            [
+                ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
+                ((DEVICE_COMPILER, HIPCC, 5.3), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, HIPCC, 6.3), (CXX_STANDARD, 20)),
+                ((HOST_COMPILER, HIPCC, 6.3), (CXX_STANDARD, 23)),
+            ]
+        )
+
+        default_remove_test(
+            _remove_unsupported_cxx_versions_for_hipcc,
             test_param_value_pairs,
             expected_results,
             self,
