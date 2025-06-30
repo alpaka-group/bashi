@@ -121,7 +121,7 @@ def _get_clang_cuda_cuda_sdk_cxx_support(
 
 VERSIONS: Dict[str, List[Union[str, int, float]]] = {
     GCC: [8, 9, 10, 11, 12, 13],
-    CLANG: [9, 10, 11, 12, 13, 14, 15, 16, 17],
+    CLANG: [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
     NVCC: [
         11.0,
         11.1,
@@ -136,6 +136,9 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
         12.1,
         12.2,
         12.3,
+        12.4,
+        12.5,
+        12.6,
     ],
     HIPCC: [5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 6.0],
     ICPX: ["2023.1.0", "2023.2.0"],
@@ -165,7 +168,8 @@ VERSIONS[CLANG_CUDA] = copy.copy(VERSIONS[CLANG])
 #   NvccHostSupport("12.0", "12"),
 #   NvccHostSupport("11.4", "11"),
 NVCC_GCC_MAX_VERSION: List[NvccHostSupport] = [
-    NvccHostSupport("12.3", "12"),
+    NvccHostSupport("12.6", "13"),
+    NvccHostSupport("12.4", "13"),
     NvccHostSupport("12.0", "12"),
     NvccHostSupport("11.4", "11"),
     NvccHostSupport("11.1", "10"),
@@ -183,6 +187,8 @@ NVCC_GCC_MAX_VERSION.sort(reverse=True)
 #   NvccHostSupport("12.2", "15"),
 #   NvccHostSupport("12.1", "15"),
 NVCC_CLANG_MAX_VERSION: List[NvccHostSupport] = [
+    NvccHostSupport("12.6", "18"),
+    NvccHostSupport("12.4", "17"),
     NvccHostSupport("12.3", "16"),
     NvccHostSupport("12.2", "15"),
     NvccHostSupport("12.1", "15"),
