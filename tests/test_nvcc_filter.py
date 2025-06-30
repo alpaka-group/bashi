@@ -346,7 +346,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
     def test_valid_combination_max_gcc_rule_c5(self):
         # change the version, if you added a new cuda release
         # this test is a guard to be sure, that the following test contains the latest nvcc release
-        latest_covered_nvcc_release = "12.3"
+        latest_covered_nvcc_release = "12.6"
         self.assertEqual(
             latest_covered_nvcc_release,
             str(VERSIONS[NVCC][-1]),
@@ -389,6 +389,8 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
             ("12.2", "13", False),
             ("12.3", "12", True),
             ("12.3", "13", False),
+            ("12.4", "13", True),
+            ("12.6", "14", False),
         ]
 
         for nvcc_version, gcc_version, expected_filter_return_value in expected_results:
@@ -511,7 +513,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
     def test_valid_combination_max_clang_rule_c6_rule_c7(self):
         # change the version, if you added a new cuda release
         # this test is a guard to be sure, that the following test contains the latest nvcc release
-        latest_covered_nvcc_release = "12.3"
+        latest_covered_nvcc_release = "12.6"
         self.assertEqual(
             latest_covered_nvcc_release,
             str(VERSIONS[NVCC][-1]),
@@ -556,6 +558,8 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
             ("12.2", "16", False),
             ("12.3", "16", True),
             ("12.3", "17", False),
+            ("12.4", "17", True),
+            ("12.6", "18", True),
         ]
 
         for nvcc_version, clang_version, expected_filter_return_value in expected_results:
