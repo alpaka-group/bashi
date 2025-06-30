@@ -12,6 +12,7 @@ from bashi.versions import (
     NVCC_CXX_SUPPORT_VERSION,
     CLANG_CUDA_CXX_SUPPORT_VERSION,
     MAX_CUDA_SDK_CXX_SUPPORT,
+    ICPX_CXX_SUPPORT_VERSION,
 )
 from bashi.utils import remove_parameter_value_pairs_ranges
 
@@ -253,3 +254,24 @@ def _remove_unsupported_cxx_versions_for_cuda(
         value_min_version2=list(cxx_bounds.keys())[-1],
         value_min_version2_inclusive=False,
     )
+
+
+def _remove_unsupported_cxx_versions_for_icpx(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    """Remove unsupported combinations of ICPX compiler versions and C++ standard.
+
+    Args:
+
+    parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+    removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
+    """
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        _remove_unsupported_cxx_version_for_compiler(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            ICPX,
+            ICPX_CXX_SUPPORT_VERSION,
+            compiler_type,
+        )

@@ -81,6 +81,22 @@ class CompilerCxxSupport(VersionSupportBase):
         return f"compiler {str(self.compiler)} + CXX {self.cxx}"
 
 
+class ClangBase(VersionSupportBase):
+    """Contains a compiler version and Clang version which the compiler based on. Does automatically
+    parse the input strings to package.version.Version.
+
+    Provides comparision operators for sorting.
+    """
+
+    def __init__(self, compiler: str, clang: str):
+        VersionSupportBase.__init__(self, compiler, clang)
+        self.compiler: packaging.version.Version = self.version1
+        self.clang: packaging.version.Version = self.version2
+
+    def __str__(self) -> str:
+        return f"Compiler {str(self.compiler)} + Clang {self.clang}"
+
+
 def _get_clang_cuda_cuda_sdk_cxx_support(
     clang_cuda_cxx_support: List[CompilerCxxSupport],
     clang_cuda_max_cuda_support: List[ClangCudaSDKSupport],
@@ -119,6 +135,32 @@ def _get_clang_cuda_cuda_sdk_cxx_support(
     return comb
 
 
+def _get_clang_base_compiler_cxx_support(
+    compiler_clang_mapping: List[ClangBase], clang_cxx_support: List[CompilerCxxSupport]
+) -> List[CompilerCxxSupport]:
+    compiler_clang_mapping_sorted = sorted(compiler_clang_mapping, reverse=True)
+    clang_cxx_support_sorted = sorted(clang_cxx_support, reverse=True)
+
+    compiler_cxx_support: List[CompilerCxxSupport] = []
+
+    for compiler_clang in compiler_clang_mapping_sorted:
+        if compiler_clang.clang < clang_cxx_support_sorted[-1].compiler:
+            compiler_cxx_support.append(
+                CompilerCxxSupport(
+                    str(compiler_clang.compiler), str(clang_cxx_support_sorted[-1].cxx)
+                )
+            )
+            break
+        for clang_cxx in clang_cxx_support_sorted:
+            if compiler_clang.clang >= clang_cxx.compiler:
+                compiler_cxx_support.append(
+                    CompilerCxxSupport(str(compiler_clang.compiler), str(clang_cxx.cxx))
+                )
+                break
+
+    return compiler_cxx_support
+
+
 VERSIONS: Dict[str, List[Union[str, int, float]]] = {
     GCC: [8, 9, 10, 11, 12, 13],
     CLANG: [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
@@ -141,7 +183,7 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
         12.6,
     ],
     HIPCC: [5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 6.0, 6.1, 6.2],
-    ICPX: ["2023.1", "2023.2", "2025.0"],
+    ICPX: ["2025.0"],
     UBUNTU: [18.04, 20.04, 22.04, 24.04],
     CMAKE: [
         3.18,
@@ -270,6 +312,15 @@ NVCC_CXX_SUPPORT_VERSION.sort(reverse=True)
 # is possible
 MAX_CUDA_SDK_CXX_SUPPORT: List[CompilerCxxSupport] = _get_clang_cuda_cuda_sdk_cxx_support(
     CLANG_CUDA_CXX_SUPPORT_VERSION, CLANG_CUDA_MAX_CUDA_VERSION
+)
+
+# This list stores which ICPX version based on which Clang
+# The list allows to reuse the knowledge of Clang and apply it on ICPX like the C++ standard
+# support.
+ICPX_CLANG_VERSION: List[ClangBase] = [ClangBase("2025.0", "19")]
+
+ICPX_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = _get_clang_base_compiler_cxx_support(
+    ICPX_CLANG_VERSION, CLANG_CXX_SUPPORT_VERSION
 )
 
 
