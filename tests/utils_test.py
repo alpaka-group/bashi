@@ -29,7 +29,7 @@ def parse_param_val(param_val: Tuple[ValueName, Union[str, int, float]]) -> Para
 
 
 def parse_param_vals(
-    param_vals: List[Tuple[ValueName, Union[str, int, float]]]
+    param_vals: List[Tuple[ValueName, Union[str, int, float]]],
 ) -> List[ParameterValue]:
     """Parse a list of tuples to a list of parameter-values.
 
@@ -48,7 +48,7 @@ def parse_param_vals(
 
 
 def parse_expected_val_pairs(
-    input_list: List[OrderedDict[Parameter, Tuple[ValueName, Union[str, int, float]]]]
+    input_list: List[OrderedDict[Parameter, Tuple[ValueName, Union[str, int, float]]]],
 ) -> List[ParameterValuePair]:
     """Parse list of expected parameter-values to the correct type.
 
@@ -96,7 +96,7 @@ ParsableParameterValue: TypeAlias = Union[
 
 
 def parse_expected_val_pairs2(
-    input_list: List[Tuple[ParsableParameterValue, ParsableParameterValue]]
+    input_list: List[Tuple[ParsableParameterValue, ParsableParameterValue]],
 ) -> List[ParameterValuePair]:
     """Parse list of expected parameter-values to the correct type.
 
@@ -245,3 +245,16 @@ def default_remove_test(
         unexpected_results,
         create_diff_parameter_value_pairs(unexpected_test_param_value_pairs, unexpected_results),
     )
+
+
+def parse_value_version(input_list: List[Union[str, int, float]]) -> List[ValueVersion]:
+    """Parse list of given version numbers to list with version objects.
+
+    Args:
+        input_list (List[Union[str, int, float]]): List with version numbers defined as str, int or
+            float.
+
+    Returns:
+        List[ValueVersion]: List of parsed versions.
+    """
+    return [pkv.parse(str(v)) for v in input_list]
