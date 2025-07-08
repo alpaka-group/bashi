@@ -4,7 +4,6 @@ from typing import Dict, List
 from collections import OrderedDict
 import packaging.version as pkv
 from bashi.types import ParameterValue, ParameterValueTuple, FilterFunction
-from bashi.utils import FilterAdapter
 from bashi.filter_chain import get_default_filter_chain
 
 
@@ -55,47 +54,6 @@ class TestFilterChain(unittest.TestCase):
         filter_chain: FilterFunction = get_default_filter_chain(custom_filter)
         self.assertFalse(
             filter_chain(self.param_val_tuple),
-            "The production filters should return True all the time, because the test data set "
-            "does not contain any production data. The custom filter should match the test data.",
-        )
-
-    def test_filter_chain_filter_adapter_default(self):
-        filter_chain: FilterFunction = get_default_filter_chain()
-        adapter = FilterAdapter(self.param_map, filter_chain)
-
-        self.assertTrue(
-            adapter(self.test_row),
-            "The filter should return true every time, "
-            "because the test data should no trigger any rule",
-        )
-
-    def test_filter_chain_filter_adapter_custom_filter_pass(self):
-        def custom_filter(row: ParameterValueTuple):
-            if "paramNotExist2" in row:
-                return False
-            return True
-
-        filter_chain: FilterFunction = get_default_filter_chain(custom_filter)
-        adapter = FilterAdapter(self.param_map, filter_chain)
-
-        self.assertTrue(
-            adapter(self.test_row),
-            "The production filters should return True all the time, because the test data set "
-            "does not contain any production data. The custom filter should not match the test "
-            "data.",
-        )
-
-    def test_filter_chain_filter_adapter_custom_filter_match(self):
-        def custom_filter(row: ParameterValueTuple):
-            if "param1" in row:
-                return False
-            return True
-
-        filter_chain: FilterFunction = get_default_filter_chain(custom_filter)
-        adapter = FilterAdapter(self.param_map, filter_chain)
-
-        self.assertFalse(
-            adapter(self.test_row),
             "The production filters should return True all the time, because the test data set "
             "does not contain any production data. The custom filter should match the test data.",
         )
