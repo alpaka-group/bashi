@@ -1,6 +1,6 @@
 """Functions to generate the combination-list"""
 
-from typing import Dict, List
+from typing import Dict, List, Callable
 from collections import OrderedDict
 
 from covertable import make  # type: ignore
@@ -9,17 +9,17 @@ from bashi.types import (
     Parameter,
     ParameterValue,
     ParameterValueMatrix,
-    FilterFunction,
     Combination,
     CombinationList,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.filter_chain import get_default_filter_chain
+from bashi.filter import FilterBase
+from bashi.filter_chain import get_default_filter_chain, FilterChain
 
 
 def generate_combination_list(
     parameter_value_matrix: ParameterValueMatrix,
-    custom_filter: FilterFunction = lambda _: True,
+    custom_filter: FilterBase = FilterBase(),
 ) -> CombinationList:
     """Generate combination-list from the parameter-value-matrix. The combination list contains
     all valid parameter-value-pairs at least one time.
@@ -32,7 +32,11 @@ def generate_combination_list(
     Returns:
         CombinationList: combination-list
     """
-    filter_chain = get_default_filter_chain(custom_filter)
+    runtime_infos: Dict[str, Callable[..., bool]] = {}
+
+    filter_chain: FilterChain = get_default_filter_chain(
+        runtime_infos=runtime_infos, custom_filter=custom_filter
+    )
 
     comb_list: CombinationList = []
 

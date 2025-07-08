@@ -1,9 +1,10 @@
 # pylint: disable=missing-docstring
 import unittest
-from typing import Dict, List
+from typing import IO, Dict, List, Callable
 from collections import OrderedDict
 import packaging.version as pkv
 from bashi.types import ParameterValue, ParameterValueTuple, FilterFunction
+from bashi.filter import FilterBase
 from bashi.filter_chain import get_default_filter_chain
 
 
@@ -24,7 +25,7 @@ class TestFilterChain(unittest.TestCase):
             cls.test_row.append(param_val)
 
     def test_filter_chain_default(self):
-        filter_chain: FilterFunction = get_default_filter_chain()
+        filter_chain: FilterBase = get_default_filter_chain()
         self.assertTrue(
             filter_chain(self.param_val_tuple),
             "The filter should return true every time, "
@@ -32,12 +33,22 @@ class TestFilterChain(unittest.TestCase):
         )
 
     def test_filter_chain_custom_filter_pass(self):
-        def custom_filter(row: ParameterValueTuple):
-            if "paramNotExist" in row:
-                return False
-            return True
+        class CustomFilter(FilterBase):
+            def __init__(
+                self,
+                runtime_infos: Dict[str, Callable[..., bool]] = {},
+                output: IO[str] | None = None,
+            ):
+                super().__init__(runtime_infos, output)
 
-        filter_chain: FilterFunction = get_default_filter_chain(custom_filter)
+            def __call__(self, row: ParameterValueTuple):
+                if "paramNotExist" in row:
+                    return False
+                return True
+
+        custom_filter = CustomFilter()
+
+        filter_chain: FilterFunction = get_default_filter_chain(custom_filter=custom_filter)
         self.assertTrue(
             filter_chain(self.param_val_tuple),
             "The production filters should return True all the time, because the test data set "
@@ -46,12 +57,22 @@ class TestFilterChain(unittest.TestCase):
         )
 
     def test_filter_chain_custom_filter_match(self):
-        def custom_filter(row: ParameterValueTuple):
-            if "param2" in row:
-                return False
-            return True
+        class CustomFilter(FilterBase):
+            def __init__(
+                self,
+                runtime_infos: Dict[str, Callable[..., bool]] = {},
+                output: IO[str] | None = None,
+            ):
+                super().__init__(runtime_infos, output)
 
-        filter_chain: FilterFunction = get_default_filter_chain(custom_filter)
+            def __call__(self, row: ParameterValueTuple):
+                if "param2" in row:
+                    return False
+                return True
+
+        custom_filter = CustomFilter()
+
+        filter_chain: FilterFunction = get_default_filter_chain(custom_filter=custom_filter)
         self.assertFalse(
             filter_chain(self.param_val_tuple),
             "The production filters should return True all the time, because the test data set "
