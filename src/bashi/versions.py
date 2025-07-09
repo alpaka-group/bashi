@@ -1,10 +1,12 @@
 """Provides all supported software versions"""
 
 import copy
-from typing import Dict, List, Union
+from typing import Dict, List, Union, NamedTuple
 from collections import OrderedDict
 from typeguard import typechecked
 import packaging.version as pkv
+from packaging.version import Version
+from packaging.specifiers import SpecifierSet
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ValueName, ValueVersion, ParameterValue, ParameterValueMatrix
 
@@ -95,6 +97,19 @@ class ClangBase(VersionSupportBase):
 
     def __str__(self) -> str:
         return f"Compiler {str(self.compiler)} + Clang {self.clang}"
+
+
+class HIPUbuntuSupport(VersionSupportBase):
+    """Contains a HIPCC version and Ubuntu version. Does automatically parse the input strings
+    to package.version.Version.
+
+    Provides comparision operators for sorting.
+    """
+
+    def __init__(self, hip_version: str, ubuntu_version: str):
+        VersionSupportBase.__init__(self, hip_version, ubuntu_version)
+        self.hip: packaging.version.Version = self.version1
+        self.ubuntu: packaging.version.Version = self.version2
 
 
 def _get_clang_cuda_cuda_sdk_cxx_support(
@@ -341,6 +356,62 @@ HIPCC_CLANG_VERSION: List[ClangBase] = [
 HIPCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = _get_clang_base_compiler_cxx_support(
     HIPCC_CLANG_VERSION, CLANG_CXX_SUPPORT_VERSION
 )
+
+# the list minimum HIP SDK version which can be installed on a specific Ubuntu version
+# the next entry in the list defines exclusive, upper bound of a HIP SDK version range
+HIP_MIN_UBUNTU: List[HIPUbuntuSupport] = [
+    HIPUbuntuSupport("5.0", "20.04"),
+    HIPUbuntuSupport("6.0", "22.04"),
+    HIPUbuntuSupport("6.3", "24.04"),
+]
+
+UbuntuHipMinMax = NamedTuple("UbuntuHipMinMax", [("ubuntu", Version), ("hip_range", SpecifierSet)])
+
+
+def _get_ubuntu_hip_min_max(hip_min_ubuntu: List[HIPUbuntuSupport]) -> List[UbuntuHipMinMax]:
+    """Convert an HIPUbuntuSupport object to an UbuntuHipMinMax object. The HIPUbuntuSupport defines
+    a version range implicit and a UbuntuHipMinMax object explicit.
+
+    Args:
+        hip_min_ubuntu (List[HIPUbuntuSupport]): Input list
+
+    Returns:
+        List[UbuntuHipMinMax]: Output list
+    """
+    l: List[UbuntuHipMinMax] = []
+    if not hip_min_ubuntu:
+        return l
+    hip_min_ubuntu_sorted = sorted(hip_min_ubuntu)
+
+    l.append(
+        UbuntuHipMinMax(
+            ubuntu=hip_min_ubuntu_sorted[0].ubuntu,
+            hip_range=SpecifierSet(f"<{hip_min_ubuntu_sorted[0].hip}"),
+        )
+    )
+
+    for i in range(len(hip_min_ubuntu_sorted) - 1):
+        l.append(
+            UbuntuHipMinMax(
+                ubuntu=hip_min_ubuntu_sorted[i].ubuntu,
+                hip_range=SpecifierSet(
+                    f">={hip_min_ubuntu_sorted[i].hip}, <{hip_min_ubuntu_sorted[i+1].hip}"
+                ),
+            )
+        )
+
+    l.append(
+        UbuntuHipMinMax(
+            ubuntu=hip_min_ubuntu_sorted[-1].ubuntu,
+            hip_range=SpecifierSet(f">={hip_min_ubuntu_sorted[-1].hip}"),
+        )
+    )
+
+    return l
+
+
+# list of ubuntu version with supported HIP SDKs
+UBUNTU_HIP_VERSION_RANGE: List[UbuntuHipMinMax] = _get_ubuntu_hip_min_max(HIP_MIN_UBUNTU)
 
 
 # pylint: disable=too-many-branches

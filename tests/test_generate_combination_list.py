@@ -4,6 +4,7 @@ import os
 import io
 import copy
 from collections import OrderedDict
+from typing import Dict, Callable, IO
 import packaging.version as pkv
 from utils_test import parse_param_vals
 from bashi.versions import get_parameter_value_matrix
@@ -22,6 +23,7 @@ from bashi.types import (
     ParameterValueMatrix,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from bashi.filter import FilterBase
 
 
 class TestGeneratorTestData(unittest.TestCase):
@@ -60,19 +62,29 @@ class TestGeneratorTestData(unittest.TestCase):
         )
 
     def test_generator_with_custom_filter(self):
-        def custom_filter(row: ParameterValueTuple) -> bool:
-            if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
-                return False
-
-            if (
-                CMAKE in row
-                and row[CMAKE].version == pkv.parse("3.23")
-                and BOOST in row
-                and row[BOOST].version == pkv.parse("1.82")
+        class CustomFilter(FilterBase):
+            def __init__(
+                self,
+                runtime_infos: Dict[str, Callable[..., bool]] = {},
+                output: IO[str] | None = None,
             ):
-                return False
+                super().__init__(runtime_infos, output)
 
-            return True
+            def __call__(self, row: ParameterValueTuple):
+                if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
+                    return False
+
+                if (
+                    CMAKE in row
+                    and row[CMAKE].version == pkv.parse("3.23")
+                    and BOOST in row
+                    and row[BOOST].version == pkv.parse("1.82")
+                ):
+                    return False
+
+                return True
+
+        custom_filter = CustomFilter()
 
         OD = OrderedDict
 
@@ -241,16 +253,26 @@ class TestGeneratorRealData(unittest.TestCase):
         )
 
     def test_generator_with_custom_filter(self):
-        def custom_filter(row: ParameterValueTuple) -> bool:
-            if (
-                CMAKE in row
-                and row[CMAKE].version == pkv.parse("3.23")
-                and BOOST in row
-                and row[BOOST].version == pkv.parse("1.82")
+        class CustomFilter(FilterBase):
+            def __init__(
+                self,
+                runtime_infos: Dict[str, Callable[..., bool]] = {},
+                output: IO[str] | None = None,
             ):
-                return False
+                super().__init__(runtime_infos, output)
 
-            return True
+            def __call__(self, row: ParameterValueTuple):
+                if (
+                    CMAKE in row
+                    and row[CMAKE].version == pkv.parse("3.23")
+                    and BOOST in row
+                    and row[BOOST].version == pkv.parse("1.82")
+                ):
+                    return False
+
+                return True
+
+        custom_filter = CustomFilter()
 
         param_val_matrix = get_parameter_value_matrix()
         reduced_expected_param_val_pairs, reduced_unexpected_param_val_pairs = (
