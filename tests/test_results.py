@@ -27,11 +27,7 @@ from bashi.results import (
     _remove_nvcc_unsupported_gcc_versions,
     _remove_nvcc_unsupported_clang_versions,
     _remove_specific_nvcc_clang_combinations,
-    _remove_unsupported_compiler_for_hip_backend,
-    _remove_disabled_hip_backend_for_hipcc,
-    _remove_enabled_sycl_backend_for_hipcc,
     _remove_enabled_hip_and_sycl_backend_at_same_time,
-    _remove_enabled_cuda_backend_for_hipcc,
     _remove_enabled_cuda_backend_for_enabled_hip_backend,
     _remove_unsupported_compiler_for_sycl_backend,
     _remove_disabled_sycl_backend_for_icpx,
@@ -46,8 +42,14 @@ from bashi.results import (
     _remove_unsupported_clang_sdk_versions_for_clang_cuda,
     _remove_unsupported_gcc_versions_for_ubuntu2004,
     _remove_unsupported_cmake_versions_for_clangcuda,
-    _remove_all_rocm_images_older_than_ubuntu2004_based,
     _remove_unsupported_cuda_versions_for_ubuntu,
+)
+from bashi.result_modules.hip_support import (
+    _remove_unsupported_compiler_for_hip_backend,
+    _remove_disabled_hip_backend_for_hipcc,
+    _remove_enabled_sycl_backend_for_hipcc,
+    _remove_enabled_cuda_backend_for_hipcc,
+    _remove_all_rocm_images_older_than_ubuntu2004_based,
 )
 from bashi.versions import NvccHostSupport, NVCC_GCC_MAX_VERSION
 
