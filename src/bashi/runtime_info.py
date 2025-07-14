@@ -8,6 +8,17 @@ from bashi.versions import UbuntuHipMinMax
 from bashi.types import ValueVersion
 
 
+# pylint: disable=too-few-public-methods
+class ValidUbuntuHip:
+    """Check if a given Ubuntu version is in the valid_ubuntu list."""
+
+    def __init__(self, valid_ubuntus: List[Version]):
+        self.valid_ubuntus = valid_ubuntus
+
+    def __call__(self, ubuntu_ver: Version) -> bool:
+        return ubuntu_ver in self.valid_ubuntus
+
+
 def get_hip_sdk_supporting_ubuntus(
     ubuntus: List[ValueVersion],
     hipccs: List[ValueVersion],
@@ -40,16 +51,6 @@ def get_hip_sdk_supporting_ubuntus(
             "It is not supported if arguments ubuntus, hipccs and ubuntu_hip_version_range "
             "are empty."
         )
-
-    # pylint: disable=too-few-public-methods
-    class ValidUbuntuHip:
-        """Check if a given Ubuntu version is in the valid_ubuntu list."""
-
-        def __init__(self, valid_ubuntus: List[Version]):
-            self.valid_ubuntus = valid_ubuntus
-
-        def __call__(self, ubuntu_ver: Version) -> bool:
-            return ubuntu_ver in self.valid_ubuntus
 
     # store which ubuntu version is valid
     valid_ubuntus: Dict[ValueVersion, bool] = {}
