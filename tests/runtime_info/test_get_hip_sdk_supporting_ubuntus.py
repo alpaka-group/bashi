@@ -2,8 +2,12 @@
 import unittest
 import packaging.version as pkv
 from packaging.specifiers import SpecifierSet
-from bashi.versions import UbuntuHipMinMax
+from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from bashi.versions import UbuntuHipMinMax, get_parameter_value_matrix, VERSIONS
 from bashi.runtime_info import get_hip_sdk_supporting_ubuntus
+from bashi.generator import get_runtime_infos
+from collections import OrderedDict
+from bashi.types import ParameterValue, ParameterValueMatrix
 from utils_test import parse_value_version as pvv
 
 
@@ -112,3 +116,51 @@ class TestGetHipSdkSupportingUbuntus(unittest.TestCase):
 
         for ub in given_ubuntus:
             self.assertEqual(validator(ub), ub in expected_ubuntus)
+
+
+class TestGetRuntimeInfoUbuntuHip(unittest.TestCase):
+    def test_get_runtime_infos_ubuntu_hip_all_param_vals_available(self):
+        parameter_value_matrix = get_parameter_value_matrix()
+        runtime_info = get_runtime_infos(parameter_value_matrix)
+        self.assertIn(RT_AVAILABLE_HIP_SDK_UBUNTU_VER, runtime_info)
+
+    def test_get_runtime_infos_ubuntu_hip_ubuntu_missing(self):
+        parameter_value_matrix = get_parameter_value_matrix()
+        del parameter_value_matrix[UBUNTU]
+        runtime_info = get_runtime_infos(parameter_value_matrix)
+        self.assertNotIn(RT_AVAILABLE_HIP_SDK_UBUNTU_VER, runtime_info)
+
+    def test_get_runtime_infos_ubuntu_hip_missing_hipcc(self):
+        param_val_matrix: ParameterValueMatrix = OrderedDict()
+
+        for compiler_type in [HOST_COMPILER, DEVICE_COMPILER]:
+            param_val_matrix[compiler_type] = []
+            for sw_name, sw_versions in VERSIONS.items():
+                if sw_name != HIPCC:
+                    if sw_name in COMPILERS:
+                        for sw_version in sw_versions:
+                            param_val_matrix[compiler_type].append(
+                                ParameterValue(sw_name, pkv.parse(str(sw_version)))
+                            )
+
+        for backend in BACKENDS:
+            if backend == ALPAKA_ACC_GPU_CUDA_ENABLE:
+                param_val_matrix[backend] = [ParameterValue(backend, OFF_VER)]
+                for cuda_version in VERSIONS[NVCC]:
+                    param_val_matrix[backend].append(
+                        ParameterValue(backend, pkv.parse(str(cuda_version)))
+                    )
+            else:
+                param_val_matrix[backend] = [
+                    ParameterValue(backend, OFF_VER),
+                    ParameterValue(backend, ON_VER),
+                ]
+
+        for other, versions in VERSIONS.items():
+            if not other in COMPILERS + BACKENDS:
+                param_val_matrix[other] = []
+                for version in versions:
+                    param_val_matrix[other].append(ParameterValue(other, pkv.parse(str(version))))
+
+        runtime_info = get_runtime_infos(param_val_matrix)
+        self.assertNotIn(RT_AVAILABLE_HIP_SDK_UBUNTU_VER, runtime_info)
