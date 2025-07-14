@@ -8,7 +8,7 @@ from typing import Dict, Callable, IO
 import packaging.version as pkv
 from utils_test import parse_param_vals
 from bashi.versions import get_parameter_value_matrix
-from bashi.generator import generate_combination_list
+from bashi.generator import generate_combination_list, get_runtime_infos
 from bashi.utils import (
     get_expected_parameter_value_pairs,
     check_parameter_value_pair_in_combination_list,
@@ -48,12 +48,14 @@ class TestGeneratorTestData(unittest.TestCase):
         cls.param_matrix[CMAKE] = parse_param_vals([(CMAKE, 3.22), (CMAKE, 3.23)])
         cls.param_matrix[BOOST] = parse_param_vals([(BOOST, 1.81), (BOOST, 1.82), (BOOST, 1.83)])
 
+        cls.runtime_info = get_runtime_infos(cls.param_matrix)
+
         cls.generated_parameter_value_pairs, cls.generated_unexpected_parameter_value_pairs = (
-            get_expected_bashi_parameter_value_pairs(cls.param_matrix)
+            get_expected_bashi_parameter_value_pairs(cls.param_matrix, cls.runtime_info)
         )
 
     def test_generator_without_custom_filter(self):
-        comb_list = generate_combination_list(self.param_matrix)
+        comb_list = generate_combination_list(self.param_matrix, self.runtime_info)
 
         self.assertTrue(
             check_parameter_value_pair_in_combination_list(
@@ -155,7 +157,9 @@ class TestGeneratorTestData(unittest.TestCase):
         )
 
         comb_list = generate_combination_list(
-            parameter_value_matrix=self.param_matrix, custom_filter=custom_filter
+            parameter_value_matrix=self.param_matrix,
+            custom_filter=custom_filter,
+            runtime_infos=self.runtime_info,
         )
 
         removed_param_val_pairs: List[ParameterValuePair] = []
@@ -222,9 +226,10 @@ class TestGeneratorRealData(unittest.TestCase):
         # of both list should be equal the number of elements of the list, which
         # get_parameter_value_matrix() generates.
         param_val_matrix = get_parameter_value_matrix()
+        runtime_info = get_runtime_infos(param_val_matrix)
         unfiltered_param_val_pairs = get_expected_parameter_value_pairs(param_val_matrix)
         expected_param_val_pairs, unexpected_param_val_pairs = (
-            get_expected_bashi_parameter_value_pairs(param_val_matrix)
+            get_expected_bashi_parameter_value_pairs(param_val_matrix, runtime_info)
         )
 
         self.assertEqual(
@@ -237,11 +242,12 @@ class TestGeneratorRealData(unittest.TestCase):
 
     def test_generator_without_custom_filter(self):
         param_val_matrix = get_parameter_value_matrix()
+        runtime_info = get_runtime_infos(param_val_matrix)
         expected_param_val_pairs, unexpected_param_val_pairs = (
-            get_expected_bashi_parameter_value_pairs(param_val_matrix)
+            get_expected_bashi_parameter_value_pairs(param_val_matrix, runtime_info)
         )
 
-        comb_list = generate_combination_list(param_val_matrix)
+        comb_list = generate_combination_list(param_val_matrix, runtime_info)
 
         self.assertTrue(
             check_parameter_value_pair_in_combination_list(comb_list, expected_param_val_pairs)
@@ -275,8 +281,9 @@ class TestGeneratorRealData(unittest.TestCase):
         custom_filter = CustomFilter()
 
         param_val_matrix = get_parameter_value_matrix()
+        runtime_info = get_runtime_infos(param_val_matrix)
         reduced_expected_param_val_pairs, reduced_unexpected_param_val_pairs = (
-            get_expected_bashi_parameter_value_pairs(param_val_matrix)
+            get_expected_bashi_parameter_value_pairs(param_val_matrix, runtime_info)
         )
 
         unexpected_param_val_pairs: List[ParameterValuePair] = []
@@ -295,7 +302,9 @@ class TestGeneratorRealData(unittest.TestCase):
         )
 
         comb_list = generate_combination_list(
-            parameter_value_matrix=param_val_matrix, custom_filter=custom_filter
+            parameter_value_matrix=param_val_matrix,
+            custom_filter=custom_filter,
+            runtime_infos=runtime_info,
         )
 
         missing_combinations = io.StringIO()
@@ -351,13 +360,14 @@ class TestParameterMatrixFilter(unittest.TestCase):
             param_matrix[DEVICE_COMPILER].append(ParameterValue(NVCC, pkv.parse(str(nvcc_version))))
         param_matrix_before = copy.deepcopy(param_matrix)
 
-        comb_list = generate_combination_list(param_matrix)
+        runtime_info = get_runtime_infos(param_matrix)
+        comb_list = generate_combination_list(param_matrix, runtime_info)
 
         # generate_combination_list should not modify the param_matrix
         self.assertEqual(param_matrix_before, param_matrix)
 
         expected_param_value_pairs, unexpected_param_value_pairs = (
-            get_expected_bashi_parameter_value_pairs(param_matrix)
+            get_expected_bashi_parameter_value_pairs(param_matrix, runtime_info)
         )
 
         self.assertTrue(
@@ -381,14 +391,17 @@ class TestParameterMatrixFilter(unittest.TestCase):
                 ParameterValue(CLANG_CUDA, pkv.parse(str(clang_cuda_version)))
             )
         param_matrix_before = copy.deepcopy(param_matrix)
+        runtime_info = get_runtime_infos(param_matrix_before)
 
-        comb_list = generate_combination_list(parameter_value_matrix=param_matrix)
+        comb_list = generate_combination_list(
+            parameter_value_matrix=param_matrix, runtime_infos=runtime_info
+        )
 
         # generate_combination_list should not modify the param_matrix
         self.assertEqual(param_matrix_before, param_matrix)
 
         expected_param_value_pairs, unexpected_param_value_pairs = (
-            get_expected_bashi_parameter_value_pairs(param_matrix)
+            get_expected_bashi_parameter_value_pairs(param_matrix, runtime_info)
         )
 
         self.assertTrue(

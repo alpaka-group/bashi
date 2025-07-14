@@ -332,15 +332,6 @@ class CompilerFilter(FilterBase):
                 ):
                     self.reason("hipcc does not support the CUDA backend.")
                     return False
-                # Rule: c19
-                # all ROCm images are Ubuntu 20.04 based or newer
-                # related to rule d3
-                if UBUNTU in row and row[UBUNTU].version < pkv.parse("20.04"):
-                    self.reason(
-                        "ROCm and also the hipcc compiler is not available on Ubuntu older than "
-                        "20.04",
-                    )
-                    return False
 
             if compiler in row and row[compiler].name == ICPX:
                 # Rule: c12

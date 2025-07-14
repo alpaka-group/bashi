@@ -13,7 +13,10 @@ from typeguard import typechecked
 from bashi.types import ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter import FilterBase
-from bashi.versions import get_oldest_supporting_clang_version_for_cuda
+from bashi.versions import (
+    get_oldest_supporting_clang_version_for_cuda,
+    UBUNTU_HIP_VERSION_RANGE,
+)
 
 
 def _ubuntu_version_to_string(version: pkv.Version) -> str:
@@ -101,20 +104,37 @@ class SoftwareDependencyFilter(FilterBase):
                         f"{row[CMAKE].version}",
                     )
                     return False
-        # Rule: d3
-        # all ROCm images are Ubuntu 20.04 based or newer
-        # related to rule c19
-        if UBUNTU in row and row[UBUNTU].version < pkv.parse("20.04"):
+
+        if UBUNTU in row:
+            # Rule: d3
+            # check if a hipcc version is available on an ubuntu version
+            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                if compiler_type in row and row[compiler_type].name == HIPCC:
+                    for ubuntu_hip_range in UBUNTU_HIP_VERSION_RANGE:
+                        if (
+                            row[compiler_type].version in ubuntu_hip_range.hip_range
+                            and row[UBUNTU].version != ubuntu_hip_range.ubuntu
+                        ):
+                            self.reason(
+                                f"The hipcc {row[compiler_type].version} compiler is not available "
+                                f"on the Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)} "
+                                "image.",
+                            )
+                            return False
+
+            # Rule: d5
             if (
                 ALPAKA_ACC_GPU_HIP_ENABLE in row
-                and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER
+                and row[ALPAKA_ACC_GPU_HIP_ENABLE].version == ON_VER
             ):
-                self.reason(
-                    "ROCm and also the hipcc compiler "
-                    "is not available on Ubuntu "
-                    "older than 20.04",
-                )
-                return False
+                if RT_AVAILABLE_HIP_SDK_UBUNTU_VER in self.runtime_infos and not self.runtime_infos[
+                    RT_AVAILABLE_HIP_SDK_UBUNTU_VER
+                ](row[UBUNTU].version):
+                    self.reason(
+                        f"There is no HIP SDK in input parameter-value-matrix which can be "
+                        f"installed on Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)}"
+                    )
+                    return False
 
         # Rule: d4
         # Ubuntu 20.04 and newer is not available with CUDA older than 11

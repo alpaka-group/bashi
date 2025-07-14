@@ -1,6 +1,6 @@
 """Create list of expected parameter-value-pairs respecting bashi filter rules"""
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Callable
 from typeguard import typechecked
 from packaging.specifiers import SpecifierSet
 from bashi.types import ParameterValuePair, ParameterValueMatrix
@@ -26,7 +26,8 @@ from bashi.result_modules.hip_support import (
     _remove_disabled_hip_backend_for_hipcc,
     _remove_enabled_sycl_backend_for_hipcc,
     _remove_enabled_cuda_backend_for_hipcc,
-    _remove_all_rocm_images_older_than_ubuntu2004_based,
+    _remove_unsupported_hipcc_ubuntu_combinations,
+    _remove_unsupported_hip_backend_ubuntu_combinations,
 )
 
 # pyright: reportPrivateUsage=false
@@ -44,6 +45,7 @@ from bashi.result_modules.cxx_compiler_support import (
 @typechecked
 def get_expected_bashi_parameter_value_pairs(
     parameter_matrix: ParameterValueMatrix,
+    runtime_infos: Dict[str, Callable[..., bool]],
 ) -> Tuple[List[ParameterValuePair], List[ParameterValuePair]]:
     """Takes parameter-value-matrix and creates a list of all expected parameter-values-pairs
     allowed by the bashi library. First it generates a complete list of parameter-value-pairs and
@@ -99,8 +101,9 @@ def get_expected_bashi_parameter_value_pairs(
     _remove_unsupported_cmake_versions_for_clangcuda(
         param_val_pair_list, removed_param_val_pair_list
     )
-    _remove_all_rocm_images_older_than_ubuntu2004_based(
-        param_val_pair_list, removed_param_val_pair_list
+    _remove_unsupported_hipcc_ubuntu_combinations(param_val_pair_list, removed_param_val_pair_list)
+    _remove_unsupported_hip_backend_ubuntu_combinations(
+        param_val_pair_list, removed_param_val_pair_list, runtime_infos
     )
     _remove_unsupported_cuda_versions_for_ubuntu(param_val_pair_list, removed_param_val_pair_list)
     _remove_unsupported_cxx_versions_for_gcc(param_val_pair_list, removed_param_val_pair_list)

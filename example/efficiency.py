@@ -6,7 +6,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from bashi.types import Parameter, Combination, CombinationList, ParameterValueMatrix
 from bashi.filter_chain import get_default_filter_chain
-from bashi.generator import generate_combination_list
+from bashi.generator import generate_combination_list, get_runtime_infos
 from bashi.versions import get_parameter_value_matrix
 
 # print numbers with dots or commas as thousand delimiter depending on the local settings
@@ -86,7 +86,10 @@ if __name__ == "__main__":
         f"{num_combinations_dense_matrix.value:n}"
     )
 
-    comb_list: CombinationList = generate_combination_list(parameter_value_matrix=param_matrix)
+    rt_info = get_runtime_infos(param_matrix)
+    comb_list: CombinationList = generate_combination_list(
+        parameter_value_matrix=param_matrix, runtime_infos=rt_info
+    )
 
     print(
         f"pair wise combinations of all parameter-values with only valid combination:   "

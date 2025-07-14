@@ -54,6 +54,7 @@ def get_runtime_infos(
 
 def generate_combination_list(
     parameter_value_matrix: ParameterValueMatrix,
+    runtime_infos: Dict[str, Callable[..., bool]],
     custom_filter: FilterBase = FilterBase(),
 ) -> CombinationList:
     """Generate combination-list from the parameter-value-matrix. The combination list contains
@@ -67,7 +68,6 @@ def generate_combination_list(
     Returns:
         CombinationList: combination-list
     """
-    runtime_infos: Dict[str, Callable[..., bool]] = {}
 
     filter_chain: FilterChain = get_default_filter_chain(
         runtime_infos=runtime_infos, custom_filter=custom_filter

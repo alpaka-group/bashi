@@ -16,7 +16,7 @@ from typing import List, Tuple, Dict, Callable, IO
 import os
 import sys
 import packaging.version as pkv
-from bashi.generator import generate_combination_list
+from bashi.generator import generate_combination_list, get_runtime_infos
 from bashi.utils import (
     check_parameter_value_pair_in_combination_list,
     check_unexpected_parameter_value_pair_in_combination_list,
@@ -45,7 +45,11 @@ from bashi.filter import FilterBase
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-statements
-def verify(combination_list: CombinationList, param_value_matrix: ParameterValueMatrix) -> bool:
+def verify(
+    combination_list: CombinationList,
+    param_value_matrix: ParameterValueMatrix,
+    run_infos: Dict[str, Callable[..., bool]],
+) -> bool:
     """Check if all expected parameter-value-pairs exists in the combination-list.
 
     Args:
@@ -57,7 +61,7 @@ def verify(combination_list: CombinationList, param_value_matrix: ParameterValue
         bool: True if it found all pairs
     """
     bashi_parameter_value_pairs_tuple: Tuple[List[ParameterValuePair], List[ParameterValuePair]] = (
-        get_expected_bashi_parameter_value_pairs(param_value_matrix)
+        get_expected_bashi_parameter_value_pairs(param_value_matrix, run_infos)
     )
 
     expected_param_val_tuple, unexpected_param_val_tuple = bashi_parameter_value_pairs_tuple
@@ -431,15 +435,19 @@ if __name__ == "__main__":
 
     custom_filter = CustomFilter()
 
+    rt_infos = get_runtime_infos(param_matrix)
+
     comb_list: CombinationList = generate_combination_list(
-        parameter_value_matrix=param_matrix, custom_filter=custom_filter
+        parameter_value_matrix=param_matrix,
+        runtime_infos=rt_infos,
+        custom_filter=custom_filter,
     )
 
     create_yaml(comb_list)
     print(f"number of combinations: {len(comb_list)}")
 
     print("verify combination-list")
-    if verify(comb_list, param_matrix):
+    if verify(comb_list, param_matrix, rt_infos):
         print("verification passed")
         sys.exit(0)
 
