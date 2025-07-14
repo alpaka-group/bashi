@@ -2,10 +2,16 @@
 import unittest
 import io
 
+from typing import Dict, Callable
 from collections import OrderedDict as OD
 from utils_test import parse_param_val as ppv
+from utils_test import parse_value_version
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.filter_software_dependency import software_dependency_filter_typechecked
+from bashi.filter_software_dependency import (
+    software_dependency_filter_typechecked,
+    SoftwareDependencyFilter,
+)
+from bashi.runtime_info import ValidUbuntuHip
 
 
 class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
@@ -188,119 +194,6 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             self.assertEqual(
                 reason_msg.getvalue(),
                 f"device compiler CLANG_CUDA is not available in CMAKE {cmake_version}",
-            )
-
-    def test_valid_ROCm_images_Ubuntu2004_based_d3(self):
-        for UBUNTU_version in ["20.04", "22.04", "21.04"]:
-            self.assertTrue(
-                software_dependency_filter_typechecked(
-                    OD(
-                        {
-                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
-                            UBUNTU: ppv((UBUNTU, UBUNTU_version)),
-                        }
-                    ),
-                )
-            )
-
-        for UBUNTU_version in ["16.04", "18.04", "19.04", "20.04", "22.04", "21.04"]:
-            self.assertTrue(
-                software_dependency_filter_typechecked(
-                    OD(
-                        {
-                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
-                            UBUNTU: ppv((UBUNTU, UBUNTU_version)),
-                        }
-                    ),
-                ),
-            )
-            self.assertTrue(
-                software_dependency_filter_typechecked(
-                    OD(
-                        {
-                            HOST_COMPILER: ppv((HIPCC, 1)),
-                            DEVICE_COMPILER: ppv((HIPCC, 1)),
-                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
-                            UBUNTU: ppv((UBUNTU, "18.04")),
-                        }
-                    ),
-                ),
-            )
-
-    def test_non_valid_ROCm_images_Ubuntu2004_based_d3(self):
-        for UBUNTU_version in ["16.04", "18.04", "19.04"]:
-            reason_msg = io.StringIO()
-            self.assertFalse(
-                software_dependency_filter_typechecked(
-                    OD(
-                        {
-                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
-                            UBUNTU: ppv((UBUNTU, UBUNTU_version)),
-                        }
-                    ),
-                    reason_msg,
-                ),
-                f"ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
-            )
-            self.assertEqual(
-                reason_msg.getvalue(),
-                f"ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
-            )
-
-        for host_name, device_name, hip_backend, ubuntu_version, error_msg in [
-            (
-                HIPCC,
-                HIPCC,
-                ON,
-                "18.04",
-                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
-            ),
-            (
-                HIPCC,
-                GCC,
-                ON,
-                "18.04",
-                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
-            ),
-            (
-                CLANG,
-                HIPCC,
-                ON,
-                "18.04",
-                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
-            ),
-            (
-                GCC,
-                HIPCC,
-                ON,
-                "18.04",
-                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
-            ),
-            (
-                HIPCC,
-                CLANG,
-                ON,
-                "18.04",
-                "ROCm and also the hipcc compiler is not available on Ubuntu older than 20.04",
-            ),
-        ]:
-            test_row = OD(
-                {
-                    HOST_COMPILER: ppv((host_name, 1)),
-                    DEVICE_COMPILER: ppv((device_name, 1)),
-                    ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, hip_backend)),
-                    UBUNTU: ppv((UBUNTU, ubuntu_version)),
-                },
-            )
-            reason_msg = io.StringIO()
-            self.assertFalse(
-                software_dependency_filter_typechecked(test_row, reason_msg),
-                f"{test_row}",
-            )
-            self.assertEqual(
-                reason_msg.getvalue(),
-                error_msg,
-                f"{test_row}",
             )
 
     def test_valid_cuda_versions_for_ubuntu_d4(self):
@@ -595,4 +488,130 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             self.assertEqual(
                 reason_msg.getvalue(),
                 f"host compiler clang-cuda {clang_cuda_version} is not available in Ubuntu 20.04",
+            )
+
+
+class TestHIPUbuntu(unittest.TestCase):
+    def test_valid_hipcc_ubuntu_d3(self):
+        for ubuntu_ver, hipcc_ver in [
+            ("20.04", 5.0),
+            ("20.04", 5.3),
+            ("20.04", 5.9),
+            ("22.04", 6.0),
+            ("22.04", 6.2),
+            ("24.04", 6.3),
+        ]:
+            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                self.assertTrue(
+                    software_dependency_filter_typechecked(
+                        OD(
+                            {
+                                compiler_type: ppv((HIPCC, hipcc_ver)),
+                                UBUNTU: ppv((UBUNTU, ubuntu_ver)),
+                            }
+                        ),
+                    )
+                )
+
+    def test_invalid_hipcc_ubuntu_d3(self):
+        for ubuntu_ver, hipcc_ver in [
+            ("14.04", 3.0),
+            ("18.04", 4.0),
+            ("18.04", 5.0),
+            ("22.04", 5.0),
+            ("20.04", 6.0),
+            ("24.04", 6.0),
+            ("24.04", 6.2),
+        ]:
+            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                reason_msg = io.StringIO()
+                self.assertFalse(
+                    software_dependency_filter_typechecked(
+                        OD(
+                            {
+                                compiler_type: ppv((HIPCC, hipcc_ver)),
+                                UBUNTU: ppv((UBUNTU, ubuntu_ver)),
+                            }
+                        ),
+                        reason_msg,
+                    )
+                )
+
+                self.assertEqual(
+                    reason_msg.getvalue(),
+                    f"The hipcc {hipcc_ver} compiler is not available on "
+                    f"the Ubuntu {ubuntu_ver} image.",
+                )
+
+    def test_valid_hip_backend_ubuntu_no_runtime_info_d3(self):
+        for ubuntu_ver in [
+            "20.04",
+            "20.04",
+            "20.04",
+            "22.04",
+            "22.04",
+            "24.04",
+        ]:
+            self.assertTrue(
+                software_dependency_filter_typechecked(
+                    OD(
+                        {
+                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                            UBUNTU: ppv((UBUNTU, ubuntu_ver)),
+                        }
+                    ),
+                )
+            )
+
+    def test_valid_hip_backend_ubuntu_runtime_info_d3(self):
+        runtime_info: Dict[str, Callable[..., bool]] = {}
+        runtime_info[RT_AVAILABLE_HIP_SDK_UBUNTU_VER] = ValidUbuntuHip(
+            parse_value_version(["20.04", "22.04", "26.04"])
+        )
+        sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info)
+
+        for ubuntu_ver in [
+            "20.04",
+            "22.04",
+            "26.04",
+        ]:
+            self.assertTrue(
+                sw_dep_filter(
+                    OD(
+                        {
+                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                            UBUNTU: ppv((UBUNTU, ubuntu_ver)),
+                        }
+                    ),
+                )
+            )
+
+    def test_invalid_hip_backend_ubuntu_runtime_info_d5(self):
+        runtime_info: Dict[str, Callable[..., bool]] = {}
+        runtime_info[RT_AVAILABLE_HIP_SDK_UBUNTU_VER] = ValidUbuntuHip(
+            parse_value_version(["20.04", "22.04", "26.04"])
+        )
+
+        for ubuntu_ver in [
+            "18.04",
+            "24.04",
+            "30.04",
+        ]:
+            reason_msg = io.StringIO()
+            sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info, output=reason_msg)
+
+            self.assertFalse(
+                sw_dep_filter(
+                    OD(
+                        {
+                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                            UBUNTU: ppv((UBUNTU, ubuntu_ver)),
+                        }
+                    ),
+                )
+            )
+
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"There is no HIP SDK in input parameter-value-matrix which can be installed on Ubuntu {ubuntu_ver}",
             )

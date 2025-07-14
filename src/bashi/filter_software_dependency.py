@@ -1,22 +1,25 @@
 """Filter rules handling software dependencies and compiler settings.
 
-All rules implemented in this filter have an identifier that begins with "sw" and follows a number. 
+All rules implemented in this filter have an identifier that begins with "sw" and follows a number.
 Examples: sw1, sw42, sw678 ...
 
-These identifiers are used in the test names, for example, to make it clear which test is testing 
+These identifiers are used in the test names, for example, to make it clear which test is testing
 which rule.
 """
 
-from typing import Optional, IO
+from typing import Dict, Optional, IO, Callable
 import packaging.version as pkv
 from typeguard import typechecked
 from bashi.types import ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.utils import reason
-from bashi.versions import get_oldest_supporting_clang_version_for_cuda
+from bashi.filter import FilterBase
+from bashi.versions import (
+    get_oldest_supporting_clang_version_for_cuda,
+    UBUNTU_HIP_VERSION_RANGE,
+)
 
 
-def __ubuntu_version_to_string(version: pkv.Version) -> str:
+def _ubuntu_version_to_string(version: pkv.Version) -> str:
     """Returns the Ubuntu version representation correctly. Ubuntu versions
     use a leading 0 in their version scheme for months before October. pkv.parse()`
     parses e.g. the 04 from 20.04 to 4. Therefore the string representation of
@@ -32,7 +35,7 @@ def __ubuntu_version_to_string(version: pkv.Version) -> str:
     return f"{version.major}.{version.minor:02}"
 
 
-def __pretty_name_compiler(constant: str) -> str:
+def _pretty_name_compiler(constant: str) -> str:
     """Returns the string representation of the constants HOST_COMPILER and DEVICE_COMPILER in a
     human-readable version.
 
@@ -49,111 +52,134 @@ def __pretty_name_compiler(constant: str) -> str:
     return "unknown compiler type"
 
 
+class SoftwareDependencyFilter(FilterBase):
+    """Filter rules handling software dependencies and compiler settings."""
+
+    def __init__(
+        self,
+        runtime_infos: Dict[str, Callable[..., bool]] | None = None,
+        output: IO[str] | None = None,
+    ):
+        super().__init__(runtime_infos, output)
+
+    def __call__(
+        self,
+        row: ParameterValueTuple,
+    ) -> bool:
+        """Check if given parameter-value-tuple is valid.
+
+        Args:
+            row (ParameterValueTuple): parameter-value-tuple to verify.
+
+        Returns:
+            bool: True, if parameter-value-tuple is valid.
+        """
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-return-statements
+        # pylint: disable=too-many-statements
+
+        # Rule: d1
+        # GCC 6 and older is not available in Ubuntu 20.04 and newer
+
+        if UBUNTU in row and row[UBUNTU].version >= pkv.parse("20.04"):
+            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                if compiler_type in row and row[compiler_type].name == GCC:
+                    if row[compiler_type].version <= pkv.parse("6"):
+                        self.reason(
+                            f"{_pretty_name_compiler(compiler_type)} GCC "
+                            f"{row[compiler_type].version} is not available in Ubuntu "
+                            f"{_ubuntu_version_to_string(row[UBUNTU].version)}",
+                        )
+                        return False
+
+        # Rule: d2
+        # CMAKE 3.19 and older is not available with clang-cuda as device and host compiler
+
+        if CMAKE in row and row[CMAKE].version <= pkv.parse("3.18"):
+            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
+                    self.reason(
+                        f"{_pretty_name_compiler(compiler_type)} CLANG_CUDA "
+                        "is not available in CMAKE "
+                        f"{row[CMAKE].version}",
+                    )
+                    return False
+
+        if UBUNTU in row:
+            # Rule: d3
+            # check if a hipcc version is available on an ubuntu version
+            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                if compiler_type in row and row[compiler_type].name == HIPCC:
+                    for ubuntu_hip_range in UBUNTU_HIP_VERSION_RANGE:
+                        if (
+                            row[compiler_type].version in ubuntu_hip_range.hip_range
+                            and row[UBUNTU].version != ubuntu_hip_range.ubuntu
+                        ):
+                            self.reason(
+                                f"The hipcc {row[compiler_type].version} compiler is not available "
+                                f"on the Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)} "
+                                "image.",
+                            )
+                            return False
+
+            # Rule: d5
+            if (
+                ALPAKA_ACC_GPU_HIP_ENABLE in row
+                and row[ALPAKA_ACC_GPU_HIP_ENABLE].version == ON_VER
+            ):
+                if RT_AVAILABLE_HIP_SDK_UBUNTU_VER in self.runtime_infos and not self.runtime_infos[
+                    RT_AVAILABLE_HIP_SDK_UBUNTU_VER
+                ](row[UBUNTU].version):
+                    self.reason(
+                        f"There is no HIP SDK in input parameter-value-matrix which can be "
+                        f"installed on Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)}"
+                    )
+                    return False
+
+        # Rule: d4
+        # Ubuntu 20.04 and newer is not available with CUDA older than 11
+
+        if UBUNTU in row and row[UBUNTU].version >= pkv.parse("20.04"):
+            if (
+                ALPAKA_ACC_GPU_CUDA_ENABLE in row
+                and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
+            ):
+                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version < pkv.parse("11.0"):
+                    self.reason(
+                        f"CUDA {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} "
+                        "is not available in Ubuntu "
+                        f"{_ubuntu_version_to_string(row[UBUNTU].version)}",
+                    )
+                    return False
+            if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
+                if row[DEVICE_COMPILER].version < pkv.parse("11.0"):
+                    self.reason(
+                        f"NVCC {row[DEVICE_COMPILER].version} "
+                        "is not available in Ubuntu "
+                        f"{_ubuntu_version_to_string(row[UBUNTU].version)}",
+                    )
+                    return False
+            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
+                    if row[compiler_type].version < get_oldest_supporting_clang_version_for_cuda(
+                        "11.0"
+                    ):
+                        self.reason(
+                            f"{_pretty_name_compiler(compiler_type)}"
+                            f" clang-cuda {row[compiler_type].version} "
+                            "is not available in Ubuntu "
+                            f"{_ubuntu_version_to_string(row[UBUNTU].version)}",
+                        )
+                        return False
+        return True
+
+
 @typechecked
 def software_dependency_filter_typechecked(
     row: ParameterValueTuple,
     output: Optional[IO[str]] = None,
 ) -> bool:
-    """Type-checked version of software_dependency_filter(). Type checking has a big performance
+    """Type-checked version of SoftwareDependencyFilter()(). Type checking has a big performance
     cost, which is why the non type-checked version is used for the pairwise generator.
     """
-    return software_dependency_filter(row, output)
-
-
-def software_dependency_filter(
-    row: ParameterValueTuple,
-    output: Optional[IO[str]] = None,
-) -> bool:
-    """Filter rules handling software dependencies and compiler settings.
-
-    Args:
-        row (ParameterValueTuple): parameter-value-tuple to verify.
-        output (Optional[IO[str]], optional): Writes the reason in the io object why the parameter
-            value tuple does not pass the filter. If None, no information is provided. The default
-            value is None.
-
-    Returns:
-        bool: True, if parameter-value-tuple is valid.
-    """
-    # pylint: disable=too-many-branches
-    # pylint: disable=too-many-return-statements
-    # pylint: disable=too-many-statements
-
-    # Rule: d1
-    # GCC 6 and older is not available in Ubuntu 20.04 and newer
-
-    if UBUNTU in row and row[UBUNTU].version >= pkv.parse("20.04"):
-        for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-            if compiler_type in row and row[compiler_type].name == GCC:
-                if row[compiler_type].version <= pkv.parse("6"):
-                    reason(
-                        output,
-                        f"{__pretty_name_compiler(compiler_type)} GCC {row[compiler_type].version} "
-                        "is not available in Ubuntu "
-                        f"{__ubuntu_version_to_string(row[UBUNTU].version)}",
-                    )
-                    return False
-
-    # Rule: d2
-    # CMAKE 3.19 and older is not available with clang-cuda as device and host compiler
-
-    if CMAKE in row and row[CMAKE].version <= pkv.parse("3.18"):
-        for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-            if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
-                reason(
-                    output,
-                    f"{__pretty_name_compiler(compiler_type)} CLANG_CUDA "
-                    "is not available in CMAKE "
-                    f"{row[CMAKE].version}",
-                )
-                return False
-    # Rule: d3
-    # all ROCm images are Ubuntu 20.04 based or newer
-    # related to rule c19
-
-    if UBUNTU in row and row[UBUNTU].version < pkv.parse("20.04"):
-        if ALPAKA_ACC_GPU_HIP_ENABLE in row and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER:
-            reason(
-                output,
-                "ROCm and also the hipcc compiler "
-                "is not available on Ubuntu "
-                "older than 20.04",
-            )
-            return False
-
-    # Rule: d4
-    # Ubuntu 20.04 and newer is not available with CUDA older than 11
-
-    if UBUNTU in row and row[UBUNTU].version >= pkv.parse("20.04"):
-        if ALPAKA_ACC_GPU_CUDA_ENABLE in row and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER:
-            if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version < pkv.parse("11.0"):
-                reason(
-                    output,
-                    f"CUDA {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} "
-                    "is not available in Ubuntu "
-                    f"{__ubuntu_version_to_string(row[UBUNTU].version)}",
-                )
-                return False
-        if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
-            if row[DEVICE_COMPILER].version < pkv.parse("11.0"):
-                reason(
-                    output,
-                    f"NVCC {row[DEVICE_COMPILER].version} "
-                    "is not available in Ubuntu "
-                    f"{__ubuntu_version_to_string(row[UBUNTU].version)}",
-                )
-                return False
-        for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-            if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
-                if row[compiler_type].version < get_oldest_supporting_clang_version_for_cuda(
-                    "11.0"
-                ):
-                    reason(
-                        output,
-                        f"{__pretty_name_compiler(compiler_type)}"
-                        f" clang-cuda {row[compiler_type].version} "
-                        "is not available in Ubuntu "
-                        f"{__ubuntu_version_to_string(row[UBUNTU].version)}",
-                    )
-                    return False
-    return True
+    return SoftwareDependencyFilter(output=output)(row)

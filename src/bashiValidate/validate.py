@@ -5,7 +5,7 @@
 import argparse
 from argparse import ArgumentParser, Namespace
 
-from typing import Sequence, Any, Callable, Optional, IO, Dict, NamedTuple, List
+from typing import Sequence, Any, Dict, NamedTuple, List
 from collections import OrderedDict
 import io
 import sys
@@ -16,9 +16,10 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.types import ParameterValue, ParameterValueTuple
 from bashi.versions import is_supported_version
 from bashi.utils import PARAMETER_SHORT_NAME
-import bashi.filter_compiler
-import bashi.filter_backend
-import bashi.filter_software_dependency
+from bashi.filter import FilterBase
+from bashi.filter_compiler import CompilerFilter
+from bashi.filter_backend import BackendFilter
+from bashi.filter_software_dependency import SoftwareDependencyFilter
 
 ArgumentAlias = NamedTuple("ArgumentAlias", [("alias", List[str]), ("parameter", Parameter)])
 # stores the ordering of the parameter arguments
@@ -238,7 +239,7 @@ def get_args(args_alias: Dict[str, ArgumentAlias]) -> Namespace:
 
 @typechecked
 def check_single_filter(
-    filter_func: Callable[[ParameterValueTuple, Optional[IO[str]]], bool],
+    filter_func: FilterBase,
     row: ParameterValueTuple,
 ) -> bool:
     """Check if row passes a filter function.
@@ -252,22 +253,17 @@ def check_single_filter(
         bool: True if the row passes the filter.
     """
     # get name of the filter for command line output.
-    filter_name: str = filter_func.__name__
+    filter_name: str = filter_func.__class__.__name__
 
-    # Each filter function has also type checked version ending with _typed.
-    # Remove _typed for better output.
-    if filter_name.endswith("_typechecked"):
-        filter_name = filter_name[: -len("_typechecked")]
+    filter_func.output = io.StringIO()
 
-    msg = io.StringIO()
-
-    if filter_func(row, msg):
+    if filter_func(row):
         print(cs(f"{filter_name}() returns True", "Green"))
         return True
 
     print(cs(f"{filter_name}() returns False", "Red"))
-    if msg.getvalue() != "":
-        print("  " + msg.getvalue())
+    if filter_func.output.getvalue() != "":
+        print("  " + filter_func.output.getvalue())
     return False
 
 
@@ -284,19 +280,19 @@ def check_filter_chain(row: ParameterValueTuple) -> bool:
     all_true = 0
     all_true += int(
         check_single_filter(
-            bashi.filter_compiler.compiler_filter,
+            CompilerFilter(),
             row,
         )
     )
     all_true += int(
         check_single_filter(
-            bashi.filter_backend.backend_filter_typechecked,
+            BackendFilter(),
             row,
         )
     )
     all_true += int(
         check_single_filter(
-            bashi.filter_software_dependency.software_dependency_filter_typechecked,
+            SoftwareDependencyFilter(),
             row,
         )
     )

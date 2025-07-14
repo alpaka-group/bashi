@@ -1,7 +1,7 @@
 """Different helper functions for bashi tests."""
 
 import unittest
-from typing import List, Union, Tuple, Callable, TypeAlias
+from typing import List, Union, Tuple, Callable, TypeAlias, Dict
 from collections import OrderedDict
 import packaging.version as pkv
 from typeguard import typechecked
@@ -29,7 +29,7 @@ def parse_param_val(param_val: Tuple[ValueName, Union[str, int, float]]) -> Para
 
 
 def parse_param_vals(
-    param_vals: List[Tuple[ValueName, Union[str, int, float]]]
+    param_vals: List[Tuple[ValueName, Union[str, int, float]]],
 ) -> List[ParameterValue]:
     """Parse a list of tuples to a list of parameter-values.
 
@@ -48,7 +48,7 @@ def parse_param_vals(
 
 
 def parse_expected_val_pairs(
-    input_list: List[OrderedDict[Parameter, Tuple[ValueName, Union[str, int, float]]]]
+    input_list: List[OrderedDict[Parameter, Tuple[ValueName, Union[str, int, float]]]],
 ) -> List[ParameterValuePair]:
     """Parse list of expected parameter-values to the correct type.
 
@@ -96,7 +96,7 @@ ParsableParameterValue: TypeAlias = Union[
 
 
 def parse_expected_val_pairs2(
-    input_list: List[Tuple[ParsableParameterValue, ParsableParameterValue]]
+    input_list: List[Tuple[ParsableParameterValue, ParsableParameterValue]],
 ) -> List[ParameterValuePair]:
     """Parse list of expected parameter-values to the correct type.
 
@@ -202,12 +202,22 @@ def create_diff_parameter_value_pairs(
     return output
 
 
+RemoveParameterValuePairsFunctor: TypeAlias = Callable[
+    [List[ParameterValuePair], List[ParameterValuePair]], None
+]
+RemoveParameterValuePairsRuntimeFunctor: TypeAlias = Callable[
+    [List[ParameterValuePair], List[ParameterValuePair], Dict[str, Callable[..., bool]]],
+    None,
+]
+
+
 @typechecked
 def default_remove_test(
-    function: Callable[[List[ParameterValuePair], List[ParameterValuePair]], None],
+    function: RemoveParameterValuePairsFunctor | RemoveParameterValuePairsRuntimeFunctor,
     test_parameter_value_pairs: List[ParameterValuePair],
     expected_results: List[ParameterValuePair],
     test_self: unittest.TestCase,
+    runtime_infos: Dict[str, Callable[..., bool]] | None = None,
 ):
     """Test template for sub-functions of the get_expected_bashi_parameter_value_pairs() function.
     Takes a function, an input parameter-value-pair list and a list of expected
@@ -215,14 +225,18 @@ def default_remove_test(
     checks the unexpected result.
 
     Args:
-        function (Callable[[List[ParameterValuePair], List[ParameterValuePair]], None]): Function to
-            test
+        function (RemoveParameterValuePairsFunctor | RemoveParameterValuePairsRuntimeFunctor):
+            Function to be tested
         test_parameter_value_pairs (List[ParameterValuePair]): Parameter-value-pairs list to filter
         expected_results (List[ParameterValuePair]): Expected result list after the function was
             applied on the input list
         test_self (unittest.TestCase): The function needs to be called in an unittest function. To
             allow to use the features of the unittest module, the caller function needs to pass the
             self parameter.
+        runtime_infos (Optional[Dict[str, Callable[..., bool]]]): Runtime infos are filter functions
+            which are generated for a given input parameter-value-matrix during runtime. Some of the
+            remove expected parameter-value-pairs function use it.
+
     """
     expected_results.sort()
     unexpected_results: List[ParameterValuePair] = sorted(
@@ -230,7 +244,10 @@ def default_remove_test(
     )
 
     unexpected_test_param_value_pairs: List[ParameterValuePair] = []
-    function(test_parameter_value_pairs, unexpected_test_param_value_pairs)
+    if runtime_infos is None:
+        function(test_parameter_value_pairs, unexpected_test_param_value_pairs)
+    else:
+        function(test_parameter_value_pairs, unexpected_test_param_value_pairs, runtime_infos)
 
     test_parameter_value_pairs.sort()
     unexpected_test_param_value_pairs.sort()
@@ -245,3 +262,16 @@ def default_remove_test(
         unexpected_results,
         create_diff_parameter_value_pairs(unexpected_test_param_value_pairs, unexpected_results),
     )
+
+
+def parse_value_version(input_list: List[Union[str, int, float]]) -> List[ValueVersion]:
+    """Parse list of given version numbers to list with version objects.
+
+    Args:
+        input_list (List[Union[str, int, float]]): List with version numbers defined as str, int or
+            float.
+
+    Returns:
+        List[ValueVersion]: List of parsed versions.
+    """
+    return [pkv.parse(str(v)) for v in input_list]

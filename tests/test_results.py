@@ -27,11 +27,7 @@ from bashi.results import (
     _remove_nvcc_unsupported_gcc_versions,
     _remove_nvcc_unsupported_clang_versions,
     _remove_specific_nvcc_clang_combinations,
-    _remove_unsupported_compiler_for_hip_backend,
-    _remove_disabled_hip_backend_for_hipcc,
-    _remove_enabled_sycl_backend_for_hipcc,
     _remove_enabled_hip_and_sycl_backend_at_same_time,
-    _remove_enabled_cuda_backend_for_hipcc,
     _remove_enabled_cuda_backend_for_enabled_hip_backend,
     _remove_unsupported_compiler_for_sycl_backend,
     _remove_disabled_sycl_backend_for_icpx,
@@ -46,8 +42,13 @@ from bashi.results import (
     _remove_unsupported_clang_sdk_versions_for_clang_cuda,
     _remove_unsupported_gcc_versions_for_ubuntu2004,
     _remove_unsupported_cmake_versions_for_clangcuda,
-    _remove_all_rocm_images_older_than_ubuntu2004_based,
     _remove_unsupported_cuda_versions_for_ubuntu,
+)
+from bashi.result_modules.hip_support import (
+    _remove_unsupported_compiler_for_hip_backend,
+    _remove_disabled_hip_backend_for_hipcc,
+    _remove_enabled_sycl_backend_for_hipcc,
+    _remove_enabled_cuda_backend_for_hipcc,
 )
 from bashi.versions import NvccHostSupport, NVCC_GCC_MAX_VERSION
 
@@ -2437,141 +2438,6 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
         default_remove_test(
             _remove_unsupported_cmake_versions_for_clangcuda,
-            test_param_value_pairs,
-            expected_results,
-            self,
-        )
-        self.assertEqual(
-            test_param_value_pairs,
-            expected_results,
-            create_diff_parameter_value_pairs(test_param_value_pairs, expected_results),
-        )
-
-    def test_remove_all_rocm_images_older_than_ubuntu2004_based(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
-            [
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "4"),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "6"),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "6"),
-                        UBUNTU: (UBUNTU, "16.04"),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "8"),
-                        UBUNTU: (UBUNTU, "22.04"),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, "7"),
-                        UBUNTU: (UBUNTU, "18.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        UBUNTU: (UBUNTU, "22.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        UBUNTU: (UBUNTU, "22.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        UBUNTU: (UBUNTU, "18.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        UBUNTU: (UBUNTU, "18.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-            ]
-        )
-        expected_results = parse_expected_val_pairs(
-            [
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "8"),
-                        UBUNTU: (UBUNTU, "22.04"),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "4"),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, "6"),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        UBUNTU: (UBUNTU, "20.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        UBUNTU: (UBUNTU, "22.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        UBUNTU: (UBUNTU, "22.04"),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        UBUNTU: (UBUNTU, "18.04"),
-                    }
-                ),
-            ]
-        )
-        default_remove_test(
-            _remove_all_rocm_images_older_than_ubuntu2004_based,
             test_param_value_pairs,
             expected_results,
             self,

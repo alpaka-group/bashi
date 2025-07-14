@@ -64,3 +64,6 @@ PARAMETERS: List[Parameter] = [
     BOOST,
     CXX_STANDARD,
 ] + BACKENDS
+
+# runtime function: get_hip_sdk_supporting_ubuntus()
+RT_AVAILABLE_HIP_SDK_UBUNTU_VER: str = "rt_available_hip_sdk_ubuntu_ver"
