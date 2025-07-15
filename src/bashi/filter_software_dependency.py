@@ -112,7 +112,7 @@ class SoftwareDependencyFilter(FilterBase):
                 if compiler_type in row and row[compiler_type].name == HIPCC:
                     for ubuntu_hip_range in UBUNTU_HIP_VERSION_RANGE:
                         if (
-                            row[compiler_type].version in ubuntu_hip_range.hip_range
+                            row[compiler_type].version in ubuntu_hip_range.sdk_range
                             and row[UBUNTU].version != ubuntu_hip_range.ubuntu
                         ):
                             self.reason(

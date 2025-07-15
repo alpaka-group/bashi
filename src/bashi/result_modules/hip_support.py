@@ -111,7 +111,7 @@ def _remove_unsupported_hipcc_ubuntu_combinations(
     """
     ub_hip_ranges: Dict[ValueVersion, SpecifierSet] = {}
     for ub_hip in UBUNTU_HIP_VERSION_RANGE:
-        ub_hip_ranges[ub_hip.ubuntu] = ub_hip.hip_range
+        ub_hip_ranges[ub_hip.ubuntu] = ub_hip.sdk_range
 
     tmp_parameter_value_pairs: List[ParameterValuePair] = []
 

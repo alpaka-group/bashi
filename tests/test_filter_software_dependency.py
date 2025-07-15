@@ -11,7 +11,7 @@ from bashi.filter_software_dependency import (
     software_dependency_filter_typechecked,
     SoftwareDependencyFilter,
 )
-from bashi.runtime_info import ValidUbuntuHip
+from bashi.runtime_info import ValidUbuntuSDK
 
 
 class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
@@ -565,7 +565,7 @@ class TestHIPUbuntu(unittest.TestCase):
 
     def test_valid_hip_backend_ubuntu_runtime_info_d3(self):
         runtime_info: Dict[str, Callable[..., bool]] = {}
-        runtime_info[RT_AVAILABLE_HIP_SDK_UBUNTU_VER] = ValidUbuntuHip(
+        runtime_info[RT_AVAILABLE_HIP_SDK_UBUNTU_VER] = ValidUbuntuSDK(
             parse_value_version(["20.04", "22.04", "26.04"])
         )
         sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info)
@@ -588,7 +588,7 @@ class TestHIPUbuntu(unittest.TestCase):
 
     def test_invalid_hip_backend_ubuntu_runtime_info_d5(self):
         runtime_info: Dict[str, Callable[..., bool]] = {}
-        runtime_info[RT_AVAILABLE_HIP_SDK_UBUNTU_VER] = ValidUbuntuHip(
+        runtime_info[RT_AVAILABLE_HIP_SDK_UBUNTU_VER] = ValidUbuntuSDK(
             parse_value_version(["20.04", "22.04", "26.04"])
         )
 

@@ -15,8 +15,8 @@ from bashi.types import (
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter import FilterBase
 from bashi.filter_chain import get_default_filter_chain, FilterChain
-from bashi.runtime_info import get_hip_sdk_supporting_ubuntus
-from bashi.versions import UBUNTU_HIP_VERSION_RANGE
+from bashi.runtime_info import get_sdk_supporting_ubuntus
+from bashi.versions import UBUNTU_HIP_VERSION_RANGE, UBUNTU_CUDA_VERSION_RANGE
 
 
 def get_runtime_infos(
@@ -33,21 +33,33 @@ def get_runtime_infos(
     runtime_infos: Dict[str, Callable[..., bool]] = {}
 
     if UBUNTU in parameter_value_matrix and DEVICE_COMPILER in parameter_value_matrix:
-        hipccs: List[ValueVersion] = []
-        for param_val in parameter_value_matrix[DEVICE_COMPILER]:
-            if param_val.name == HIPCC:
-                hipccs.append(param_val.version)
-
         ubuntus: List[ValueVersion] = [
             param_val.version for param_val in parameter_value_matrix[UBUNTU]
         ]
+        if len(ubuntus) > 0:
+            for sdk_name, version_range, rt_func_name in [
+                (
+                    HIPCC,
+                    UBUNTU_HIP_VERSION_RANGE,
+                    RT_AVAILABLE_HIP_SDK_UBUNTU_VER,
+                ),
+                (
+                    NVCC,
+                    UBUNTU_CUDA_VERSION_RANGE,
+                    RT_AVAILABLE_CUDA_SDK_UBUNTU_VER,
+                ),
+            ]:
+                sdks: List[ValueVersion] = []
+                for param_val in parameter_value_matrix[DEVICE_COMPILER]:
+                    if param_val.name == sdk_name:
+                        sdks.append(param_val.version)
 
-        if len(hipccs) > 0 and len(ubuntus) > 0 and len(UBUNTU_HIP_VERSION_RANGE) > 0:
-            runtime_infos[RT_AVAILABLE_HIP_SDK_UBUNTU_VER] = get_hip_sdk_supporting_ubuntus(
-                ubuntus=ubuntus,
-                hipccs=hipccs,
-                ubuntu_hip_version_range=UBUNTU_HIP_VERSION_RANGE,
-            )
+                if len(sdks) > 0 and len(version_range) > 0:
+                    runtime_infos[rt_func_name] = get_sdk_supporting_ubuntus(
+                        ubuntus=ubuntus,
+                        sdk_versions=sdks,
+                        ubuntu_sdk_version_range=version_range,
+                    )
 
     return runtime_infos
 
