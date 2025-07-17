@@ -3,6 +3,7 @@
 import copy
 from typing import Dict, List, Union, NamedTuple
 from collections import OrderedDict
+from operator import attrgetter
 from typeguard import typechecked
 import packaging.version as pkv
 from packaging.version import Version
@@ -425,6 +426,45 @@ UBUNTU_HIP_VERSION_RANGE: List[UbuntuSDKMinMax] = _get_ubuntu_sdk_min_max(HIP_MI
 UBUNTU_CUDA_VERSION_RANGE: List[UbuntuSDKMinMax] = _get_ubuntu_sdk_min_max(CUDA_MIN_UBUNTU)
 
 
+def _get_ubuntu_clang_cuda_sdk_support(
+    ubuntu_cuda_version_range: List[UbuntuSDKMinMax] | None = None,
+    clang_cuda_max_cuda_version: List[ClangCudaSDKSupport] | None = None,
+) -> Dict[Version, SpecifierSet]:
+    """Calculates since which Clang-CUDA version, there is an supported CUDA SDK which can be
+    installed on a specific Ubuntu version.
+
+    Args:
+        ubuntu_cuda_version_range (List[UbuntuSDKMinMax], optional): List with supported CUDA
+            versions for a specific Ubuntu version. Defaults to UBUNTU_CUDA_VERSION_RANGE.
+        clang_cuda_max_cuda_version (List[ClangCudaSDKSupport], optional): List which defines the
+            maximum CUDA support for a specific Clang-CUDA version. Defaults to
+            CLANG_CUDA_MAX_CUDA_VERSION.
+
+    Returns:
+        Dict[Version, SpecifierSet]: Dict which shows Ubuntu supports which Clang-CUDA versions.
+    """
+    if ubuntu_cuda_version_range is None:
+        ubuntu_cuda_version_range = UBUNTU_CUDA_VERSION_RANGE
+    if clang_cuda_max_cuda_version is None:
+        clang_cuda_max_cuda_version = CLANG_CUDA_MAX_CUDA_VERSION
+
+    support_dict: Dict[Version, SpecifierSet] = {}
+
+    ubuntu_cuda_version_range_sorted = sorted(ubuntu_cuda_version_range, key=attrgetter("ubuntu"))
+
+    for ub_cuda in ubuntu_cuda_version_range_sorted:
+        for clang_cuda_sdk in sorted(clang_cuda_max_cuda_version):
+            if clang_cuda_sdk.cuda in ub_cuda.sdk_range:
+                if ub_cuda.ubuntu not in support_dict:
+                    support_dict[ub_cuda.ubuntu] = SpecifierSet(f">={clang_cuda_sdk.clang_cuda}")
+                break
+
+    return support_dict
+
+
+UBUNTU_CLANG_CUDA_SDK_SUPPORT: Dict[Version, SpecifierSet] = _get_ubuntu_clang_cuda_sdk_support()
+
+
 # pylint: disable=too-many-branches
 def get_parameter_value_matrix() -> ParameterValueMatrix:
     """Generates a parameter-value-matrix from all supported compilers, softwares and compilation
@@ -499,33 +539,3 @@ def is_supported_version(name: ValueName, version: ValueVersion) -> bool:
             return True
 
     return False
-
-
-def get_oldest_supporting_clang_version_for_cuda(
-    cuda_version: str,
-    clang_cuda_max_cuda_version: List[ClangCudaSDKSupport] = copy.deepcopy(
-        CLANG_CUDA_MAX_CUDA_VERSION
-    ),
-) -> packaging.version.Version:
-    """Returns the first and oldest Clang-CUDA version which supports a given CUDA version.
-    Args:
-        cuda_version (str): CUDA SKD version
-        clang_cuda_max_cuda_version (List[ClangCudaSDKSupport], optional): List Clang version with
-            the maximum supported CUDA SDK version. Defaults to CLANG_CUDA_MAX_CUDA_VERSION.
-    Returns:
-        packaging.version.Version: Returns the first and oldest Clang version which supports the
-        given CUDA SDK version. Returns version 0, if no version supports the CUDA SDK.
-    """
-    parsed_cuda_ver = pkv.parse(cuda_version)
-    # sort the list by the Clang version starting the smallest version
-    # luckily we can assume that the CUDA SDK version is also sorted starting with the smallest
-    # version, because a newer Clang version will also support all version like before plus new
-    # versions
-    clang_cuda_max_cuda_version.sort()
-
-    for sdk_support in clang_cuda_max_cuda_version:
-        if sdk_support.cuda >= parsed_cuda_ver:
-            return sdk_support.clang_cuda
-
-    # return version 0 as not available
-    return OFF_VER

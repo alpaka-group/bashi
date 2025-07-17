@@ -1,11 +1,42 @@
 """Filter rules to remove combinations which has to do with HIP"""
 
 from typing import List, Dict, Callable
-from packaging.specifiers import SpecifierSet
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.types import ParameterValueSingle, ParameterValuePair
+from bashi.types import ParameterValuePair
 from bashi.utils import remove_parameter_value_pairs, remove_parameter_value_pairs_ranges
 from bashi.versions import UBUNTU_HIP_VERSION_RANGE
+from bashi.result_modules.sdk_helper import (
+    remove_unsupported_sdk_ubuntu_combinations,
+    remove_runtime_not_available_ubuntu_versions,
+)
+
+
+def remove_hip_specific_parameter_value_pairs(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+    runtime_infos: Dict[str, Callable[..., bool]],
+):
+    """Apply several filter functions to remove invalid HIP related parameter-value-pairs.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+        removed_parameter_value_pairs (List[ParameterValuePair): list with removed
+            parameter-value-pairs
+        runtime_infos: Dict[str, Callable[..., bool]]: Dict of functors which checks if the given
+        parameter-values (combinations) are valid.
+    """
+    _remove_unsupported_compiler_for_hip_backend(
+        parameter_value_pairs, removed_parameter_value_pairs
+    )
+    _remove_disabled_hip_backend_for_hipcc(parameter_value_pairs, removed_parameter_value_pairs)
+    _remove_enabled_sycl_backend_for_hipcc(parameter_value_pairs, removed_parameter_value_pairs)
+    _remove_enabled_cuda_backend_for_hipcc(parameter_value_pairs, removed_parameter_value_pairs)
+    _remove_unsupported_hipcc_ubuntu_combinations(
+        parameter_value_pairs, removed_parameter_value_pairs
+    )
+    _remove_runtime_unsupported_hip_backend_ubuntu_combinations(
+        parameter_value_pairs, removed_parameter_value_pairs, runtime_infos
+    )
 
 
 def _remove_unsupported_compiler_for_hip_backend(
@@ -109,42 +140,17 @@ def _remove_unsupported_hipcc_ubuntu_combinations(
         removed_parameter_value_pairs (List[ParameterValuePair): list with removed
             parameter-value-pairs
     """
-    ub_hip_ranges: Dict[ValueVersion, SpecifierSet] = {}
-    for ub_hip in UBUNTU_HIP_VERSION_RANGE:
-        ub_hip_ranges[ub_hip.ubuntu] = ub_hip.sdk_range
-
-    tmp_parameter_value_pairs: List[ParameterValuePair] = []
-
-    def is_remove(param_val1: ParameterValueSingle, param_val2: ParameterValueSingle) -> bool:
-        for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-            if (
-                param_val1.parameter == UBUNTU
-                and param_val2.parameter == compiler_type
-                and param_val2.parameterValue.name == HIPCC
-            ):
-                if param_val1.parameterValue.version not in ub_hip_ranges:
-                    return True
-
-                if (
-                    param_val2.parameterValue.version
-                    not in ub_hip_ranges[param_val1.parameterValue.version]
-                ):
-                    return True
-
-        return False
-
-    for param_val in parameter_value_pairs:
-        if is_remove(param_val.first, param_val.second) or is_remove(
-            param_val.second, param_val.first
-        ):
-            removed_parameter_value_pairs.append(param_val)
-        else:
-            tmp_parameter_value_pairs.append(param_val)
-
-    parameter_value_pairs[:] = tmp_parameter_value_pairs
+    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+        remove_unsupported_sdk_ubuntu_combinations(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            compiler_type,
+            HIPCC,
+            UBUNTU_HIP_VERSION_RANGE,
+        )
 
 
-def _remove_unsupported_hip_backend_ubuntu_combinations(
+def _remove_runtime_unsupported_hip_backend_ubuntu_combinations(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
     runtime_infos: Dict[str, Callable[..., bool]],
@@ -167,27 +173,9 @@ def _remove_unsupported_hip_backend_ubuntu_combinations(
     if RT_AVAILABLE_HIP_SDK_UBUNTU_VER not in runtime_infos:
         return
 
-    tmp_parameter_value_pairs: List[ParameterValuePair] = []
-
-    def is_remove(param_val1: ParameterValueSingle, param_val2: ParameterValueSingle) -> bool:
-        if (
-            param_val1.parameter == ALPAKA_ACC_GPU_HIP_ENABLE
-            and param_val1.parameterValue.version == ON_VER
-            and param_val2.parameter == UBUNTU
-            and not runtime_infos[RT_AVAILABLE_HIP_SDK_UBUNTU_VER](
-                param_val2.parameterValue.version
-            )
-        ):
-            return True
-
-        return False
-
-    for param_val in parameter_value_pairs:
-        if is_remove(param_val.first, param_val.second) or is_remove(
-            param_val.second, param_val.first
-        ):
-            removed_parameter_value_pairs.append(param_val)
-        else:
-            tmp_parameter_value_pairs.append(param_val)
-
-    parameter_value_pairs[:] = tmp_parameter_value_pairs
+    remove_runtime_not_available_ubuntu_versions(
+        parameter_value_pairs,
+        removed_parameter_value_pairs,
+        runtime_infos[RT_AVAILABLE_HIP_SDK_UBUNTU_VER],
+        ALPAKA_ACC_GPU_HIP_ENABLE,
+    )

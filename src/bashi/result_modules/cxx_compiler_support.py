@@ -18,6 +18,28 @@ from bashi.versions import (
 from bashi.utils import remove_parameter_value_pairs_ranges
 
 
+def remove_cxx_specific_parameter_value_pairs(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+):
+    """Apply several filter functions to remove C++ standard related parameter-value-pairs.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+        removed_parameter_value_pairs (List[ParameterValuePair): list with removed
+            parameter-value-pairs
+    """
+    _remove_unsupported_cxx_versions_for_gcc(parameter_value_pairs, removed_parameter_value_pairs)
+    _remove_unsupported_cxx_versions_for_clang(parameter_value_pairs, removed_parameter_value_pairs)
+    _remove_unsupported_cxx_versions_for_nvcc(parameter_value_pairs, removed_parameter_value_pairs)
+    _remove_unsupported_cxx_versions_for_clang_cuda(
+        parameter_value_pairs, removed_parameter_value_pairs
+    )
+    _remove_unsupported_cxx_versions_for_cuda(parameter_value_pairs, removed_parameter_value_pairs)
+    _remove_unsupported_cxx_versions_for_icpx(parameter_value_pairs, removed_parameter_value_pairs)
+    _remove_unsupported_cxx_versions_for_hipcc(parameter_value_pairs, removed_parameter_value_pairs)
+
+
 def _remove_unsupported_cxx_version_for_compiler(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],

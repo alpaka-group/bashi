@@ -13,7 +13,7 @@ from utils_test import (
 from bashi.runtime_info import ValidUbuntuSDK
 from bashi.result_modules.hip_support import (
     _remove_unsupported_hipcc_ubuntu_combinations,
-    _remove_unsupported_hip_backend_ubuntu_combinations,
+    _remove_runtime_unsupported_hip_backend_ubuntu_combinations,
 )
 
 
@@ -84,7 +84,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
 
     def test_remove_unsupported_hip_backend_ubuntu_combinations_empty_runtime_info(self):
         default_remove_test(
-            _remove_unsupported_hip_backend_ubuntu_combinations,
+            _remove_runtime_unsupported_hip_backend_ubuntu_combinations,
             self.default_input,
             self.default_input,
             self,
@@ -109,7 +109,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
             ]
         )
         default_remove_test(
-            _remove_unsupported_hip_backend_ubuntu_combinations,
+            _remove_runtime_unsupported_hip_backend_ubuntu_combinations,
             self.default_input,
             expected_output,
             self,
@@ -135,7 +135,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
             ]
         )
         default_remove_test(
-            _remove_unsupported_hip_backend_ubuntu_combinations,
+            _remove_runtime_unsupported_hip_backend_ubuntu_combinations,
             self.default_input,
             expected_output,
             self,

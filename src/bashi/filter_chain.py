@@ -35,6 +35,8 @@ class FilterChain:
         self.backend_filter = BackendFilter(runtime_infos=runtime_infos)
         self.software_dependency_filter = SoftwareDependencyFilter(runtime_infos=runtime_infos)
         self.custom_filter = custom_filter
+        if runtime_infos:
+            self.custom_filter.runtime_infos = runtime_infos
 
     def __call__(self, row: ParameterValueTuple) -> bool:
         return (

@@ -356,6 +356,24 @@ class CustomFilter(FilterBase):
                     if gpu_backend in row and row[gpu_backend].version != OFF_VER:
                         return False
 
+        if UBUNTU in row and RT_AVAILABLE_CUDA_SDK_UBUNTU_VER in self.runtime_infos:
+            # Clang and GCC can be used either as CPU backend compiler or as Nvcc host compiler
+            # Therefore the combination of enabled or disable CPU backend and host Clang/GCC
+            # compiler is valid
+            # There is special case, if a Ubuntu version exist, where no CUDA SDK can be installed
+            # In this case only the enabled CPU backend is valid for the host compiler Clang/GCC and
+            # the specific Ubuntu version
+            if HOST_COMPILER in row and row[HOST_COMPILER].name in (GCC, CLANG):
+                for cpu_backend in cpu_backends:
+                    if (
+                        cpu_backend in row
+                        and row[cpu_backend].version == OFF_VER
+                        and not self.runtime_infos[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER](
+                            row[UBUNTU].version
+                        )
+                    ):
+                        return False
+
         # if nvcc does not support a gcc/clang version, the gcc/clang compiler can be only used as
         # cpu compiler
         for compiler_name, max_supported_version in (
@@ -370,7 +388,6 @@ class CustomFilter(FilterBase):
                 for cpu_backend in cpu_backends:
                     if cpu_backend in row and row[cpu_backend].version == OFF_VER:
                         return False
-
         return True
 
 
