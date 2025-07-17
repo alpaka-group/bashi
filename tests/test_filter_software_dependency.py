@@ -515,3 +515,29 @@ class TestCUDAUbuntu(unittest.TestCase):
                     f"{clang_cuda_ver}, which can be installed on "
                     f"Ubuntu {ubuntu_ver}",
                 )
+
+    def test_valid_hip_backend_ubuntu_runtime_info_d9(self):
+        self.assertTrue(
+            True, "Regel noch mal überprüfen. Müsste ja eigentlich auch für Backends gelten"
+        )
+        runtime_info: Dict[str, Callable[..., bool]] = {}
+        runtime_info[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER] = ValidUbuntuSDK(
+            parse_value_version(["20.04", "22.04", "26.04"])
+        )
+        sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info)
+
+        for ubuntu_ver in [
+            "20.04",
+            "22.04",
+            "26.04",
+        ]:
+            self.assertTrue(
+                sw_dep_filter(
+                    OD(
+                        {
+                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                            UBUNTU: ppv((UBUNTU, ubuntu_ver)),
+                        }
+                    ),
+                )
+            )

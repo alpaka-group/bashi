@@ -189,6 +189,53 @@ class SoftwareDependencyFilter(FilterBase):
                         )
                         return False
 
+            # TODO: the rules d9 until d11 should be rewritten and unified
+            # Rule: d9
+            # To be completely correct, there needs to be also a filter rule for the CUDA backend.
+            # The case would be, that no Nvcc version and no Clang-CUDA version which supports the
+            # backend.
+            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
+                    if (
+                        RT_AVAILABLE_CUDA_SDK_UBUNTU_VER in self.runtime_infos
+                        and not self.runtime_infos[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER](
+                            row[UBUNTU].version
+                        )
+                    ):
+                        self.reason(
+                            f"There is no CUDA SDK in input parameter-value-matrix for {compiler_type} Clang-CUDA {row[compiler_type].version} which can be "
+                            f"installed on Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)}"
+                        )
+                        return False
+            # Rule: d10
+            if (
+                ALPAKA_ACC_GPU_CUDA_ENABLE in row
+                and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
+            ):
+                if (
+                    RT_AVAILABLE_CUDA_SDK_UBUNTU_VER in self.runtime_infos
+                    and not self.runtime_infos[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER](
+                        row[UBUNTU].version
+                    )
+                ):
+                    self.reason(
+                        f"There is no CUDA SDK for the CUDA backend {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} in the input parameter-value-matrix which can be "
+                        f"installed on Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)}"
+                    )
+                    return False
+            # Rule: d11
+            if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
+                if (
+                    RT_AVAILABLE_CUDA_SDK_UBUNTU_VER in self.runtime_infos
+                    and not self.runtime_infos[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER](
+                        row[UBUNTU].version
+                    )
+                ):
+                    self.reason(
+                        f"There is no CUDA SDK in input parameter-value-matrix for Nvcc {row[DEVICE_COMPILER].version} which can be "
+                        f"installed on Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)}"
+                    )
+                    return False
         return True
 
 
