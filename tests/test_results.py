@@ -18,15 +18,8 @@ from bashi.versions import VERSIONS, CLANG_CUDA_MAX_CUDA_VERSION
 
 # pyright: reportPrivateUsage=false
 from bashi.results import (
-    _remove_nvcc_host_compiler,
-    _remove_unsupported_clang_cuda_version,
-    _remove_unsupported_nvcc_host_compiler,
     _remove_different_compiler_names,
     _remove_different_compiler_versions,
-    _remove_unsupported_nvcc_cuda_host_compiler_versions,
-    _remove_nvcc_unsupported_gcc_versions,
-    _remove_nvcc_unsupported_clang_versions,
-    _remove_specific_nvcc_clang_combinations,
     _remove_enabled_hip_and_sycl_backend_at_same_time,
     _remove_enabled_cuda_backend_for_enabled_hip_backend,
     _remove_unsupported_compiler_for_sycl_backend,
@@ -34,15 +27,25 @@ from bashi.results import (
     _remove_enabled_hip_backend_for_icpx,
     _remove_enabled_cuda_backend_for_icpx,
     _remove_enabled_cuda_backend_for_enabled_sycl_backend,
+    _remove_unsupported_gcc_versions_for_ubuntu2004,
+)
+
+# pyright: reportPrivateUsage=false
+from bashi.result_modules.cuda_support import (
+    _remove_nvcc_host_compiler,
+    _remove_unsupported_clang_cuda_version,
+    _remove_unsupported_nvcc_host_compiler,
+    _remove_unsupported_nvcc_cuda_host_compiler_versions,
+    _remove_nvcc_unsupported_gcc_versions,
+    _remove_nvcc_unsupported_clang_versions,
+    _remove_specific_nvcc_clang_combinations,
     _remove_nvcc_and_cuda_version_not_same,
     _remove_cuda_sdk_unsupported_gcc_versions,
     _remove_cuda_sdk_unsupported_clang_versions,
     _remove_device_compiler_gcc_clang_enabled_cuda_backend,
     _remove_specific_cuda_clang_combinations,
     _remove_unsupported_clang_sdk_versions_for_clang_cuda,
-    _remove_unsupported_gcc_versions_for_ubuntu2004,
     _remove_unsupported_cmake_versions_for_clangcuda,
-    _remove_unsupported_cuda_versions_for_ubuntu,
 )
 from bashi.result_modules.hip_support import (
     _remove_unsupported_compiler_for_hip_backend,
@@ -2438,69 +2441,6 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
         default_remove_test(
             _remove_unsupported_cmake_versions_for_clangcuda,
-            test_param_value_pairs,
-            expected_results,
-            self,
-        )
-        self.assertEqual(
-            test_param_value_pairs,
-            expected_results,
-            create_diff_parameter_value_pairs(test_param_value_pairs, expected_results),
-        )
-
-    def test_remove_unsupported_cuda_versions_for_ubuntu(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
-            [
-                ((HOST_COMPILER, GCC, 12), (UBUNTU, 22.04)),
-                ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
-                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1")),
-                ((UBUNTU, "22.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1")),
-                ((UBUNTU, "22.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "12")),
-                ((UBUNTU, "18.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1")),
-                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.2")),
-                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "11")),
-                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "11.1")),
-                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "14.1")),
-                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "7.4")),
-                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
-                ((UBUNTU, "18.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
-                ((UBUNTU, "18.04"), (DEVICE_COMPILER, NVCC, "11.2")),
-                ((UBUNTU, "20.04"), (DEVICE_COMPILER, NVCC, "12")),
-                ((UBUNTU, "20.04"), (DEVICE_COMPILER, NVCC, "10.1")),
-                ((UBUNTU, "22.04"), (DEVICE_COMPILER, NVCC, "10")),
-                ((UBUNTU, "20.04"), (DEVICE_COMPILER, CLANG_CUDA, "10")),
-                ((UBUNTU, "20.04"), (DEVICE_COMPILER, CLANG_CUDA, "10.2")),
-                ((UBUNTU, "18.04"), (DEVICE_COMPILER, CLANG_CUDA, "11")),
-                ((UBUNTU, "22.04"), (DEVICE_COMPILER, CLANG_CUDA, "12")),
-                ((UBUNTU, "20.04"), (DEVICE_COMPILER, CLANG_CUDA, "13")),
-                ((UBUNTU, "18.04"), (DEVICE_COMPILER, NVCC, "10.2")),
-                ((UBUNTU, "20.04"), (DEVICE_COMPILER, NVCC, "10.2")),
-                ((UBUNTU, "20.04"), (DEVICE_COMPILER, NVCC, "11")),
-            ]
-        )
-
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
-            [
-                ((HOST_COMPILER, GCC, 12), (UBUNTU, 22.04)),
-                ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
-                ((UBUNTU, "22.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "12")),
-                ((UBUNTU, "18.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1")),
-                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "11")),
-                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "11.1")),
-                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "14.1")),
-                ((UBUNTU, "20.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
-                ((UBUNTU, "18.04"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
-                ((UBUNTU, "18.04"), (DEVICE_COMPILER, NVCC, "11.2")),
-                ((UBUNTU, "20.04"), (DEVICE_COMPILER, NVCC, "12")),
-                ((UBUNTU, "18.04"), (DEVICE_COMPILER, CLANG_CUDA, "11")),
-                ((UBUNTU, "22.04"), (DEVICE_COMPILER, CLANG_CUDA, "12")),
-                ((UBUNTU, "20.04"), (DEVICE_COMPILER, CLANG_CUDA, "13")),
-                ((UBUNTU, "18.04"), (DEVICE_COMPILER, NVCC, "10.2")),
-                ((UBUNTU, "20.04"), (DEVICE_COMPILER, NVCC, "11")),
-            ]
-        )
-        default_remove_test(
-            _remove_unsupported_cuda_versions_for_ubuntu,
             test_param_value_pairs,
             expected_results,
             self,

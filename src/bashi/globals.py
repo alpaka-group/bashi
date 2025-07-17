@@ -65,5 +65,6 @@ PARAMETERS: List[Parameter] = [
     CXX_STANDARD,
 ] + BACKENDS
 
-# runtime function: get_hip_sdk_supporting_ubuntus()
+# runtime functions
 RT_AVAILABLE_HIP_SDK_UBUNTU_VER: str = "rt_available_hip_sdk_ubuntu_ver"
+RT_AVAILABLE_CUDA_SDK_UBUNTU_VER: str = "rt_available_cuda_sdk_ubuntu_ver"

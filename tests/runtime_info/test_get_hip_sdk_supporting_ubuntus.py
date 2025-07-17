@@ -3,8 +3,8 @@ import unittest
 import packaging.version as pkv
 from packaging.specifiers import SpecifierSet
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import UbuntuHipMinMax, get_parameter_value_matrix, VERSIONS
-from bashi.runtime_info import get_hip_sdk_supporting_ubuntus
+from bashi.versions import UbuntuSDKMinMax, get_parameter_value_matrix, VERSIONS
+from bashi.runtime_info import get_sdk_supporting_ubuntus
 from bashi.generator import get_runtime_infos
 from collections import OrderedDict
 from bashi.types import ParameterValue, ParameterValueMatrix
@@ -15,44 +15,44 @@ class TestGetHipSdkSupportingUbuntus(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.default_ubuntu_hip_version_range = [
-            UbuntuHipMinMax(ubuntu=pkv.parse("18.04"), hip_range=SpecifierSet("<5.0")),
-            UbuntuHipMinMax(ubuntu=pkv.parse("20.04"), hip_range=SpecifierSet(">=5.0, <6.0")),
-            UbuntuHipMinMax(ubuntu=pkv.parse("22.04"), hip_range=SpecifierSet(">=6.0, <6.3")),
-            UbuntuHipMinMax(ubuntu=pkv.parse("24.04"), hip_range=SpecifierSet(">=6.3")),
+            UbuntuSDKMinMax(ubuntu=pkv.parse("18.04"), sdk_range=SpecifierSet("<5.0")),
+            UbuntuSDKMinMax(ubuntu=pkv.parse("20.04"), sdk_range=SpecifierSet(">=5.0, <6.0")),
+            UbuntuSDKMinMax(ubuntu=pkv.parse("22.04"), sdk_range=SpecifierSet(">=6.0, <6.3")),
+            UbuntuSDKMinMax(ubuntu=pkv.parse("24.04"), sdk_range=SpecifierSet(">=6.3")),
         ]
 
     def test_get_hip_sdk_supporting_ubuntus_empty_input(self):
         with self.assertRaises(RuntimeError):
-            get_hip_sdk_supporting_ubuntus(ubuntus=[], hipccs=[], ubuntu_hip_version_range=[])
+            get_sdk_supporting_ubuntus(ubuntus=[], sdk_versions=[], ubuntu_sdk_version_range=[])
 
         with self.assertRaises(RuntimeError):
-            get_hip_sdk_supporting_ubuntus(
+            get_sdk_supporting_ubuntus(
                 ubuntus=[],
-                hipccs=[],
-                ubuntu_hip_version_range=self.default_ubuntu_hip_version_range,
+                sdk_versions=[],
+                ubuntu_sdk_version_range=self.default_ubuntu_hip_version_range,
             )
 
         with self.assertRaises(RuntimeError):
-            get_hip_sdk_supporting_ubuntus(
+            get_sdk_supporting_ubuntus(
                 ubuntus=[],
-                hipccs=[pkv.parse("6.1")],
-                ubuntu_hip_version_range=[],
+                sdk_versions=[pkv.parse("6.1")],
+                ubuntu_sdk_version_range=[],
             )
 
         with self.assertRaises(RuntimeError):
-            get_hip_sdk_supporting_ubuntus(
+            get_sdk_supporting_ubuntus(
                 ubuntus=[pkv.parse("20.04")],
-                hipccs=[],
-                ubuntu_hip_version_range=[],
+                sdk_versions=[],
+                ubuntu_sdk_version_range=[],
             )
 
     def test_get_hip_sdk_supporting_ubuntus_all_hip_available(self):
         given_ubuntus = pvv(["16.04", "18.04", "20.04", "22.04", "24.04", "26.04"])
         expected_ubuntus = pvv(["18.04", "20.04", "22.04", "24.04"])
-        validator = get_hip_sdk_supporting_ubuntus(
+        validator = get_sdk_supporting_ubuntus(
             ubuntus=given_ubuntus,
-            hipccs=pvv([4.0, 5.1, 6.1, 6.3]),
-            ubuntu_hip_version_range=self.default_ubuntu_hip_version_range,
+            sdk_versions=pvv([4.0, 5.1, 6.1, 6.3]),
+            ubuntu_sdk_version_range=self.default_ubuntu_hip_version_range,
         )
 
         self.assertEqual(
@@ -66,12 +66,12 @@ class TestGetHipSdkSupportingUbuntus(unittest.TestCase):
     def test_get_hip_sdk_supporting_ubuntus_all_hip_available_edge_case_mapping(self):
         given_ubuntus = pvv(["16.04", "18.04", "20.04", "22.04", "24.04", "26.04"])
         expected_ubuntus = pvv(["18.04", "20.04"])
-        validator = get_hip_sdk_supporting_ubuntus(
+        validator = get_sdk_supporting_ubuntus(
             ubuntus=given_ubuntus,
-            hipccs=pvv([4.0, 5.1, 6.1, 6.3]),
-            ubuntu_hip_version_range=[
-                UbuntuHipMinMax(ubuntu=pkv.parse("18.04"), hip_range=SpecifierSet("<5.0")),
-                UbuntuHipMinMax(ubuntu=pkv.parse("20.04"), hip_range=SpecifierSet(">=5.0")),
+            sdk_versions=pvv([4.0, 5.1, 6.1, 6.3]),
+            ubuntu_sdk_version_range=[
+                UbuntuSDKMinMax(ubuntu=pkv.parse("18.04"), sdk_range=SpecifierSet("<5.0")),
+                UbuntuSDKMinMax(ubuntu=pkv.parse("20.04"), sdk_range=SpecifierSet(">=5.0")),
             ],
         )
 
@@ -86,10 +86,10 @@ class TestGetHipSdkSupportingUbuntus(unittest.TestCase):
     def test_get_hip_sdk_supporting_ubuntus_missing_hip_versions1(self):
         given_ubuntus = pvv(["18.04", "20.04", "22.04", "24.04"])
         expected_ubuntus = pvv(["18.04", "22.04"])
-        validator = get_hip_sdk_supporting_ubuntus(
+        validator = get_sdk_supporting_ubuntus(
             ubuntus=given_ubuntus,
-            hipccs=pvv([4.0, 6.1]),
-            ubuntu_hip_version_range=self.default_ubuntu_hip_version_range,
+            sdk_versions=pvv([4.0, 6.1]),
+            ubuntu_sdk_version_range=self.default_ubuntu_hip_version_range,
         )
 
         self.assertEqual(
@@ -103,10 +103,10 @@ class TestGetHipSdkSupportingUbuntus(unittest.TestCase):
     def test_get_hip_sdk_supporting_ubuntus_missing_hip_versions2(self):
         given_ubuntus = pvv(["18.04", "20.04", "22.04", "24.04"])
         expected_ubuntus = pvv(["20.04", "22.04", "24.04"])
-        validator = get_hip_sdk_supporting_ubuntus(
+        validator = get_sdk_supporting_ubuntus(
             ubuntus=given_ubuntus,
-            hipccs=pvv([5.0, 6.1, 6.5]),
-            ubuntu_hip_version_range=self.default_ubuntu_hip_version_range,
+            sdk_versions=pvv([5.0, 6.1, 6.5]),
+            ubuntu_sdk_version_range=self.default_ubuntu_hip_version_range,
         )
 
         self.assertEqual(
