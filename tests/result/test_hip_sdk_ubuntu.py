@@ -10,10 +10,10 @@ from utils_test import (
     default_remove_test,
     parse_value_version,
 )
-from bashi.runtime_info import ValidUbuntuHip
+from bashi.runtime_info import ValidUbuntuSDK
 from bashi.result_modules.hip_support import (
     _remove_unsupported_hipcc_ubuntu_combinations,
-    _remove_unsupported_hip_backend_ubuntu_combinations,
+    _remove_runtime_unsupported_hip_backend_ubuntu_combinations,
 )
 
 
@@ -84,7 +84,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
 
     def test_remove_unsupported_hip_backend_ubuntu_combinations_empty_runtime_info(self):
         default_remove_test(
-            _remove_unsupported_hip_backend_ubuntu_combinations,
+            _remove_runtime_unsupported_hip_backend_ubuntu_combinations,
             self.default_input,
             self.default_input,
             self,
@@ -93,7 +93,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
 
     def test_remove_unsupported_hip_backend_ubuntu_combinations_normal_runtime_info(self):
         runtime_info: Dict[str, Callable[..., bool]] = {}
-        runtime_info[RT_AVAILABLE_HIP_SDK_UBUNTU_VER] = ValidUbuntuHip(
+        runtime_info[RT_AVAILABLE_HIP_SDK_UBUNTU_VER] = ValidUbuntuSDK(
             parse_value_version(["20.04", "22.04"])
         )
 
@@ -109,7 +109,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
             ]
         )
         default_remove_test(
-            _remove_unsupported_hip_backend_ubuntu_combinations,
+            _remove_runtime_unsupported_hip_backend_ubuntu_combinations,
             self.default_input,
             expected_output,
             self,
@@ -118,7 +118,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
 
     def test_remove_unsupported_hip_backend_ubuntu_combinations_gapped_runtime_info(self):
         runtime_info: Dict[str, Callable[..., bool]] = {}
-        runtime_info[RT_AVAILABLE_HIP_SDK_UBUNTU_VER] = ValidUbuntuHip(
+        runtime_info[RT_AVAILABLE_HIP_SDK_UBUNTU_VER] = ValidUbuntuSDK(
             parse_value_version(["20.04", "22.04", "26.04"])
         )
 
@@ -135,7 +135,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
             ]
         )
         default_remove_test(
-            _remove_unsupported_hip_backend_ubuntu_combinations,
+            _remove_runtime_unsupported_hip_backend_ubuntu_combinations,
             self.default_input,
             expected_output,
             self,

@@ -14,8 +14,9 @@ from bashi.types import ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter import FilterBase
 from bashi.versions import (
-    get_oldest_supporting_clang_version_for_cuda,
     UBUNTU_HIP_VERSION_RANGE,
+    UBUNTU_CUDA_VERSION_RANGE,
+    UBUNTU_CLANG_CUDA_SDK_SUPPORT,
 )
 
 
@@ -112,7 +113,7 @@ class SoftwareDependencyFilter(FilterBase):
                 if compiler_type in row and row[compiler_type].name == HIPCC:
                     for ubuntu_hip_range in UBUNTU_HIP_VERSION_RANGE:
                         if (
-                            row[compiler_type].version in ubuntu_hip_range.hip_range
+                            row[compiler_type].version in ubuntu_hip_range.sdk_range
                             and row[UBUNTU].version != ubuntu_hip_range.ubuntu
                         ):
                             self.reason(
@@ -136,41 +137,95 @@ class SoftwareDependencyFilter(FilterBase):
                     )
                     return False
 
-        # Rule: d4
-        # Ubuntu 20.04 and newer is not available with CUDA older than 11
+            # Rule: d6
+            if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
+                for ubuntu_cuda_range in UBUNTU_CUDA_VERSION_RANGE:
+                    if (
+                        row[DEVICE_COMPILER].version in ubuntu_cuda_range.sdk_range
+                        and row[UBUNTU].version != ubuntu_cuda_range.ubuntu
+                    ):
+                        self.reason(
+                            f"The nvcc {row[DEVICE_COMPILER].version} compiler is not available "
+                            f"on the Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)} "
+                            "image.",
+                        )
+                        return False
 
-        if UBUNTU in row and row[UBUNTU].version >= pkv.parse("20.04"):
+            # Rule: d7
             if (
                 ALPAKA_ACC_GPU_CUDA_ENABLE in row
                 and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
             ):
-                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version < pkv.parse("11.0"):
-                    self.reason(
-                        f"CUDA {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} "
-                        "is not available in Ubuntu "
-                        f"{_ubuntu_version_to_string(row[UBUNTU].version)}",
-                    )
-                    return False
-            if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
-                if row[DEVICE_COMPILER].version < pkv.parse("11.0"):
-                    self.reason(
-                        f"NVCC {row[DEVICE_COMPILER].version} "
-                        "is not available in Ubuntu "
-                        f"{_ubuntu_version_to_string(row[UBUNTU].version)}",
-                    )
-                    return False
-            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-                if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
-                    if row[compiler_type].version < get_oldest_supporting_clang_version_for_cuda(
-                        "11.0"
+                for ubuntu_cuda_range in UBUNTU_CUDA_VERSION_RANGE:
+                    if (
+                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version in ubuntu_cuda_range.sdk_range
+                        and row[UBUNTU].version != ubuntu_cuda_range.ubuntu
                     ):
                         self.reason(
-                            f"{_pretty_name_compiler(compiler_type)}"
-                            f" clang-cuda {row[compiler_type].version} "
-                            "is not available in Ubuntu "
-                            f"{_ubuntu_version_to_string(row[UBUNTU].version)}",
+                            f"The CUDA SDK {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} is not "
+                            "available on the Ubuntu "
+                            f"{_ubuntu_version_to_string(row[UBUNTU].version)} image.",
                         )
                         return False
+
+            # Rule: d8
+            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
+                    if row[UBUNTU].version not in UBUNTU_CLANG_CUDA_SDK_SUPPORT:
+                        self.reason(
+                            "There is no installable CUDA SDK available for "
+                            f"Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)}"
+                        )
+                        return False
+
+                    if (
+                        row[compiler_type].version
+                        not in UBUNTU_CLANG_CUDA_SDK_SUPPORT[row[UBUNTU].version]
+                    ):
+                        self.reason(
+                            "There is no compatible CUDA SDK for Clang-CUDA "
+                            f"{row[compiler_type].version}, which can be installed on "
+                            f"Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)}"
+                        )
+                        return False
+
+            if RT_AVAILABLE_CUDA_SDK_UBUNTU_VER in self.runtime_infos and not self.runtime_infos[
+                RT_AVAILABLE_CUDA_SDK_UBUNTU_VER
+            ](row[UBUNTU].version):
+                # Rule: d9
+                # To be completely correct, there needs to be also a filter rule for the CUDA
+                # backend.
+                # The case would be, that no Nvcc version and no Clang-CUDA version which supports
+                # the backend.
+                for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                    if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
+                        self.reason(
+                            "There is no CUDA SDK in input parameter-value-matrix for "
+                            f"{compiler_type} Clang-CUDA {row[compiler_type].version} which can be "
+                            f"installed on Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)}"
+                        )
+                        return False
+                # Rule: d10
+                if (
+                    ALPAKA_ACC_GPU_CUDA_ENABLE in row
+                    and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
+                ):
+
+                    self.reason(
+                        "There is no CUDA SDK for the CUDA backend "
+                        f"{row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} in the input "
+                        "parameter-value-matrix which can be installed on Ubuntu "
+                        f"{_ubuntu_version_to_string(row[UBUNTU].version)}"
+                    )
+                    return False
+                # Rule: d11
+                if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
+                    self.reason(
+                        "There is no CUDA SDK in input parameter-value-matrix for Nvcc "
+                        f"{row[DEVICE_COMPILER].version} which can be installed on Ubuntu "
+                        f"{_ubuntu_version_to_string(row[UBUNTU].version)}"
+                    )
+                    return False
         return True
 
 
