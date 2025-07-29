@@ -517,27 +517,171 @@ class TestCUDAUbuntu(unittest.TestCase):
                 )
 
     def test_valid_hip_backend_ubuntu_runtime_info_d9(self):
-        self.assertTrue(
-            True, "Regel noch mal überprüfen. Müsste ja eigentlich auch für Backends gelten"
-        )
         runtime_info: Dict[str, Callable[..., bool]] = {}
         runtime_info[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER] = ValidUbuntuSDK(
-            parse_value_version(["20.04", "22.04", "26.04"])
+            parse_value_version(["18.04", "20.04", "22.04", "24.04"])
         )
         sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info)
 
-        for ubuntu_ver in [
-            "20.04",
-            "22.04",
-            "26.04",
+        for ubuntu_ver, clang_cuda_ver in [
+            ("18.04", 12),
+            ("20.04", 17),
+            ("24.04", 19),
+        ]:
+            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                self.assertTrue(
+                    sw_dep_filter(
+                        OD(
+                            {
+                                compiler_type: ppv((CLANG_CUDA, clang_cuda_ver)),
+                                UBUNTU: ppv((UBUNTU, ubuntu_ver)),
+                            }
+                        ),
+                    ),
+                    f"Ubuntu {ubuntu_ver} + CLANG-CUDA {clang_cuda_ver}",
+                )
+
+    def test_invalid_hip_backend_ubuntu_runtime_info_d9(self):
+        runtime_info: Dict[str, Callable[..., bool]] = {}
+        runtime_info[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER] = ValidUbuntuSDK(
+            parse_value_version(["22.04"])
+        )
+
+        for ubuntu_ver, clang_cuda_ver in [
+            ("18.04", 12),
+            ("20.04", 17),
+            ("24.04", 19),
+        ]:
+            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                reason_msg = io.StringIO()
+                sw_dep_filter = SoftwareDependencyFilter(
+                    runtime_infos=runtime_info, output=reason_msg
+                )
+
+                self.assertFalse(
+                    sw_dep_filter(
+                        OD(
+                            {
+                                compiler_type: ppv((CLANG_CUDA, clang_cuda_ver)),
+                                UBUNTU: ppv((UBUNTU, ubuntu_ver)),
+                            }
+                        ),
+                    ),
+                    f"Ubuntu {ubuntu_ver} + CLANG-CUDA {clang_cuda_ver}",
+                )
+
+                self.assertEqual(
+                    reason_msg.getvalue(),
+                    f"There is no CUDA SDK in input parameter-value-matrix for {compiler_type} "
+                    f"Clang-CUDA {clang_cuda_ver} which can be installed on Ubuntu {ubuntu_ver}",
+                )
+
+    def test_valid_hip_backend_ubuntu_runtime_info_d10(self):
+        runtime_info: Dict[str, Callable[..., bool]] = {}
+        runtime_info[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER] = ValidUbuntuSDK(
+            parse_value_version(["18.04", "20.04", "22.04", "24.04"])
+        )
+        sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info)
+
+        for ubuntu_ver, cuda_ver in [
+            ("18.04", 10.2),
+            ("20.04", 11.0),
+            ("24.04", 12.0),
         ]:
             self.assertTrue(
                 sw_dep_filter(
                     OD(
                         {
-                            ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, cuda_ver)),
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
                         }
                     ),
-                )
+                ),
+                f"Ubuntu {ubuntu_ver} + CUDA {cuda_ver}",
+            )
+
+    def test_invalid_hip_backend_ubuntu_runtime_info_d10(self):
+        runtime_info: Dict[str, Callable[..., bool]] = {}
+        runtime_info[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER] = ValidUbuntuSDK(
+            parse_value_version(["22.04"])
+        )
+
+        for ubuntu_ver, cuda_ver in [
+            ("18.04", 10.2),
+            ("20.04", 11.0),
+            ("24.04", 12.0),
+        ]:
+            reason_msg = io.StringIO()
+            sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info, output=reason_msg)
+
+            self.assertFalse(
+                sw_dep_filter(
+                    OD(
+                        {
+                            ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, cuda_ver)),
+                            UBUNTU: ppv((UBUNTU, ubuntu_ver)),
+                        }
+                    ),
+                ),
+            )
+
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"There is no CUDA SDK for the CUDA backend {cuda_ver} in the input "
+                f"parameter-value-matrix which can be installed on Ubuntu {ubuntu_ver}",
+            )
+
+    def test_valid_hip_backend_ubuntu_runtime_info_d11(self):
+        runtime_info: Dict[str, Callable[..., bool]] = {}
+        runtime_info[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER] = ValidUbuntuSDK(
+            parse_value_version(["18.04", "20.04", "22.04", "24.04"])
+        )
+        sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info)
+
+        for ubuntu_ver, cuda_ver in [
+            ("18.04", 10.2),
+            ("20.04", 11.0),
+            ("24.04", 12.0),
+        ]:
+            self.assertTrue(
+                sw_dep_filter(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((NVCC, cuda_ver)),
+                            UBUNTU: ppv((UBUNTU, ubuntu_ver)),
+                        }
+                    ),
+                ),
+                f"Ubuntu {ubuntu_ver} + CUDA {cuda_ver}",
+            )
+
+    def test_invalid_hip_backend_ubuntu_runtime_info_d11(self):
+        runtime_info: Dict[str, Callable[..., bool]] = {}
+        runtime_info[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER] = ValidUbuntuSDK(
+            parse_value_version(["22.04"])
+        )
+
+        for ubuntu_ver, nvcc_ver in [
+            ("18.04", 10.2),
+            ("20.04", 11.0),
+            ("24.04", 12.0),
+        ]:
+            reason_msg = io.StringIO()
+            sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info, output=reason_msg)
+
+            self.assertFalse(
+                sw_dep_filter(
+                    OD(
+                        {
+                            DEVICE_COMPILER: ppv((NVCC, nvcc_ver)),
+                            UBUNTU: ppv((UBUNTU, ubuntu_ver)),
+                        }
+                    ),
+                ),
+            )
+
+            self.assertEqual(
+                reason_msg.getvalue(),
+                f"There is no CUDA SDK in input parameter-value-matrix for Nvcc {nvcc_ver} which "
+                f"can be installed on Ubuntu {ubuntu_ver}",
             )

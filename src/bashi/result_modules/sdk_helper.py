@@ -25,12 +25,12 @@ def remove_unsupported_sdk_ubuntu_combinations(
         ubuntu_sdk_version_range (List[UbuntuSDKMinMax] | Dict[ValueVersion, SpecifierSet]): Version
             range which specified, which combination is valid.
     """
+    ub_sdk_ranges: Dict[ValueVersion, SpecifierSet] = {}
     if isinstance(ubuntu_sdk_version_range, (List, UbuntuSDKMinMax)):
-        ub_sdk_ranges: Dict[ValueVersion, SpecifierSet] = {}
         for ub_sdk in ubuntu_sdk_version_range:
             ub_sdk_ranges[ub_sdk.ubuntu] = ub_sdk.sdk_range
     else:
-        ub_sdk_ranges: Dict[ValueVersion, SpecifierSet] = ubuntu_sdk_version_range
+        ub_sdk_ranges = ubuntu_sdk_version_range
 
     tmp_parameter_value_pairs: List[ParameterValuePair] = []
 
