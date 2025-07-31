@@ -53,9 +53,10 @@ class BackendFilter(FilterBase):
 
             # Rule: b2
             # related to rule c10
-            if ALPAKA_ACC_SYCL_ENABLE in row and row[ALPAKA_ACC_SYCL_ENABLE].version != OFF_VER:
-                self.reason("The HIP and SYCL backend cannot be enabled on the same time.")
-                return False
+            for one_api_backend in ONE_API_BACKENDS:
+                if one_api_backend in row and row[one_api_backend].version != OFF_VER:
+                    self.reason("The HIP and SYCL backend cannot be enabled on the same time.")
+                    return False
 
             # Rule: b3
             # related to rule c11
@@ -66,31 +67,41 @@ class BackendFilter(FilterBase):
                 self.reason("The HIP and CUDA backend cannot be enabled on the same time.")
                 return False
 
-        if ALPAKA_ACC_SYCL_ENABLE in row and row[ALPAKA_ACC_SYCL_ENABLE].version != OFF_VER:
-            # Rule: b4
-            # related to rule c12
-            for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-                if compiler_type in row and row[compiler_type].name != ICPX:
-                    self.reason("An enabled SYCL backend requires icpx as compiler.")
+        for one_api_backend in ONE_API_BACKENDS:
+            if one_api_backend in row and row[one_api_backend].version != OFF_VER:
+                # Rule: b4
+                # related to rule c12
+                for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+                    if compiler_type in row and row[compiler_type].name != ICPX:
+                        self.reason("An enabled SYCL backend requires icpx as compiler.")
+                        return False
+
+                # Rule: b5
+                # related to rule c13
+                if (
+                    ALPAKA_ACC_GPU_HIP_ENABLE in row
+                    and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER
+                ):
+                    self.reason("The SYCL and HIP backend cannot be enabled on the same time.")
                     return False
 
-            # Rule: b5
-            # related to rule c13
-            if (
-                ALPAKA_ACC_GPU_HIP_ENABLE in row
-                and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER
-            ):
-                self.reason("The SYCL and HIP backend cannot be enabled on the same time.")
-                return False
+                # Rule: b6
+                # related to rule c14
+                if (
+                    ALPAKA_ACC_GPU_CUDA_ENABLE in row
+                    and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
+                ):
+                    self.reason("The SYCL and CUDA backend cannot be enabled on the same time.")
+                    return False
 
-            # Rule: b6
-            # related to rule c14
-            if (
-                ALPAKA_ACC_GPU_CUDA_ENABLE in row
-                and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
-            ):
-                self.reason("The SYCL and CUDA backend cannot be enabled on the same time.")
-                return False
+                # Rule: b18
+                for other_one_api_backends in set(ONE_API_BACKENDS) - set([one_api_backend]):
+                    if (
+                        other_one_api_backends in row
+                        and row[other_one_api_backends].version != OFF_VER
+                    ):
+                        self.reason("Only one SYCL backend can be enabled.")
+                        return False
 
         if ALPAKA_ACC_GPU_CUDA_ENABLE in row and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version == OFF_VER:
             # Rule: b7
@@ -176,7 +187,7 @@ class BackendFilter(FilterBase):
                 return False
 
             # Rule: b14
-            # related to rule c16
+            # related to rule c30
             if (
                 ALPAKA_ACC_GPU_HIP_ENABLE in row
                 and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER
@@ -186,9 +197,10 @@ class BackendFilter(FilterBase):
 
             # Rule: b15
             # related to rule c17
-            if ALPAKA_ACC_SYCL_ENABLE in row and row[ALPAKA_ACC_SYCL_ENABLE].version != OFF_VER:
-                self.reason("The CUDA and SYCL backend cannot be enabled on the same time.")
-                return False
+            for one_api_backend in ONE_API_BACKENDS:
+                if one_api_backend in row and row[one_api_backend].version != OFF_VER:
+                    self.reason("The CUDA and SYCL backend cannot be enabled on the same time.")
+                    return False
 
             # Rule: b17
             # related to rule c16

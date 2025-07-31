@@ -148,7 +148,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
                 f"CUDA {unsupported_new_cuda_sdk_version}",
             )
 
-    def test_clang_cuda_does_not_support_the_hip_backend_c17(self):
+    def test_clang_cuda_does_not_support_the_hip_backend_c30(self):
         for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
             self.assertTrue(
                 compiler_filter_typechecked(
@@ -175,34 +175,71 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
             )
             self.assertEqual(reason_msg1.getvalue(), "clang-cuda does not support the HIP backend.")
 
-    def test_clang_cuda_does_not_support_the_sycl_backend_c18(self):
-        for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-            self.assertTrue(
-                compiler_filter_typechecked(
-                    OD(
-                        {
-                            compiler_type: ppv((CLANG_CUDA, 15)),
-                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
-                        }
-                    )
-                )
-            )
+    def test_valid_clang_cuda_does_not_support_the_sycl_backend_c18(self):
+        for row in [
+            OD({HOST_COMPILER: ppv((CLANG_CUDA, 15))}),
+            OD({DEVICE_COMPILER: ppv((CLANG_CUDA, 14))}),
+            OD({HOST_COMPILER: ppv((CLANG_CUDA, 17)), DEVICE_COMPILER: ppv((CLANG_CUDA, 17))}),
+        ]:
+            for comb in [
+                [ALPAKA_ACC_ONEAPI_CPU_ENABLE],
+                [ALPAKA_ACC_ONEAPI_GPU_ENABLE],
+                [ALPAKA_ACC_ONEAPI_FPGA_ENABLE],
+                [ALPAKA_ACC_ONEAPI_CPU_ENABLE, ALPAKA_ACC_ONEAPI_GPU_ENABLE],
+                [ALPAKA_ACC_ONEAPI_CPU_ENABLE, ALPAKA_ACC_ONEAPI_FPGA_ENABLE],
+                [ALPAKA_ACC_ONEAPI_GPU_ENABLE, ALPAKA_ACC_ONEAPI_FPGA_ENABLE],
+                [
+                    ALPAKA_ACC_ONEAPI_CPU_ENABLE,
+                    ALPAKA_ACC_ONEAPI_GPU_ENABLE,
+                    ALPAKA_ACC_ONEAPI_FPGA_ENABLE,
+                ],
+            ]:
+                for backend_name in comb:
+                    row[backend_name] = ppv((backend_name, OFF))
+                self.assertTrue(compiler_filter_typechecked(row), f"{row}")
 
-            reason_msg1 = io.StringIO()
-            self.assertFalse(
-                compiler_filter_typechecked(
-                    OD(
-                        {
-                            compiler_type: ppv((CLANG_CUDA, 15)),
-                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
-                        }
-                    ),
-                    reason_msg1,
+    def test_invalid_clang_cuda_does_not_support_the_sycl_backend_c18(self):
+        for row in [
+            OD({HOST_COMPILER: ppv((CLANG_CUDA, 15))}),
+            OD({DEVICE_COMPILER: ppv((CLANG_CUDA, 14))}),
+            OD({HOST_COMPILER: ppv((CLANG_CUDA, 17)), DEVICE_COMPILER: ppv((CLANG_CUDA, 17))}),
+        ]:
+            for comb in [
+                [(ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)],
+                [(ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)],
+                [(ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)],
+                [(ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)],
+                [(ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF), (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)],
+                [(ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)],
+                [
+                    (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON),
+                    (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
+                    (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, OFF),
+                ],
+                [
+                    (ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF),
+                    (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
+                    (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
+                ],
+                [
+                    (ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF),
+                    (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
+                    (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
+                ],
+                [
+                    (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON),
+                    (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
+                    (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
+                ],
+            ]:
+                for backend_name, value in comb:
+                    row[backend_name] = ppv((backend_name, value))
+
+                reason_msg = io.StringIO()
+                self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+                self.assertEqual(
+                    reason_msg.getvalue(), "clang-cuda does not support the SYCL backend."
                 )
-            )
-            self.assertEqual(
-                reason_msg1.getvalue(), "clang-cuda does not support the SYCL backend."
-            )
 
 
 class TestClangCUDABackendFilter(unittest.TestCase):

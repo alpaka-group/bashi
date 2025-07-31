@@ -94,17 +94,18 @@ def _remove_enabled_sycl_backend_for_hipcc(
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
-    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-        remove_parameter_value_pairs(
-            parameter_value_pairs,
-            removed_parameter_value_pairs,
-            parameter1=compiler_type,
-            value_name1=HIPCC,
-            value_version1=ANY_VERSION,
-            parameter2=ALPAKA_ACC_SYCL_ENABLE,
-            value_name2=ALPAKA_ACC_SYCL_ENABLE,
-            value_version2=ON,
-        )
+    for sycl_backend in ONE_API_BACKENDS:
+        for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
+            remove_parameter_value_pairs(
+                parameter_value_pairs,
+                removed_parameter_value_pairs,
+                parameter1=compiler_type,
+                value_name1=HIPCC,
+                value_version1=ANY_VERSION,
+                parameter2=sycl_backend,
+                value_name2=sycl_backend,
+                value_version2=ON,
+            )
 
 
 def _remove_enabled_cuda_backend_for_hipcc(

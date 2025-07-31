@@ -43,7 +43,7 @@ def get_expected_bashi_parameter_value_pairs(
         param_val_pair_list, removed_param_val_pair_list
     )
     _remove_unsupported_compiler_for_sycl_backend(param_val_pair_list, removed_param_val_pair_list)
-    _remove_disabled_sycl_backend_for_icpx(param_val_pair_list, removed_param_val_pair_list)
+    _remove_more_than_one_enabled_oneapi_backend(param_val_pair_list, removed_param_val_pair_list)
     _remove_enabled_hip_backend_for_icpx(param_val_pair_list, removed_param_val_pair_list)
     _remove_enabled_cuda_backend_for_icpx(param_val_pair_list, removed_param_val_pair_list)
     _remove_enabled_cuda_backend_for_enabled_sycl_backend(
@@ -128,16 +128,17 @@ def _remove_enabled_hip_and_sycl_backend_at_same_time(
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
-    remove_parameter_value_pairs(
-        parameter_value_pairs,
-        removed_parameter_value_pairs,
-        parameter1=ALPAKA_ACC_GPU_HIP_ENABLE,
-        value_name1=ALPAKA_ACC_GPU_HIP_ENABLE,
-        value_version1=ON,
-        parameter2=ALPAKA_ACC_SYCL_ENABLE,
-        value_name2=ALPAKA_ACC_SYCL_ENABLE,
-        value_version2=ON,
-    )
+    for sycl_backend in ONE_API_BACKENDS:
+        remove_parameter_value_pairs(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            parameter1=ALPAKA_ACC_GPU_HIP_ENABLE,
+            value_name1=ALPAKA_ACC_GPU_HIP_ENABLE,
+            value_version1=ON,
+            parameter2=sycl_backend,
+            value_name2=sycl_backend,
+            value_version2=ON,
+        )
 
 
 def _remove_enabled_cuda_backend_for_enabled_hip_backend(
@@ -175,38 +176,38 @@ def _remove_unsupported_compiler_for_sycl_backend(
     for compiler_name in COMPILERS:
         if compiler_name != ICPX:
             for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-                remove_parameter_value_pairs(
-                    parameter_value_pairs,
-                    removed_parameter_value_pairs,
-                    parameter1=compiler_type,
-                    value_name1=compiler_name,
-                    value_version1=ANY_VERSION,
-                    parameter2=ALPAKA_ACC_SYCL_ENABLE,
-                    value_name2=ALPAKA_ACC_SYCL_ENABLE,
-                    value_version2=ON,
-                )
+                for sycl_backend in ONE_API_BACKENDS:
+                    remove_parameter_value_pairs(
+                        parameter_value_pairs,
+                        removed_parameter_value_pairs,
+                        parameter1=compiler_type,
+                        value_name1=compiler_name,
+                        value_version1=ANY_VERSION,
+                        parameter2=sycl_backend,
+                        value_name2=sycl_backend,
+                        value_version2=ON,
+                    )
 
 
-def _remove_disabled_sycl_backend_for_icpx(
+def _remove_more_than_one_enabled_oneapi_backend(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
 ):
-    """Remove all pairs, where the ICPX is the compiler and the SYCL backend is disabled.
+    """Remove all pairs, where more than one OneAPI backend is enabled.
 
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
-    for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-        remove_parameter_value_pairs(
-            parameter_value_pairs,
-            removed_parameter_value_pairs,
-            parameter1=compiler_type,
-            value_name1=ICPX,
-            value_version1=ANY_VERSION,
-            parameter2=ALPAKA_ACC_SYCL_ENABLE,
-            value_name2=ALPAKA_ACC_SYCL_ENABLE,
-            value_version2=OFF,
-        )
+    for sycl_backend in ONE_API_BACKENDS:
+        for other_sycl_backend in set(ONE_API_BACKENDS) - set([sycl_backend]):
+            remove_parameter_value_pairs(
+                parameter_value_pairs,
+                removed_parameter_value_pairs,
+                parameter1=sycl_backend,
+                value_version1=ON,
+                parameter2=other_sycl_backend,
+                value_version2=ON,
+            )
 
 
 def _remove_enabled_hip_backend_for_icpx(
@@ -262,18 +263,19 @@ def _remove_enabled_cuda_backend_for_enabled_sycl_backend(
     parameter_value_pairs (List[ParameterValuePair]): parameter-value-pair list
     removed_parameter_value_pairs (List[ParameterValuePair): list with removed parameter-value-pairs
     """
-    remove_parameter_value_pairs_ranges(
-        parameter_value_pairs,
-        removed_parameter_value_pairs,
-        parameter1=ALPAKA_ACC_SYCL_ENABLE,
-        value_name1=ALPAKA_ACC_SYCL_ENABLE,
-        value_min_version1=ON,
-        value_max_version1=ON,
-        parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
-        value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
-        value_min_version2=OFF,
-        value_min_version2_inclusive=False,
-    )
+    for sycl_backend in ONE_API_BACKENDS:
+        remove_parameter_value_pairs_ranges(
+            parameter_value_pairs,
+            removed_parameter_value_pairs,
+            parameter1=sycl_backend,
+            value_name1=sycl_backend,
+            value_min_version1=ON,
+            value_max_version1=ON,
+            parameter2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+            value_name2=ALPAKA_ACC_GPU_CUDA_ENABLE,
+            value_min_version2=OFF,
+            value_min_version2_inclusive=False,
+        )
 
 
 def _remove_unsupported_gcc_versions_for_ubuntu2004(

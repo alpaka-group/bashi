@@ -287,9 +287,10 @@ class CompilerFilter(FilterBase):
 
             # Rule: c17
             # related to rule b15
-            if ALPAKA_ACC_SYCL_ENABLE in row and row[ALPAKA_ACC_SYCL_ENABLE].version != OFF_VER:
-                self.reason("nvcc does not support the SYCL backend.")
-                return False
+            for one_api_backend in ONE_API_BACKENDS:
+                if one_api_backend in row and row[one_api_backend].version != OFF_VER:
+                    self.reason("nvcc does not support the SYCL backend.")
+                    return False
 
         # Rule: c8
         # related to rule b11
@@ -320,9 +321,10 @@ class CompilerFilter(FilterBase):
 
                 # Rule: c10
                 # related to rule b2
-                if ALPAKA_ACC_SYCL_ENABLE in row and row[ALPAKA_ACC_SYCL_ENABLE].version != OFF_VER:
-                    self.reason("hipcc does not support the SYCL backend.")
-                    return False
+                for one_api_backend in ONE_API_BACKENDS:
+                    if one_api_backend in row and row[one_api_backend].version != OFF_VER:
+                        self.reason("hipcc does not support the SYCL backend.")
+                        return False
 
                 # Rule: c11
                 # related to rule b2
@@ -336,7 +338,10 @@ class CompilerFilter(FilterBase):
             if compiler in row and row[compiler].name == ICPX:
                 # Rule: c12
                 # related to rule b4
-                if ALPAKA_ACC_SYCL_ENABLE in row and row[ALPAKA_ACC_SYCL_ENABLE].version == OFF_VER:
+                if all(
+                    one_api_backend in row and row[one_api_backend].version == OFF_VER
+                    for one_api_backend in ONE_API_BACKENDS
+                ):
                     self.reason("icpx requires an enabled SYCL backend.")
                     return False
 
@@ -392,7 +397,7 @@ class CompilerFilter(FilterBase):
                                     return False
                                 break
 
-                # Rule: c17
+                # Rule: c30
                 # related to rule b14
                 if (
                     ALPAKA_ACC_GPU_HIP_ENABLE in row
@@ -403,9 +408,10 @@ class CompilerFilter(FilterBase):
 
                 # Rule: c18
                 # related to rule b15
-                if ALPAKA_ACC_SYCL_ENABLE in row and row[ALPAKA_ACC_SYCL_ENABLE].version != OFF_VER:
-                    self.reason("clang-cuda does not support the SYCL backend.")
-                    return False
+                for one_api_backend in ONE_API_BACKENDS:
+                    if one_api_backend in row and row[one_api_backend].version != OFF_VER:
+                        self.reason("clang-cuda does not support the SYCL backend.")
+                        return False
 
             if CXX_STANDARD in row:
                 for compiler in (HOST_COMPILER, DEVICE_COMPILER):

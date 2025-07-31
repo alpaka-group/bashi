@@ -9,6 +9,7 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.versions import VERSIONS, NvccHostSupport
 from bashi.filter_compiler import compiler_filter_typechecked
 from bashi.filter_backend import backend_filter_typechecked
+from bashi.types import ParameterValueTuple
 
 
 class TestNoNvccHostCompiler(unittest.TestCase):
@@ -863,7 +864,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((GCC, 7)),
                             DEVICE_COMPILER: ppv((NVCC, version)),
                             BOOST: ppv((BOOST, "1.78.0")),
-                            ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                            ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
                         }
                     ),
@@ -900,17 +901,62 @@ class TestNvccCompilerFilter(unittest.TestCase):
         )
         self.assertEqual(reason_msg1.getvalue(), "nvcc does not support the HIP backend.")
 
-    def test_nvcc_requires_disabled_sycl_backend_c17(self):
-        self.assertTrue(
-            compiler_filter_typechecked(
-                OD(
-                    {
-                        DEVICE_COMPILER: ppv((NVCC, 11.2)),
-                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
-                    }
-                ),
-            )
-        )
+    def test_valid_nvcc_requires_disabled_sycl_backend_c17(self):
+        for comb in [
+            [ALPAKA_ACC_ONEAPI_CPU_ENABLE],
+            [ALPAKA_ACC_ONEAPI_GPU_ENABLE],
+            [ALPAKA_ACC_ONEAPI_FPGA_ENABLE],
+            [ALPAKA_ACC_ONEAPI_CPU_ENABLE, ALPAKA_ACC_ONEAPI_GPU_ENABLE],
+            [ALPAKA_ACC_ONEAPI_CPU_ENABLE, ALPAKA_ACC_ONEAPI_FPGA_ENABLE],
+            [ALPAKA_ACC_ONEAPI_GPU_ENABLE, ALPAKA_ACC_ONEAPI_FPGA_ENABLE],
+            [
+                ALPAKA_ACC_ONEAPI_CPU_ENABLE,
+                ALPAKA_ACC_ONEAPI_GPU_ENABLE,
+                ALPAKA_ACC_ONEAPI_FPGA_ENABLE,
+            ],
+        ]:
+            row: ParameterValueTuple = OD({DEVICE_COMPILER: ppv((NVCC, 11.2))})
+            for backend_name in comb:
+                row[backend_name] = ppv((backend_name, OFF))
+            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+
+    def test_invalid_nvcc_requires_disabled_sycl_backend_c17(self):
+        for comb in [
+            [(ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)],
+            [(ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)],
+            [(ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)],
+            [(ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)],
+            [(ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF), (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)],
+            [(ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)],
+            [
+                (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON),
+                (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
+                (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, OFF),
+            ],
+            [
+                (ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF),
+                (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
+                (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
+            ],
+            [
+                (ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF),
+                (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
+                (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
+            ],
+            [
+                (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON),
+                (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
+                (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
+            ],
+        ]:
+            reason_msg = io.StringIO()
+
+            row: ParameterValueTuple = OD({DEVICE_COMPILER: ppv((NVCC, 11.2))})
+            for backend_name, value in comb:
+                row[backend_name] = ppv((backend_name, value))
+            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+
+            self.assertEqual(reason_msg.getvalue(), "nvcc does not support the SYCL backend.")
 
         reason_msg1 = io.StringIO()
         self.assertFalse(
@@ -918,7 +964,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                 OD(
                     {
                         DEVICE_COMPILER: ppv((NVCC, 11.3)),
-                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                     }
                 ),
                 reason_msg1,
@@ -1339,7 +1385,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                 OD(
                     {
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
-                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                     }
                 ),
             )
@@ -1350,7 +1396,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                 OD(
                     {
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
-                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                        ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF)),
                     }
                 ),
             )
@@ -1361,7 +1407,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                 OD(
                     {
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
-                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                        ALPAKA_ACC_ONEAPI_FPGA_ENABLE: ppv((ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
                     }
                 ),
             )
@@ -1373,7 +1419,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                 OD(
                     {
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.7)),
-                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                     }
                 ),
                 reason_msg1,
@@ -1388,7 +1434,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                 OD(
                     {
                         CMAKE: ppv((CMAKE, 3.18)),
-                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, OFF)),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                         BOOST: ppv((BOOST, "1.78.0")),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 10.2)),
                     }
@@ -1402,7 +1448,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                 OD(
                     {
                         CMAKE: ppv((CMAKE, 3.18)),
-                        ALPAKA_ACC_SYCL_ENABLE: ppv((ALPAKA_ACC_SYCL_ENABLE, ON)),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                         BOOST: ppv((BOOST, "1.78.0")),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.3)),
                     }
