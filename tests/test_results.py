@@ -23,7 +23,7 @@ from bashi.results import (
     _remove_enabled_hip_and_sycl_backend_at_same_time,
     _remove_enabled_cuda_backend_for_enabled_hip_backend,
     _remove_unsupported_compiler_for_sycl_backend,
-    _remove_disabled_sycl_backend_for_icpx,
+    _remove_more_than_one_enabled_oneapi_backend,
     _remove_enabled_hip_backend_for_icpx,
     _remove_enabled_cuda_backend_for_icpx,
     _remove_enabled_cuda_backend_for_enabled_sycl_backend,
@@ -981,50 +981,62 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
                 OD(
                     {
                         HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (HIPCC, 4.2),
+                        ALPAKA_ACC_ONEAPI_CPU_ENABLE: (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         DEVICE_COMPILER: (HIPCC, 4.3),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
+                    }
+                ),
+                OD(
+                    {
+                        DEVICE_COMPILER: (HIPCC, 4.4),
+                        ALPAKA_ACC_ONEAPI_FPGA_ENABLE: (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         HOST_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                     }
                 ),
                 OD(
                     {
                         DEVICE_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         DEVICE_COMPILER: (HIPCC, 6.0),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                     }
                 ),
                 OD(
                     {
                         DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                     }
                 ),
                 OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
                 OD(
                     {
                         DEVICE_COMPILER: (HIPCC, 5.7),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
             ]
@@ -1035,37 +1047,37 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
                 OD(
                     {
                         HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                     }
                 ),
                 OD(
                     {
                         HOST_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                     }
                 ),
                 OD(
                     {
                         DEVICE_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         DEVICE_COMPILER: (HIPCC, 6.0),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                     }
                 ),
                 OD(
                     {
                         DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                     }
                 ),
                 OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
@@ -1085,7 +1097,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
                 OD(
                     {
                         HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD(
@@ -1097,25 +1109,37 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
                 OD(
                     {
                         ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                     }
                 ),
                 OD(
                     {
                         ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                     }
                 ),
                 OD(
                     {
                         ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_CPU_ENABLE: (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_FPGA_ENABLE: (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
@@ -1127,7 +1151,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
                 OD(
                     {
                         HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD(
@@ -1139,19 +1163,19 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
                 OD(
                     {
                         ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                     }
                 ),
                 OD(
                     {
                         ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                     }
                 ),
                 OD(
                     {
                         ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
@@ -1333,37 +1357,37 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
                 OD(
                     {
                         HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_CPU_ENABLE: (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         HOST_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         DEVICE_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         DEVICE_COMPILER: (ICPX, "2024.2.0"),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_FPGA_ENABLE: (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
                     }
                 ),
                 OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
@@ -1375,13 +1399,13 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
                 OD(
                     {
                         HOST_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD(
                     {
                         DEVICE_COMPILER: (ICPX, "2024.2.0"),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                     }
                 ),
                 OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
@@ -1390,86 +1414,6 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
 
         default_remove_test(
             _remove_unsupported_compiler_for_sycl_backend,
-            test_param_value_pairs,
-            expected_results,
-            self,
-        )
-
-    def test_remove_disabled_sycl_backend_for_icpx(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
-            [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2024.2.0"),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-            ]
-        )
-
-        expected_results = parse_expected_val_pairs(
-            [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-            ]
-        )
-
-        default_remove_test(
-            _remove_disabled_sycl_backend_for_icpx,
             test_param_value_pairs,
             expected_results,
             self,
@@ -1694,25 +1638,37 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
             [
                 OD(
                     {
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
                     }
                 ),
                 OD(
                     {
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
                     }
                 ),
                 OD(
                     {
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_CPU_ENABLE: (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
                     }
                 ),
                 OD(
                     {
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_FPGA_ENABLE: (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 13.2),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
+                    }
+                ),
+                OD(
+                    {
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
                     }
                 ),
@@ -1724,13 +1680,13 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
             [
                 OD(
                     {
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, ON),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
                     }
                 ),
                 OD(
                     {
-                        ALPAKA_ACC_SYCL_ENABLE: (ALPAKA_ACC_SYCL_ENABLE, OFF),
+                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
                     }
                 ),
@@ -1740,6 +1696,35 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
 
         default_remove_test(
             _remove_enabled_cuda_backend_for_enabled_sycl_backend,
+            test_param_value_pairs,
+            expected_results,
+            self,
+        )
+
+    def test_remove_more_than_one_enabled_oneapi_backend(self):
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+            [
+                ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
+                ((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF), (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
+                ((ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON), (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
+                ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)),
+                ((ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+            ]
+        )
+
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+            [
+                ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
+                ((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF), (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
+            ]
+        )
+
+        default_remove_test(
+            _remove_more_than_one_enabled_oneapi_backend,
             test_param_value_pairs,
             expected_results,
             self,

@@ -35,9 +35,11 @@ from bashi.types import (
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.versions import (
     get_parameter_value_matrix,
+    NvccHostSupport,
     VERSIONS,
     NVCC_GCC_MAX_VERSION,
     NVCC_CLANG_MAX_VERSION,
+    NVCC_CXX_SUPPORT_VERSION,
 )
 from bashi.filter import FilterBase
 
@@ -71,14 +73,17 @@ def verify(
         before_number_of_expected_pairs + before_number_of_unexpected_pairs
     )
 
+    # the OneAPI CPU and FPGA backend behaves like a GPU backend
     gpu_backends = set(
         [
             ALPAKA_ACC_GPU_CUDA_ENABLE,
             ALPAKA_ACC_GPU_HIP_ENABLE,
-            ALPAKA_ACC_SYCL_ENABLE,
+            ALPAKA_ACC_ONEAPI_CPU_ENABLE,
+            ALPAKA_ACC_ONEAPI_GPU_ENABLE,
+            ALPAKA_ACC_ONEAPI_FPGA_ENABLE,
         ]
     )
-    cpu_backends = set(BACKENDS) - gpu_backends
+    cpu_backends = set(CPU_BACKENDS)
     gpu_compilers = set([NVCC, CLANG_CUDA, HIPCC, ICPX])
     cpu_compilers = set(COMPILERS) - gpu_compilers
 
@@ -195,9 +200,7 @@ def verify(
         Returns:
             bool: True if all cpu backends have the expected state
         """
-        cpu_backends = set(BACKENDS) - set(
-            [ALPAKA_ACC_GPU_CUDA_ENABLE, ALPAKA_ACC_GPU_HIP_ENABLE, ALPAKA_ACC_SYCL_ENABLE]
-        )
+        cpu_backends = set(CPU_BACKENDS)
 
         def version_to_string(version: pkv.Version) -> str:
             if version == ON_VER:
@@ -236,7 +239,9 @@ def verify(
             if not (
                 comb[ALPAKA_ACC_GPU_CUDA_ENABLE].version == OFF_VER
                 and comb[ALPAKA_ACC_GPU_HIP_ENABLE].version == OFF_VER
-                and comb[ALPAKA_ACC_SYCL_ENABLE].version == OFF_VER
+                and comb[ALPAKA_ACC_ONEAPI_CPU_ENABLE].version == OFF_VER
+                and comb[ALPAKA_ACC_ONEAPI_GPU_ENABLE].version == OFF_VER
+                and comb[ALPAKA_ACC_ONEAPI_FPGA_ENABLE].version == OFF_VER
             ):
                 print(f"ERROR: gpu backend is enabled for cpu device compiler:\n  {comb}\n")
         else:
@@ -245,7 +250,6 @@ def verify(
                 (NVCC, ALPAKA_ACC_GPU_CUDA_ENABLE),
                 (CLANG_CUDA, ALPAKA_ACC_GPU_CUDA_ENABLE),
                 (HIPCC, ALPAKA_ACC_GPU_HIP_ENABLE),
-                (ICPX, ALPAKA_ACC_SYCL_ENABLE),
             ):
                 if comb[DEVICE_COMPILER].name == device_compiler:
                     if comb[backend_on].version == OFF_VER:
@@ -278,6 +282,18 @@ def verify(
             f"   unexpected pairs: {after_number_of_unexpected_pairs}\n"
         )
         return False
+
+    for comb in combination_list:
+        if comb[DEVICE_COMPILER].name == ICPX:
+            for one_api_backend in ONE_API_BACKENDS:
+                if comb[one_api_backend].version == ON_VER and not all(
+                    comb[backend].version == OFF_VER
+                    for backend in set(ONE_API_BACKENDS) - set([one_api_backend])
+                ):
+                    print(
+                        f"If the device compiler is ICPX, only one OneAPI must be enabled.\n{comb}"
+                    )
+                    all_right = False
 
     return (
         check_parameter_value_pair_in_combination_list(combination_list, expected_param_val_tuple)
@@ -315,45 +331,119 @@ class CustomFilter(FilterBase):
         gpu_compilers = set([NVCC, CLANG_CUDA, HIPCC, ICPX])
         cpu_compilers = set(COMPILERS) - gpu_compilers
 
+        # the OneAPI CPU and FPGA backend behaves like a GPU backend
         gpu_backends = set(
             [
                 ALPAKA_ACC_GPU_CUDA_ENABLE,
                 ALPAKA_ACC_GPU_HIP_ENABLE,
-                ALPAKA_ACC_SYCL_ENABLE,
+                ALPAKA_ACC_ONEAPI_CPU_ENABLE,
+                ALPAKA_ACC_ONEAPI_GPU_ENABLE,
+                ALPAKA_ACC_ONEAPI_FPGA_ENABLE,
             ]
         )
-        cpu_backends = set(BACKENDS) - gpu_backends
+        cpu_backends = set(CPU_BACKENDS)
 
-        # cpu backend cannot be enabled if gpu compiler is used
         for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
             if compiler_type in row and row[compiler_type].name in gpu_compilers:
                 for cpu_backend in cpu_backends:
                     if cpu_backend in row and row[cpu_backend].version == ON_VER:
+                        self.reason(
+                            f"Enabled CPU backend {cpu_backend} and GPU {compiler_type} "
+                            f"{row[compiler_type].name} cannot used together."
+                        )
                         return False
 
         if DEVICE_COMPILER in row:
             for cpu_compiler in cpu_compilers:
                 if row[DEVICE_COMPILER].name == cpu_compiler:
-                    # if the device compiler is a cpu compiler, all cpu backends needs to be enabled
                     for cpu_backend in cpu_backends:
                         if cpu_backend in row and row[cpu_backend].version == OFF_VER:
+                            self.reason(
+                                f"The backend {cpu_backend} cannot be disabled if device compiler "
+                                f"{cpu_compiler} is used"
+                            )
                             return False
-                    # if the device compiler is a cpu compiler, all gpu backends needs to be
-                    # disabled
                     for gpu_backend in gpu_backends:
                         if gpu_backend in row and row[gpu_backend].version != OFF_VER:
+                            self.reason(
+                                f"The backend {gpu_backend} cannot be enabled if device compiler "
+                                f"{cpu_compiler} is used"
+                            )
+                            return False
+
+        # pylint: disable=too-many-nested-blocks
+        if HOST_COMPILER in row and row[HOST_COMPILER].name in (GCC, CLANG):
+            if ALPAKA_ACC_GPU_CUDA_ENABLE in row:
+                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version == OFF_VER:
+                    for cpu_backend in cpu_backends:
+                        if cpu_backend in row and row[cpu_backend].version == OFF_VER:
+                            self.reason(
+                                "If the host compiler is {row[HOST_COMPILER].name} and "
+                                "the CUDA backend is disable, all CPU backends needs to be enabled."
+                                f" {cpu_backend} is disabled."
+                            )
+                            return False
+                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version == ON_VER:
+                    for cpu_backend in cpu_backends:
+                        if cpu_backend in row and row[cpu_backend].version == ON_VER:
+                            self.reason(
+                                "If the host compiler is {row[HOST_COMPILER].name} and "
+                                "the CUDA backend is disable, all CPU backends needs to be enabled."
+                                f" {cpu_backend} is enabled."
+                            )
+                            return False
+
+            if (
+                CXX_STANDARD in row
+                and not ALPAKA_ACC_GPU_CUDA_ENABLE in row
+                and not (
+                    DEVICE_COMPILER in row
+                    or (DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC)
+                )
+            ):
+                for cpu_backend in cpu_backends:
+                    if cpu_backend in row and row[cpu_backend].version == OFF_VER:
+                        nvcc_host_compiler_max_version: List[NvccHostSupport] = []
+                        if row[HOST_COMPILER].name == GCC:
+                            nvcc_host_compiler_max_version = sorted(NVCC_GCC_MAX_VERSION)
+                        else:
+                            nvcc_host_compiler_max_version = sorted(NVCC_CLANG_MAX_VERSION)
+                        max_supported_cuda_version = OFF_VER
+                        for nvcc_host_ver in nvcc_host_compiler_max_version:
+                            if row[HOST_COMPILER].version <= nvcc_host_ver.host:
+                                max_supported_cuda_version = nvcc_host_ver.nvcc
+                                break
+                        max_support_cxx_ver = OFF_VER
+                        for nvcc_cxx_support in NVCC_CXX_SUPPORT_VERSION:
+                            if max_supported_cuda_version >= nvcc_cxx_support.compiler:
+                                max_support_cxx_ver = nvcc_cxx_support.cxx
+                                break
+                        if row[CXX_STANDARD].version > max_support_cxx_ver:
+                            self.reason(
+                                "At least one CPU backend is disabled, therefore host compiler "
+                                f"{row[HOST_COMPILER].name}-{row[HOST_COMPILER].version} needs to "
+                                "be used together with NVCC. The possible maximum support NVCC "
+                                f"version is {max_supported_cuda_version} which supports only up "
+                                f"to C++{max_support_cxx_ver}."
+                            )
                             return False
 
         for cpu_backend in cpu_backends:
-            # if a single cpu backend is enabled all other cpu backends needs also to be enabled
             if cpu_backend in row and row[cpu_backend].version == ON_VER:
                 for cpu_backend2 in cpu_backends:
                     if cpu_backend != cpu_backend2:
                         if cpu_backend2 in row and row[cpu_backend2].version == OFF_VER:
+                            self.reason(
+                                f"All CPU backends needs to be enabled. {cpu_backend} is "
+                                f"enabled, therefore {cpu_backend2} needs to be enabled too."
+                            )
                             return False
-                # if a single cpu backend is enabled all other gpu backends needs to be disabled
                 for gpu_backend in gpu_backends:
                     if gpu_backend in row and row[gpu_backend].version != OFF_VER:
+                        self.reason(
+                            "If a single CPU backend is enabled all other gpu backends needs to be "
+                            "disabled."
+                        )
                         return False
 
         if UBUNTU in row and RT_AVAILABLE_CUDA_SDK_UBUNTU_VER in self.runtime_infos:
@@ -423,7 +513,7 @@ def create_yaml(combination_list: CombinationList):
         job_yaml += "  script:\n"
         job_yaml += "    - ./run_tests.sh\n"
         job_yaml += "  tags:\n"
-        if comb[ALPAKA_ACC_SYCL_ENABLE].version == ON_VER:
+        if comb[ALPAKA_ACC_ONEAPI_GPU_ENABLE].version == ON_VER:
             job_yaml += "    - intel-gpu-runner\n"
         elif comb[ALPAKA_ACC_GPU_HIP_ENABLE].version == ON_VER:
             job_yaml += "    - amd-gpu-runner\n"
