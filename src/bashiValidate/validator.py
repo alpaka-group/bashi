@@ -1,6 +1,7 @@
 """Provide class to build bashi based validator app."""
 
 import io
+import sys
 from typing import Dict, List
 from collections import OrderedDict
 import packaging.version
@@ -21,8 +22,14 @@ class Validator:
     the filter stages.
     """
 
-    def __init__(self: "Validator"):
-        """Setup default configuration for bashi filter rules"""
+    def __init__(self, args: List[str] | None = None, silent: bool = False):
+        """Setup default configuration for bashi filter rules.
+
+        Args:
+            args (List[str] | None, optional): Set command line arguments manually. Defaults to
+                None.
+            silent (bool, optional): If True, disable terminal output. Defaults to False.
+        """
         self.parser, self.argument_alias, self.param_order = get_validator_args()
         self.filter_stages: List[FilterBase] = [
             CompilerFilter(),
@@ -30,6 +37,11 @@ class Validator:
             SoftwareDependencyFilter(),
         ]
         self.known_version: Dict[str, List[packaging.version.Version]] = {}
+        if args:
+            self.args = args
+        else:
+            self.args = sys.argv[1:]
+        self.silent = silent
 
     @typechecked
     def add_software_version_parameter(self, name: str, help_text: str, short_name: str = ""):
@@ -70,6 +82,16 @@ class Validator:
         self.filter_stages.append(custom_filter)
 
     @typechecked
+    def _print(self, msg: str):
+        """Print message only if silent flag is false.
+
+        Args:
+            msg (str): Message to be printed.
+        """
+        if not self.silent:
+            print(msg)
+
+    @typechecked
     def _check_single_filter(
         self,
         filter_func: FilterBase,
@@ -93,12 +115,12 @@ class Validator:
         filter_func.output = io.StringIO()
 
         if filter_func(row):
-            print(cs(f"{filter_name}() returns True", Color.GREEN))
+            self._print(cs(f"{filter_name}() returns True", Color.GREEN))
             return True
 
-        print(cs(f"{filter_name}() returns False", Color.RED))
+        self._print(cs(f"{filter_name}() returns False", Color.RED))
         if filter_func.output.getvalue() != "":
-            print("  " + filter_func.output.getvalue())
+            self._print("  " + filter_func.output.getvalue())
         return False
 
     @typechecked
@@ -129,7 +151,7 @@ class Validator:
         Returns:
             bool: Return True if all filter stages are passed
         """
-        args = self.parser.parse_args()
+        args = self.parser.parse_args(args=self.args)
 
         row: ParameterValueTuple = OrderedDict()
 
@@ -158,7 +180,7 @@ class Validator:
                     raise e
 
             if not known_software:
-                print(
+                self._print(
                     cs(
                         f"WARNING: {val_name} {val_version} is not officially supported.",
                         Color.YELLOW,
