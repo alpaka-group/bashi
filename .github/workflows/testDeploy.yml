@@ -41,3 +41,5 @@ jobs:
               run: python example/example.py
             - name: compare result of example runs (should be equal)
               run: diff example/job.yaml example/first.yaml
+            - name: run validator example
+              run: python example/validate.py --SoftwareA=2.1
