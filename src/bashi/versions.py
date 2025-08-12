@@ -10,6 +10,7 @@ from packaging.version import Version
 from packaging.specifiers import SpecifierSet
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ValueName, ValueVersion, ParameterValue, ParameterValueMatrix
+from bashi.exceptions import BashiUnknownVersion
 
 
 class VersionSupportBase:
@@ -523,7 +524,7 @@ def is_supported_version(name: ValueName, version: ValueVersion) -> bool:
     known_names: List[ValueName] = list(VERSIONS.keys()) + [CLANG_CUDA] + BACKENDS
 
     if name not in known_names:
-        raise ValueError(f"Unknown software name: {name}")
+        raise BashiUnknownVersion(f"Unknown software name: {name}")
 
     local_versions = copy.deepcopy(VERSIONS)
 

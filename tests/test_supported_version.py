@@ -4,6 +4,7 @@ from typing import List, Union
 import packaging.version as pkv
 from bashi.versions import VERSIONS, is_supported_version
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from bashi.exceptions import BashiUnknownVersion
 
 
 def parse_to_version(input_list: List[Union[int, float, str]]) -> List[pkv.Version]:
@@ -41,7 +42,7 @@ class TestParameterValueGenerator(unittest.TestCase):
 
         # unknown compiler should throw an error
         self.assertRaises(
-            ValueError, is_supported_version, "fancy-cpp-compiler", pkv.parse(str(12))
+            BashiUnknownVersion, is_supported_version, "fancy-cpp-compiler", pkv.parse(str(12))
         )
 
     def test_backend_versions(self):
@@ -71,7 +72,9 @@ class TestParameterValueGenerator(unittest.TestCase):
         self.assertTrue(is_supported_version(ALPAKA_ACC_GPU_CUDA_ENABLE, pkv.parse(str(12.1))))
 
         # unknown backend should throw an error
-        self.assertRaises(ValueError, is_supported_version, "alpaka_Backend_esoteric_acc", OFF_VER)
+        self.assertRaises(
+            BashiUnknownVersion, is_supported_version, "alpaka_Backend_esoteric_acc", OFF_VER
+        )
 
     def test_software_versions(self):
         for name, version in [
