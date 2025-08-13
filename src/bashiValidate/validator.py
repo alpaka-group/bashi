@@ -2,7 +2,7 @@
 
 import io
 import sys
-from typing import Dict, List
+from typing import Dict, List, Callable
 from collections import OrderedDict
 import packaging.version
 from typeguard import typechecked
@@ -13,10 +13,13 @@ from bashi.filter_compiler import CompilerFilter
 from bashi.filter_backend import BackendFilter
 from bashi.filter_software_dependency import SoftwareDependencyFilter
 from bashi.exceptions import BashiUnknownVersion
+from bashi.versions import VERSIONS, get_parameter_value_matrix
+from bashi.generator import get_runtime_infos
 from .arguments import get_validator_args, ArgumentAlias, VersionCheck
 from .utils import cs, Color
 
 
+# pylint: disable=too-many-instance-attributes
 class Validator:
     """Constructs a parameter-value-tuple from command line arguments and checks if it passes
     the filter stages.
@@ -42,6 +45,10 @@ class Validator:
         else:
             self.args = sys.argv[1:]
         self.silent = silent
+
+        # list of software names, where the available versions can be set via CLI arguments
+        self.software_version_names = list(VERSIONS.keys())
+        self.runtime_infos: Dict[str, Callable[..., bool]] = {}
 
     @typechecked
     def add_software_version_parameter(self, name: str, help_text: str, short_name: str = ""):
@@ -80,6 +87,16 @@ class Validator:
             custom_filter (FilterBase): Custom filter
         """
         self.filter_stages.append(custom_filter)
+
+    def add_custom_runtime_info_function(self, name: str, func: Callable[..., bool]):
+        """Add custom runtime info function.
+
+        Args:
+            name (str): Name of the function
+            func (Callable[..., bool]): The function itself. The arguments can be freely chosen. It
+                returns True, if the input parameter passes the filter.
+        """
+        self.runtime_infos[name] = func
 
     @typechecked
     def _print(self, msg: str):
@@ -144,6 +161,7 @@ class Validator:
 
         return all_true == len(self.filter_stages)
 
+    # pylint: disable=too-many-branches
     def validate(self) -> bool:
         """Construct parameter-value-tuple from the application arguments and check if it passes
         the bashi and custom filter.
@@ -152,6 +170,21 @@ class Validator:
             bool: Return True if all filter stages are passed
         """
         args = self.parser.parse_args(args=self.args)
+
+        sw_versions: Dict[str, list[str | float | int]] = {}
+        # read software versions from CLI arguments
+        for sw_name in self.software_version_names:
+            # workaround for Python 3.11 (maybe also other Python versions)
+            argument_name = "ver_" + sw_name.replace("-", "_")
+            sw_versions[sw_name] = getattr(args, argument_name)
+
+        # merge custom runtime info with bashi runtime info functions
+        self.runtime_infos = self.runtime_infos | get_runtime_infos(
+            get_parameter_value_matrix(software_versions=sw_versions)
+        )
+
+        for filter_stage in self.filter_stages:
+            filter_stage.runtime_infos = self.runtime_infos
 
         row: ParameterValueTuple = OrderedDict()
 
