@@ -20,8 +20,8 @@ from bashi.globals import (
     OFF,
 )
 from bashi.utils import PARAMETER_SHORT_NAME
+from bashi.versions import VERSIONS
 from bashiValidate.utils import exit_error
-
 
 ArgumentAlias = NamedTuple("ArgumentAlias", [("alias", List[str]), ("parameter", Parameter)])
 
@@ -161,23 +161,27 @@ def get_validator_args() -> Tuple[argparse.ArgumentParser, Dict[str, ArgumentAli
 
         return argument_alias
 
-    parser.add_argument(
+    compiler_arg_group = parser.add_argument_group("Compiler")
+
+    compiler_arg_group.add_argument(
         *add_param_alias("host-compiler", args_alias),
         type=str,
         action=CompilerVersionCheck,
         help="Define host compiler. Shape needs to be name@version. " "For example gcc@10",
     )
 
-    parser.add_argument(
+    compiler_arg_group.add_argument(
         *add_param_alias("device-compiler", args_alias),
         type=str,
         action=CompilerVersionCheck,
         help="Define device compiler. Shape needs to be name@version. " "For example nvcc@11.3",
     )
 
+    backends_arg_group = parser.add_argument_group("Backends")
+
     for backend in BACKENDS:
         if backend != ALPAKA_ACC_GPU_CUDA_ENABLE:
-            parser.add_argument(
+            backends_arg_group.add_argument(
                 *add_param_alias(backend, args_alias),
                 type=str,
                 action=VersionCheck,
@@ -185,12 +189,14 @@ def get_validator_args() -> Tuple[argparse.ArgumentParser, Dict[str, ArgumentAli
                 help=f"Set backend {backend} as enabled or disabled.",
             )
         else:
-            parser.add_argument(
+            backends_arg_group.add_argument(
                 *add_param_alias(backend, args_alias),
                 type=str,
                 action=VersionCheck,
                 help=f"Set backend {backend} to disabled (OFF) or a specific CUDA SDK version.",
             )
+
+    other_sw_arg_group = parser.add_argument_group("Other Combination Parameter")
 
     for argument, help_text in (
         ("ubuntu", "Ubuntu version."),
@@ -198,11 +204,23 @@ def get_validator_args() -> Tuple[argparse.ArgumentParser, Dict[str, ArgumentAli
         ("boost", "Set Boost version."),
         ("cxx", "C++ version."),
     ):
-        parser.add_argument(
+        other_sw_arg_group.add_argument(
             *add_param_alias(argument, args_alias),
             type=str,
             action=VersionCheck,
             help=help_text,
+        )
+
+    sw_versions_arg_group = parser.add_argument_group("Software Versions")
+
+    for sw_name, sw_version in VERSIONS.items():
+        parsed_sw_versions = [str(ver) for ver in sw_version]
+        sw_versions_arg_group.add_argument(
+            f"--ver-{sw_name}",
+            type=str,
+            nargs="*",
+            default=parsed_sw_versions,
+            help=f"Set input version for {sw_name}. Default: {parsed_sw_versions}.",
         )
 
     return parser, args_alias, param_order

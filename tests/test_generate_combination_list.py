@@ -412,3 +412,102 @@ class TestParameterMatrixFilter(unittest.TestCase):
                 comb_list, unexpected_param_value_pairs
             )
         )
+
+
+class TestGetParameterValueMatrix(unittest.TestCase):
+    def test_get_parameter_value_matrix_empty_input(self: "unittest.TestCase"):
+        param_matrix = get_parameter_value_matrix(software_versions={}, backends=[])
+        self.assertEqual(len(param_matrix), 0, f"{param_matrix}")
+
+    def test_get_parameter_value_matrix_one_software_version(self: "unittest.TestCase"):
+        param_matrix = get_parameter_value_matrix(software_versions={GCC: [8]}, backends=[])
+        self.assertEqual(len(param_matrix), 2, f"{param_matrix}")
+
+        expected_param_matrix: ParameterValueMatrix = OrderedDict(
+            {
+                HOST_COMPILER: [ParameterValue(GCC, pkv.parse("8"))],
+                DEVICE_COMPILER: [ParameterValue(GCC, pkv.parse("8"))],
+            }
+        )
+        self.assertEqual(
+            param_matrix,
+            expected_param_matrix,
+            f"\ngiven:\n{param_matrix}\n\nexpected\n{expected_param_matrix}",
+        )
+
+    def test_get_parameter_value_matrix_many_software_version(self: "unittest.TestCase"):
+        param_matrix = get_parameter_value_matrix(
+            software_versions={GCC: [8, 9], NVCC: [11.2, 12.2]}, backends=[]
+        )
+        self.assertEqual(len(param_matrix), 2, f"{param_matrix}")
+
+        expected_param_matrix: ParameterValueMatrix = OrderedDict(
+            {
+                HOST_COMPILER: [
+                    ParameterValue(GCC, pkv.parse("8")),
+                    ParameterValue(GCC, pkv.parse("9")),
+                    ParameterValue(NVCC, pkv.parse("11.2")),
+                    ParameterValue(NVCC, pkv.parse("12.2")),
+                ],
+                DEVICE_COMPILER: [
+                    ParameterValue(GCC, pkv.parse("8")),
+                    ParameterValue(GCC, pkv.parse("9")),
+                    ParameterValue(NVCC, pkv.parse("11.2")),
+                    ParameterValue(NVCC, pkv.parse("12.2")),
+                ],
+            }
+        )
+        self.assertEqual(
+            param_matrix,
+            expected_param_matrix,
+            f"\ngiven:\n{param_matrix}\n\nexpected\n{expected_param_matrix}",
+        )
+
+    def test_get_parameter_value_matrix_one_backend(self: "unittest.TestCase"):
+        param_matrix = get_parameter_value_matrix(
+            software_versions={}, backends=[ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE]
+        )
+        self.assertEqual(len(param_matrix), 1, f"{param_matrix}")
+
+        expected_param_matrix: ParameterValueMatrix = OrderedDict(
+            {
+                ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: [
+                    ParameterValue(ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, OFF_VER),
+                    ParameterValue(ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON_VER),
+                ]
+            }
+        )
+        self.assertEqual(
+            param_matrix,
+            expected_param_matrix,
+            f"\ngiven:\n{param_matrix}\n\nexpected\n{expected_param_matrix}",
+        )
+
+    def test_get_parameter_value_matrix_cuda(self: "unittest.TestCase"):
+        param_matrix = get_parameter_value_matrix(
+            software_versions={NVCC: [11.7, 13.0]}, backends=[ALPAKA_ACC_GPU_CUDA_ENABLE]
+        )
+        self.assertEqual(len(param_matrix), 3, f"{param_matrix}")
+
+        expected_param_matrix: ParameterValueMatrix = OrderedDict(
+            {
+                HOST_COMPILER: [
+                    ParameterValue(NVCC, pkv.parse("11.7")),
+                    ParameterValue(NVCC, pkv.parse("13.0")),
+                ],
+                DEVICE_COMPILER: [
+                    ParameterValue(NVCC, pkv.parse("11.7")),
+                    ParameterValue(NVCC, pkv.parse("13.0")),
+                ],
+                ALPAKA_ACC_GPU_CUDA_ENABLE: [
+                    ParameterValue(ALPAKA_ACC_GPU_CUDA_ENABLE, OFF_VER),
+                    ParameterValue(ALPAKA_ACC_GPU_CUDA_ENABLE, pkv.parse("11.7")),
+                    ParameterValue(ALPAKA_ACC_GPU_CUDA_ENABLE, pkv.parse("13.0")),
+                ],
+            }
+        )
+        self.assertEqual(
+            param_matrix,
+            expected_param_matrix,
+            f"\ngiven:\n{param_matrix}\n\nexpected\n{expected_param_matrix}",
+        )

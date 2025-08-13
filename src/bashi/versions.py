@@ -467,28 +467,43 @@ UBUNTU_CLANG_CUDA_SDK_SUPPORT: Dict[Version, SpecifierSet] = _get_ubuntu_clang_c
 
 
 # pylint: disable=too-many-branches
-def get_parameter_value_matrix() -> ParameterValueMatrix:
+def get_parameter_value_matrix(
+    software_versions: Dict[str, List[Union[str, int, float]]] | None = None,
+    backends: List[str] | None = None,
+) -> ParameterValueMatrix:
     """Generates a parameter-value-matrix from all supported compilers, softwares and compilation
     configuration.
+
+    Args:
+        software_versions (Dict[str, List[Union[str, int, float]]] | None, optional): Dict of
+            software version which will be used to generate the parameter-value-matrix. The default
+            value is bashi.globals.VERSION. Defaults to None.
+        backends (List[str] | None, optional): List of backend names which will be used to generate
+        the parameter-value-matrix. The default value is bashi.globals.BACKENDS Defaults to None.
 
     Returns:
         ParameterValueMatrix: parameter-value-matrix
     """
+    if software_versions is None:
+        software_versions = VERSIONS
+    if backends is None:
+        backends = BACKENDS
+
     param_val_matrix: ParameterValueMatrix = OrderedDict()
 
     for compiler_type in [HOST_COMPILER, DEVICE_COMPILER]:
-        param_val_matrix[compiler_type] = []
-        for sw_name, sw_versions in VERSIONS.items():
+        compilers: List[ParameterValue] = []
+        for sw_name, sw_versions in software_versions.items():
             if sw_name in COMPILERS:
                 for sw_version in sw_versions:
-                    param_val_matrix[compiler_type].append(
-                        ParameterValue(sw_name, pkv.parse(str(sw_version)))
-                    )
+                    compilers.append(ParameterValue(sw_name, pkv.parse(str(sw_version))))
+        if len(compilers) > 0:
+            param_val_matrix[compiler_type] = compilers
 
-    for backend in BACKENDS:
+    for backend in backends:
         if backend == ALPAKA_ACC_GPU_CUDA_ENABLE:
             param_val_matrix[backend] = [ParameterValue(backend, OFF_VER)]
-            for cuda_version in VERSIONS[NVCC]:
+            for cuda_version in software_versions[NVCC]:
                 param_val_matrix[backend].append(
                     ParameterValue(backend, pkv.parse(str(cuda_version)))
                 )
@@ -498,7 +513,7 @@ def get_parameter_value_matrix() -> ParameterValueMatrix:
                 ParameterValue(backend, ON_VER),
             ]
 
-    for other, versions in VERSIONS.items():
+    for other, versions in software_versions.items():
         if not other in COMPILERS + BACKENDS:
             param_val_matrix[other] = []
             for version in versions:
