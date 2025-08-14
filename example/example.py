@@ -22,6 +22,7 @@ from bashi.utils import (
     check_unexpected_parameter_value_pair_in_combination_list,
     remove_parameter_value_pairs,
     remove_parameter_value_pairs_ranges,
+    add_print_row_nice_version_alias,
 )
 from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
@@ -39,6 +40,13 @@ from bashi.versions import (
     NVCC_CLANG_MAX_VERSION,
 )
 from src.example_filter import ExampleFilter
+from src.globals import (
+    BUILD_TYPE,
+    CMAKE_RELEASE,
+    CMAKE_RELEASE_VER,
+    CMAKE_DEBUG_VER,
+    get_version_aliases,
+)
 
 
 # pylint: disable=too-many-branches
@@ -292,6 +300,20 @@ def verify(
                     )
                     all_right = False
 
+    # remove all CMake Release builds for CMake 3.25 and older
+    remove_parameter_value_pairs_ranges(
+        expected_param_val_tuple,
+        unexpected_param_val_tuple,
+        parameter1=CMAKE,
+        value_max_version1="3.25",
+        value_max_version1_inclusive=True,
+        parameter2=BUILD_TYPE,
+        value_min_version2=CMAKE_RELEASE,
+        value_min_version2_inclusive=True,
+        value_max_version2=CMAKE_RELEASE,
+        value_max_version2_inclusive=True,
+    )
+
     return (
         check_parameter_value_pair_in_combination_list(combination_list, expected_param_val_tuple)
         and check_unexpected_parameter_value_pair_in_combination_list(
@@ -351,13 +373,24 @@ def create_yaml(combination_list: CombinationList):
         output.write(job_yaml)
 
 
+def setup_row_printer() -> None:
+    """Set extra configurations for the print_row_nice() function"""
+    for val_name, alias in get_version_aliases().items():
+        add_print_row_nice_version_alias(val_name, alias)
+
+
 if __name__ == "__main__":
+    setup_row_printer()
     param_matrix = get_parameter_value_matrix()
     # append project specific parameter-values
     param_matrix["SoftwareA"] = [
         ParameterValue("SoftwareA", ValueVersion("1.0")),
         ParameterValue("SoftwareA", ValueVersion("2.0")),
         ParameterValue("SoftwareA", ValueVersion("2.1")),
+    ]
+    param_matrix[BUILD_TYPE] = [
+        ParameterValue(BUILD_TYPE, CMAKE_RELEASE_VER),
+        ParameterValue(BUILD_TYPE, CMAKE_DEBUG_VER),
     ]
 
     custom_filter = ExampleFilter()

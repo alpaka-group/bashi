@@ -15,7 +15,7 @@ from bashi.filter_software_dependency import SoftwareDependencyFilter
 from bashi.exceptions import BashiUnknownVersion
 from bashi.versions import VERSIONS, get_parameter_value_matrix
 from bashi.generator import get_runtime_infos
-from .arguments import get_validator_args, ArgumentAlias, VersionCheck
+from .arguments import get_validator_args, ArgumentAlias, VersionCheck, AliasParser
 from .utils import cs, Color
 
 
@@ -59,13 +59,47 @@ class Validator:
             help_text (str): Description text of software
             short_name (str, optional): Short argument name as alias. Defaults to "".
         """
-        self.parser.add_argument(f"--{name}", type=str, action=VersionCheck, help=help_text)
-
         argument_names: List[str] = [f"--{name}"]
 
         if short_name != "":
             argument_names.append(f"--{short_name}")
 
+        self.parser.add_argument(*argument_names, type=str, action=VersionCheck, help=help_text)
+        self.argument_alias[name.replace("-", "_")] = ArgumentAlias(argument_names, name)
+
+    @typechecked
+    def add_string_parameter(
+        self,
+        name: str,
+        help_text: str,
+        value_aliases: Dict[str, packaging.version.Version],
+        short_name: str = "",
+    ):
+        """Add a new software name to the application argument list. Instead to specify a software
+        version, it is possible to use strings as argument value, which will be mapped to fake
+        versions.
+
+        Args:
+            name (str): name of the argument
+            help_text (str): argument help text
+            value_aliases (Dict[str, packaging.version.Version]): The string from the argument value
+                will be mapped to the version.
+            short_name (str, optional): short name of the argument which can be used as alias.
+                Defaults to "".
+        """
+        argument_names: List[str] = [f"--{name}"]
+        if short_name != "":
+            argument_names.append(f"--{short_name}")
+
+        self.parser.add_argument(
+            *argument_names,
+            type=str,
+            action=AliasParser,
+            help=help_text,
+            choices=value_aliases.keys(),
+        )
+        self.parser.argument_value_aliases[name] = value_aliases  # type: ignore
+        self.parser.argument_aliases[short_name] = name  # type: ignore
         self.argument_alias[name.replace("-", "_")] = ArgumentAlias(argument_names, name)
 
     @typechecked

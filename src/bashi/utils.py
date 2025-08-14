@@ -285,6 +285,33 @@ def reason(output: Optional[IO[str]], msg: str):
         )
 
 
+print_row_nice_parameter_alias: Dict[Parameter, str] = PARAMETER_SHORT_NAME.copy()
+print_row_nice_version_aliases: Dict[ValueName, Dict[ValueVersion, str]] = {}
+
+
+def add_print_row_nice_parameter_alias(parameter_name: Parameter, alias: str):
+    """Add an alias for an parameter, which will be displayed if print_row_nice() is called.
+
+    Args:
+        parameter_name (Parameter): parameter
+        alias (str): alias
+    """
+    print_row_nice_parameter_alias[parameter_name] = alias
+
+
+def add_print_row_nice_version_alias(
+    value_name: ValueName, versions_aliases: Dict[ValueVersion, str]
+):
+    """Add an aliases for the version of parameter-value, which will be displayed if
+    print_row_nice() is called.
+
+    Args:
+        value_name (ValueName): parameter-name
+        versions_aliases (Dict[ValueVersion, str]): text which is display instead the value-version
+    """
+    print_row_nice_version_aliases[value_name] = versions_aliases
+
+
 # do not cover code, because the function is only used for debugging
 def print_row_nice(
     row: ParameterValueTuple, init: str = "", bashi_validate: bool = False
@@ -308,15 +335,19 @@ def print_row_nice(
         parameter_prefix = "" if not bashi_validate else "--"
         if param in [HOST_COMPILER, DEVICE_COMPILER]:
             s += (
-                f"{parameter_prefix}{PARAMETER_SHORT_NAME.get(param, param)}="
-                f"{PARAMETER_SHORT_NAME.get(val.name, val.name)}@"
+                f"{parameter_prefix}{print_row_nice_parameter_alias.get(param, param)}="
+                f"{print_row_nice_parameter_alias.get(val.name, val.name)}@"
                 f"{nice_version.get(val.version, str(val.version))} "
             )
         else:
-            s += (
-                f"{parameter_prefix}{PARAMETER_SHORT_NAME.get(param, param)}="
-                f"{nice_version.get(val.version, str(val.version))} "
-            )
+            s += f"{parameter_prefix}{print_row_nice_parameter_alias.get(param, param)}="
+            if (
+                val.name in print_row_nice_version_aliases
+                and val.version in print_row_nice_version_aliases[val.name]
+            ):
+                s += f"{print_row_nice_version_aliases[val.name][val.version]} "
+            else:
+                s += f"{nice_version.get(val.version, str(val.version))} "
     print(s)
 
 

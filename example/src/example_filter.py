@@ -11,6 +11,7 @@ from bashi.versions import (
     NVCC_CLANG_MAX_VERSION,
     NVCC_CXX_SUPPORT_VERSION,
 )
+from .globals import BUILD_TYPE, CMAKE_RELEASE_VER
 
 
 class ExampleFilter(FilterBase):
@@ -189,4 +190,16 @@ class ExampleFilter(FilterBase):
                 for cpu_backend in cpu_backends:
                     if cpu_backend in row and row[cpu_backend].version == OFF_VER:
                         return False
+        if (
+            CMAKE in row
+            and row[CMAKE].version <= pkv.parse("3.25")
+            and BUILD_TYPE in row
+            and row[BUILD_TYPE].version == CMAKE_RELEASE_VER
+        ):
+            self.reason(
+                "CMake 3.25 does not support CMake Release builds."
+                "Only for demonstration. In reality it is working."
+            )
+            return False
+
         return True
