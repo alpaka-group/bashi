@@ -203,7 +203,6 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
     ICPX: ["2025.0"],
     UBUNTU: [18.04, 20.04, 22.04, 24.04],
     CMAKE: [
-        3.18,
         3.19,
         3.20,
         3.21,

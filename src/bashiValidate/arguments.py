@@ -101,6 +101,50 @@ class CompilerVersionCheck(argparse.Action):
 
 
 @typechecked
+class AliasParser(argparse.Action):
+    """Takes a string and maps to a package.version.Version.
+
+    Internal, bashi filters works only with version numbers. Therefore if value-name should be a
+    string, it needs to be mapped to a fake version number. This parser allows to use the string
+    representation instead the version number as CLI argument.
+
+    e.g. --build_type=Release instead --build_type=0
+    """
+
+    # check if argument has valid version shape
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
+    ):
+        if not values:
+            exit_error(f"argument {option_string}: expected one argument")
+
+        striped_option: str = str(option_string).lstrip("-")
+        # if striped_option is in the argument_aliases dict, it is a short name
+        # in the case use the regular name instead
+        if striped_option in parser.argument_aliases:  # type: ignore
+            striped_option = parser.argument_aliases[striped_option]  # type: ignore
+
+        argument_value_aliases: Dict[str, Dict[str, packaging.version.Version]] = (
+            parser.argument_value_aliases  # type: ignore
+        )
+
+        if striped_option not in argument_value_aliases:
+            exit_error(f"no argument value alias for argument {option_string}")
+
+        if values not in argument_value_aliases[striped_option]:
+            exit_error(f"no value alias for argument value {values}")
+
+        setattr(namespace, self.dest, argument_value_aliases[striped_option][str(values)])
+        if option_string:
+            parser.param_order.append(option_string)  # type: ignore
+
+
+# pylint: disable=too-many-locals
+@typechecked
 def get_validator_args() -> Tuple[argparse.ArgumentParser, Dict[str, ArgumentAlias], List[str]]:
     """Set up command line arguments.
 
@@ -116,6 +160,12 @@ def get_validator_args() -> Tuple[argparse.ArgumentParser, Dict[str, ArgumentAli
     parser = argparse.ArgumentParser(description="Check if combination of parameters is valid.")
     param_order: List[str] = []
     setattr(parser, "param_order", param_order)
+    # store for which argument which value should be mapped to packaging.version.Version
+    argument_value_aliases: Dict[str, Dict[str, packaging.version.Version]] = {}
+    setattr(parser, "argument_value_aliases", argument_value_aliases)
+    # map shortname of an argument to the regular argument
+    argument_aliases: Dict[str, str] = {}
+    setattr(parser, "argument_aliases", argument_aliases)
 
     def add_param_alias(argument: str, args_alias: Dict[str, ArgumentAlias]) -> List[str]:
         """Returns the argument name and also an alias, if it is defined in the PARAMETER_SHORT_NAME

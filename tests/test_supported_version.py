@@ -78,7 +78,7 @@ class TestParameterValueGenerator(unittest.TestCase):
 
     def test_software_versions(self):
         for name, version in [
-            (CMAKE, 3.18),
+            (CMAKE, 3.19),
             (CMAKE, 3.21),
             (BOOST, "1.80.0"),
             (UBUNTU, "20.04"),
