@@ -5,6 +5,7 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.versions import get_parameter_value_matrix
 from bashi.generator import get_runtime_infos, generate_combination_list
 from bashi.utils import (
+    get_str_row_nice,
     print_row_nice,
     add_print_row_nice_parameter_alias,
     add_print_row_nice_version_alias,

@@ -313,16 +313,18 @@ def add_print_row_nice_version_alias(
 
 
 # do not cover code, because the function is only used for debugging
-def print_row_nice(
+def get_str_row_nice(
     row: ParameterValueTuple, init: str = "", bashi_validate: bool = False
-):  # pragma: no cover
-    """Prints a parameter-value-tuple in a short and nice way.
+) -> str:  # pragma: no cover
+    """Returns a parameter-value-tuple as string in a short and nice way.
 
     Args:
         row (ParameterValueTuple): row with parameter-value-tuple
         init (str, optional): Prefix of the output string. Defaults to "".
         bashi_validate (bool): If it is set to True, the row is printed in a form that can be passed
             directly as arguments to bashi-validate. Defaults to False.
+    Return:
+        str: string representation of a parameter-value-tuple
     """
     s = init
 
@@ -348,7 +350,22 @@ def print_row_nice(
                 s += f"{print_row_nice_version_aliases[val.name][val.version]} "
             else:
                 s += f"{nice_version.get(val.version, str(val.version))} "
-    print(s)
+    return s
+
+
+# do not cover code, because the function is only used for debugging
+def print_row_nice(
+    row: ParameterValueTuple, init: str = "", bashi_validate: bool = False
+):  # pragma: no cover
+    """Prints a parameter-value-tuple in a short and nice way.
+
+    Args:
+        row (ParameterValueTuple): row with parameter-value-tuple
+        init (str, optional): Prefix of the output string. Defaults to "".
+        bashi_validate (bool): If it is set to True, the row is printed in a form that can be passed
+            directly as arguments to bashi-validate. Defaults to False.
+    """
+    print(get_str_row_nice(row, init, bashi_validate))
 
 
 def _create_version_range(
