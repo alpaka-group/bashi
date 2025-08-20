@@ -195,13 +195,11 @@ class Validator:
 
         return all_true == len(self.filter_stages)
 
-    # pylint: disable=too-many-branches
-    def validate(self) -> bool:
-        """Construct parameter-value-tuple from the application arguments and check if it passes
-        the bashi and custom filter.
+    def get_row(self) -> ParameterValueTuple:
+        """Generate parameter-value-tuple from the application arguments.
 
         Returns:
-            bool: Return True if all filter stages are passed
+            ParameterValueTuple: parameter-value-tuple
         """
         args = self.parser.parse_args(args=self.args)
 
@@ -233,6 +231,18 @@ class Validator:
                             row[alias.parameter] = ParameterValue(
                                 alias.parameter, getattr(args, arg)
                             )
+
+        return row
+
+    # pylint: disable=too-many-branches
+    def validate(self) -> bool:
+        """Construct parameter-value-tuple from the application arguments and check if it passes
+        the bashi and custom filter.
+
+        Returns:
+            bool: Return True if all filter stages are passed
+        """
+        row = self.get_row()
 
         for val_name, val_version in row.values():
             known_software = (
