@@ -402,6 +402,8 @@ if __name__ == "__main__":
         parameter_value_matrix=param_matrix,
         runtime_infos=rt_infos,
         custom_filter=custom_filter,
+        # change me to display which combinations passed and did not pass the filter chain
+        debug_print=FilterDebugMode.OFF,
     )
 
     create_yaml(comb_list)

@@ -3,6 +3,7 @@
 from typing import Callable, Dict
 from typeguard import typechecked
 from bashi.types import ParameterValueTuple
+from bashi.globals import FilterDebugMode
 
 from bashi.filter import FilterBase
 from bashi.filter_compiler import CompilerFilter
@@ -37,6 +38,17 @@ class FilterChain:
         self.custom_filter = custom_filter
         if runtime_infos:
             self.custom_filter.runtime_infos = runtime_infos
+
+    def set_debug_print(self, state: FilterDebugMode):
+        """Set the debug print mode for all filter in the chain.
+
+        Args:
+            state (FilterDebugMode): filter debug mode
+        """
+        self.compiler_filter.debug_print = state
+        self.backend_filter.debug_print = state
+        self.software_dependency_filter.debug_print = state
+        self.custom_filter.debug_print = state
 
     def __call__(self, row: ParameterValueTuple) -> bool:
         return (

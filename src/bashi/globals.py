@@ -1,6 +1,7 @@
 """This module contains constants used in the bashi library."""
 
 from typing import List
+from enum import Enum
 import packaging.version
 from bashi.types import Parameter, ValueName, ValueVersion
 
@@ -82,3 +83,11 @@ PARAMETERS: List[Parameter] = [
 # runtime functions
 RT_AVAILABLE_HIP_SDK_UBUNTU_VER: str = "rt_available_hip_sdk_ubuntu_ver"
 RT_AVAILABLE_CUDA_SDK_UBUNTU_VER: str = "rt_available_cuda_sdk_ubuntu_ver"
+
+
+class FilterDebugMode(Enum):
+    """Control which debug information will be displayed if a row passes a filter."""
+
+    OFF = 0  # no information
+    NORMAL = 1  # human readable information
+    VALIDATOR_ARGS = 2  # can be passed to the validator application
