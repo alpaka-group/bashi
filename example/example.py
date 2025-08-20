@@ -314,13 +314,14 @@ def verify(
         value_max_version2_inclusive=True,
     )
 
-    return (
-        check_parameter_value_pair_in_combination_list(combination_list, expected_param_val_tuple)
-        and check_unexpected_parameter_value_pair_in_combination_list(
-            combination_list, unexpected_param_val_tuple
-        )
-        and all_right
+    expected_param_val_okay = check_parameter_value_pair_in_combination_list(
+        combination_list, expected_param_val_tuple
     )
+    unexpected_param_val_okay = check_unexpected_parameter_value_pair_in_combination_list(
+        combination_list, unexpected_param_val_tuple
+    )
+
+    return expected_param_val_okay and unexpected_param_val_okay and all_right
 
 
 def create_yaml(combination_list: CombinationList):
