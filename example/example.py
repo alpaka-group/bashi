@@ -22,8 +22,8 @@ from bashi.utils import (
     check_unexpected_parameter_value_pair_in_combination_list,
     remove_parameter_value_pairs,
     remove_parameter_value_pairs_ranges,
-    add_print_row_nice_version_alias,
 )
+from bashi.printer import add_print_row_nice_version_alias
 from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
     ParameterValue,
@@ -403,7 +403,7 @@ if __name__ == "__main__":
         runtime_infos=rt_infos,
         custom_filter=custom_filter,
         # change me to display which combinations passed and did not pass the filter chain
-        debug_print=FilterDebugMode.OFF,
+        debug_print=FilterDebugMode.NORMAL,
     )
 
     create_yaml(comb_list)
