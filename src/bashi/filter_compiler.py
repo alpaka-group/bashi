@@ -28,8 +28,7 @@ from bashi.versions import (
 from bashi.filter import FilterBase
 from bashi.utils import reason
 
-# uncomment me for debugging
-# from bashi.utils import print_row_nice
+from bashi.utils import print_row_nice
 
 
 def _remove_unsupported_compiler_cxx_combination(
@@ -181,8 +180,9 @@ class CompilerFilter(FilterBase):
         Returns:
             bool: True, if parameter-value-tuple is valid.
         """
-        # uncomment me for debugging
-        # print_row_nice(row, bashi_validate=False)
+        if self.debug_print != FilterDebugMode.OFF:
+            validate_args = self.debug_print == FilterDebugMode.VALIDATOR_ARGS
+            print_row_nice(row, bashi_validate=validate_args)
 
         # Rule: c1
         # NVCC as HOST_COMPILER is not allow

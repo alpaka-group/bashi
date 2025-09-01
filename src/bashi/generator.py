@@ -1,6 +1,6 @@
 """Functions to generate the combination-list"""
 
-from typing import Dict, List, Callable
+from typing import Dict, List, Callable, cast
 from collections import OrderedDict
 
 from covertable import make  # type: ignore
@@ -68,15 +68,18 @@ def generate_combination_list(
     parameter_value_matrix: ParameterValueMatrix,
     runtime_infos: Dict[str, Callable[..., bool]],
     custom_filter: FilterBase = FilterBase(),
+    debug_print: FilterDebugMode = FilterDebugMode.OFF,
 ) -> CombinationList:
     """Generate combination-list from the parameter-value-matrix. The combination list contains
     all valid parameter-value-pairs at least one time.
 
     Args:
         parameter_value_matrix (ParameterValueMatrix): Input matrix with parameter and
-        parameter-values.
+            parameter-values.
         custom_filter (FilterFunction, optional): Custom filter function to extend bashi
-        filters. Defaults is lambda _: True.
+            filters. Defaults is lambda _: True.
+        debug_print (FilterDebugMode): Depending on the debug mode, print additional information
+            for each row passing the filter function. Defaults to FilterDebugMode.OFF.
     Returns:
         CombinationList: combination-list
     """
@@ -84,14 +87,18 @@ def generate_combination_list(
     filter_chain: FilterChain = get_default_filter_chain(
         runtime_infos=runtime_infos, custom_filter=custom_filter
     )
+    filter_chain.set_debug_print(debug_print)
 
     comb_list: CombinationList = []
 
-    all_pairs: List[Dict[Parameter, ParameterValue]] = make(
-        factors=parameter_value_matrix,
-        length=2,
-        pre_filter=filter_chain,
-    )  # type: ignore
+    all_pairs = cast(
+        List[Dict[Parameter, ParameterValue]],
+        make(
+            factors=parameter_value_matrix,
+            length=2,
+            pre_filter=filter_chain,
+        ),
+    )
 
     # convert List[Dict[Parameter, ParameterValue]] to CombinationList
     for all_pair in all_pairs:
