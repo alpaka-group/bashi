@@ -550,7 +550,12 @@ def is_supported_version(name: ValueName, version: ValueVersion) -> bool:
             local_versions[backend_name] = [OFF, ON]
 
     for ver in local_versions[name]:
-        if pkv.parse(str(ver)) == version:
+        parsed_version = pkv.parse(str(ver))
+        # in case of CMAKE, we don't care about the patch level
+        if name == CMAKE:
+            parsed_version = pkv.parse(f"{parsed_version.major}.{parsed_version.minor}")
+            version = pkv.parse(f"{version.major}.{version.minor}")
+        if parsed_version == version:
             return True
 
     return False
