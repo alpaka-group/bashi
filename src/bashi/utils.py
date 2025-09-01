@@ -13,27 +13,9 @@ from bashi.types import (
     ParameterValueMatrix,
     ParameterValuePair,
     ParameterValueSingle,
-    ParameterValueTuple,
     ValueName,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# short names for parameter
-PARAMETER_SHORT_NAME: dict[Parameter, str] = {
-    HOST_COMPILER: "host",
-    DEVICE_COMPILER: "device",
-    ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE: "bOpenMP2thread",
-    ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE: "bOpenMP2block",
-    ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: "bSeq",
-    ALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLE: "bThreads",
-    ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE: "bTBB",
-    ALPAKA_ACC_GPU_CUDA_ENABLE: "bCUDA",
-    ALPAKA_ACC_GPU_HIP_ENABLE: "bHIP",
-    ALPAKA_ACC_ONEAPI_CPU_ENABLE: "bSYCLcpu",
-    ALPAKA_ACC_ONEAPI_GPU_ENABLE: "bSYCLgpu",
-    ALPAKA_ACC_ONEAPI_FPGA_ENABLE: "bSYCLfpga",
-    CXX_STANDARD: "c++",
-}
 
 
 # pylint: disable=too-many-positional-arguments
@@ -283,89 +265,6 @@ def reason(output: Optional[IO[str]], msg: str):
             file=output,
             end="",
         )
-
-
-print_row_nice_parameter_alias: Dict[Parameter, str] = PARAMETER_SHORT_NAME.copy()
-print_row_nice_version_aliases: Dict[ValueName, Dict[ValueVersion, str]] = {}
-
-
-def add_print_row_nice_parameter_alias(parameter_name: Parameter, alias: str):
-    """Add an alias for an parameter, which will be displayed if print_row_nice() is called.
-
-    Args:
-        parameter_name (Parameter): parameter
-        alias (str): alias
-    """
-    print_row_nice_parameter_alias[parameter_name] = alias
-
-
-def add_print_row_nice_version_alias(
-    value_name: ValueName, versions_aliases: Dict[ValueVersion, str]
-):
-    """Add an aliases for the version of parameter-value, which will be displayed if
-    print_row_nice() is called.
-
-    Args:
-        value_name (ValueName): parameter-name
-        versions_aliases (Dict[ValueVersion, str]): text which is display instead the value-version
-    """
-    print_row_nice_version_aliases[value_name] = versions_aliases
-
-
-# do not cover code, because the function is only used for debugging
-def get_str_row_nice(
-    row: ParameterValueTuple, init: str = "", bashi_validate: bool = False
-) -> str:  # pragma: no cover
-    """Returns a parameter-value-tuple as string in a short and nice way.
-
-    Args:
-        row (ParameterValueTuple): row with parameter-value-tuple
-        init (str, optional): Prefix of the output string. Defaults to "".
-        bashi_validate (bool): If it is set to True, the row is printed in a form that can be passed
-            directly as arguments to bashi-validate. Defaults to False.
-    Return:
-        str: string representation of a parameter-value-tuple
-    """
-    s = init
-
-    nice_version: dict[packaging.version.Version, str] = {
-        ON_VER: "ON",
-        OFF_VER: "OFF",
-    }
-
-    for param, val in row.items():
-        parameter_prefix = "" if not bashi_validate else "--"
-        if param in [HOST_COMPILER, DEVICE_COMPILER]:
-            s += (
-                f"{parameter_prefix}{print_row_nice_parameter_alias.get(param, param)}="
-                f"{print_row_nice_parameter_alias.get(val.name, val.name)}@"
-                f"{nice_version.get(val.version, str(val.version))} "
-            )
-        else:
-            s += f"{parameter_prefix}{print_row_nice_parameter_alias.get(param, param)}="
-            if (
-                val.name in print_row_nice_version_aliases
-                and val.version in print_row_nice_version_aliases[val.name]
-            ):
-                s += f"{print_row_nice_version_aliases[val.name][val.version]} "
-            else:
-                s += f"{nice_version.get(val.version, str(val.version))} "
-    return s
-
-
-# do not cover code, because the function is only used for debugging
-def print_row_nice(
-    row: ParameterValueTuple, init: str = "", bashi_validate: bool = False
-):  # pragma: no cover
-    """Prints a parameter-value-tuple in a short and nice way.
-
-    Args:
-        row (ParameterValueTuple): row with parameter-value-tuple
-        init (str, optional): Prefix of the output string. Defaults to "".
-        bashi_validate (bool): If it is set to True, the row is printed in a form that can be passed
-            directly as arguments to bashi-validate. Defaults to False.
-    """
-    print(get_str_row_nice(row, init, bashi_validate))
 
 
 def _create_version_range(

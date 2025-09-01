@@ -19,7 +19,7 @@ from bashi.globals import (
     ON,
     OFF,
 )
-from bashi.utils import PARAMETER_SHORT_NAME
+from bashi.printer import PARAMETER_SHORT_NAME
 from bashi.versions import VERSIONS
 from bashiValidate.utils import exit_error
 

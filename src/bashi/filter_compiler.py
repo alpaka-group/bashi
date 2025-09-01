@@ -28,7 +28,7 @@ from bashi.versions import (
 from bashi.filter import FilterBase
 from bashi.utils import reason
 
-from bashi.utils import print_row_nice
+from bashi.printer import print_row_nice
 
 
 def _remove_unsupported_compiler_cxx_combination(
