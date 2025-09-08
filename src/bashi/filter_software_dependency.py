@@ -18,22 +18,7 @@ from bashi.versions import (
     UBUNTU_CUDA_VERSION_RANGE,
     UBUNTU_CLANG_CUDA_SDK_SUPPORT,
 )
-
-
-def _ubuntu_version_to_string(version: pkv.Version) -> str:
-    """Returns the Ubuntu version representation correctly. Ubuntu versions
-    use a leading 0 in their version scheme for months before October. pkv.parse()`
-    parses e.g. the 04 from 20.04 to 4. Therefore the string representation of
-    str(pkv.parse(“20.04”)) is `20.4`. This function returns the correct version scheme.
-    For Ubuntu `20.04` it is `20.04`.
-
-    Args:
-        version (pkv.Version): Ubuntu version
-
-    Returns:
-        str: string representation of the Ubuntu version
-    """
-    return f"{version.major}.{version.minor:02}"
+from bashi.printer import ubuntu_version_to_string
 
 
 def _pretty_name_compiler(constant: str) -> str:
@@ -89,7 +74,7 @@ class SoftwareDependencyFilter(FilterBase):
                         self.reason(
                             f"{_pretty_name_compiler(compiler_type)} GCC "
                             f"{row[compiler_type].version} is not available in Ubuntu "
-                            f"{_ubuntu_version_to_string(row[UBUNTU].version)}",
+                            f"{ubuntu_version_to_string(row[UBUNTU].version)}",
                         )
                         return False
 
@@ -118,7 +103,7 @@ class SoftwareDependencyFilter(FilterBase):
                         ):
                             self.reason(
                                 f"The hipcc {row[compiler_type].version} compiler is not available "
-                                f"on the Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)} "
+                                f"on the Ubuntu {ubuntu_version_to_string(row[UBUNTU].version)} "
                                 "image.",
                             )
                             return False
@@ -133,7 +118,7 @@ class SoftwareDependencyFilter(FilterBase):
                 ](row[UBUNTU].version):
                     self.reason(
                         f"There is no HIP SDK in input parameter-value-matrix which can be "
-                        f"installed on Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)}"
+                        f"installed on Ubuntu {ubuntu_version_to_string(row[UBUNTU].version)}"
                     )
                     return False
 
@@ -146,7 +131,7 @@ class SoftwareDependencyFilter(FilterBase):
                     ):
                         self.reason(
                             f"The nvcc {row[DEVICE_COMPILER].version} compiler is not available "
-                            f"on the Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)} "
+                            f"on the Ubuntu {ubuntu_version_to_string(row[UBUNTU].version)} "
                             "image.",
                         )
                         return False
@@ -164,7 +149,7 @@ class SoftwareDependencyFilter(FilterBase):
                         self.reason(
                             f"The CUDA SDK {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} is not "
                             "available on the Ubuntu "
-                            f"{_ubuntu_version_to_string(row[UBUNTU].version)} image.",
+                            f"{ubuntu_version_to_string(row[UBUNTU].version)} image.",
                         )
                         return False
 
@@ -174,7 +159,7 @@ class SoftwareDependencyFilter(FilterBase):
                     if row[UBUNTU].version not in UBUNTU_CLANG_CUDA_SDK_SUPPORT:
                         self.reason(
                             "There is no installable CUDA SDK available for "
-                            f"Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)}"
+                            f"Ubuntu {ubuntu_version_to_string(row[UBUNTU].version)}"
                         )
                         return False
 
@@ -185,7 +170,7 @@ class SoftwareDependencyFilter(FilterBase):
                         self.reason(
                             "There is no compatible CUDA SDK for Clang-CUDA "
                             f"{row[compiler_type].version}, which can be installed on "
-                            f"Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)}"
+                            f"Ubuntu {ubuntu_version_to_string(row[UBUNTU].version)}"
                         )
                         return False
 
@@ -202,7 +187,7 @@ class SoftwareDependencyFilter(FilterBase):
                         self.reason(
                             "There is no CUDA SDK in input parameter-value-matrix for "
                             f"{compiler_type} Clang-CUDA {row[compiler_type].version} which can be "
-                            f"installed on Ubuntu {_ubuntu_version_to_string(row[UBUNTU].version)}"
+                            f"installed on Ubuntu {ubuntu_version_to_string(row[UBUNTU].version)}"
                         )
                         return False
                 # Rule: d10
@@ -215,7 +200,7 @@ class SoftwareDependencyFilter(FilterBase):
                         "There is no CUDA SDK for the CUDA backend "
                         f"{row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} in the input "
                         "parameter-value-matrix which can be installed on Ubuntu "
-                        f"{_ubuntu_version_to_string(row[UBUNTU].version)}"
+                        f"{ubuntu_version_to_string(row[UBUNTU].version)}"
                     )
                     return False
                 # Rule: d11
@@ -223,7 +208,7 @@ class SoftwareDependencyFilter(FilterBase):
                     self.reason(
                         "There is no CUDA SDK in input parameter-value-matrix for Nvcc "
                         f"{row[DEVICE_COMPILER].version} which can be installed on Ubuntu "
-                        f"{_ubuntu_version_to_string(row[UBUNTU].version)}"
+                        f"{ubuntu_version_to_string(row[UBUNTU].version)}"
                     )
                     return False
         return True
