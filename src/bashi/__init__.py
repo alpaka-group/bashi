@@ -2,7 +2,7 @@
 
 from bashi.types import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import get_parameter_value_matrix
+from bashi.versions import get_parameter_value_matrix, HIPCC_CLANG_VERSION, ICPX_CLANG_VERSION
 from bashi.generator import get_runtime_infos, generate_combination_list
 from bashi.utils import (
     check_parameter_value_pair_in_combination_list,
@@ -16,6 +16,7 @@ from bashi.printer import (
     add_print_row_nice_parameter_alias,
     add_print_row_nice_version_alias,
     ubuntu_version_to_string,
+    on_off_ver_to_str,
 )
 from bashi.filter import FilterBase
 from bashi.results import get_expected_bashi_parameter_value_pairs
