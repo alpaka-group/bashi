@@ -347,7 +347,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
     def test_valid_combination_max_gcc_rule_c5(self):
         # change the version, if you added a new cuda release
         # this test is a guard to be sure, that the following test contains the latest nvcc release
-        latest_covered_nvcc_release = "12.6"
+        latest_covered_nvcc_release = "13.0"
         self.assertEqual(
             latest_covered_nvcc_release,
             str(VERSIONS[NVCC][-1]),
@@ -514,7 +514,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
     def test_valid_combination_max_clang_rule_c6_rule_c7(self):
         # change the version, if you added a new cuda release
         # this test is a guard to be sure, that the following test contains the latest nvcc release
-        latest_covered_nvcc_release = "12.6"
+        latest_covered_nvcc_release = "13.0"
         self.assertEqual(
             latest_covered_nvcc_release,
             str(VERSIONS[NVCC][-1]),
