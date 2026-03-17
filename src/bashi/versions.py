@@ -203,7 +203,7 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
         12.9,
         13.0,
     ],
-    HIPCC: [5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 6.0, 6.1, 6.2],
+    HIPCC: [5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 6.0, 6.1, 6.2, 6.3, 6.4, 7.0, 7.1, 7.2],
     ICPX: ["2025.0"],
     UBUNTU: [18.04, 20.04, 22.04, 24.04],
     CMAKE: [
@@ -360,6 +360,11 @@ HIPCC_CLANG_VERSION: List[ClangBase] = [
     ClangBase("6.0", "17"),
     ClangBase("6.1", "17"),
     ClangBase("6.2", "18"),
+    ClangBase("6.3", "18"),
+    ClangBase("6.4", "19"),
+    ClangBase("7.0", "20"),
+    ClangBase("7.1", "20"),
+    ClangBase("7.2", "22"),
 ]
 
 HIPCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = _get_clang_base_compiler_cxx_support(
