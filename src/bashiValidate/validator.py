@@ -51,20 +51,26 @@ class Validator:
         self.runtime_infos: Dict[str, Callable[..., bool]] = {}
 
     @typechecked
-    def add_software_version_parameter(self, name: str, help_text: str, short_name: str = ""):
+    def add_software_version_parameter(
+        self, name: str, help_text: str, short_name: str = "", choices: List[str] | None = None
+    ):
         """Add new software name to application argument list.
 
         Args:
             name (str): Name of the software
             help_text (str): Description text of software
             short_name (str, optional): Short argument name as alias. Defaults to "".
+            choices (List[str], optional): Define allowed application parameter values. Defaults to
+                None.
         """
         argument_names: List[str] = [f"--{name}"]
 
         if short_name != "":
             argument_names.append(f"--{short_name}")
 
-        self.parser.add_argument(*argument_names, type=str, action=VersionCheck, help=help_text)
+        self.parser.add_argument(
+            *argument_names, type=str, action=VersionCheck, choices=choices, help=help_text
+        )
         self.argument_alias[name.replace("-", "_")] = ArgumentAlias(argument_names, name)
 
     @typechecked

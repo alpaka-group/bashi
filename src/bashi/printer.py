@@ -138,3 +138,28 @@ def print_row_nice(
             directly as arguments to bashi-validate. Defaults to False.
     """
     print(get_str_row_nice(row, init, bashi_validate))
+
+
+def ubuntu_version_to_string(version: ValueVersion) -> str:
+    """Returns the Ubuntu version representation correctly. Ubuntu versions
+    use a leading 0 in their version scheme for months before October. pkv.parse()`
+    parses e.g. the 04 from 20.04 to 4. Therefore the string representation of
+    str(pkv.parse(“20.04”)) is `20.4`. This function returns the correct version scheme.
+    For Ubuntu `20.04` it is `20.04`.
+
+    Args:
+        version (pkv.Version): Ubuntu version
+
+    Returns:
+        str: string representation of the Ubuntu version
+    """
+    return f"{version.major}.{version.minor:02}"
+
+
+def on_off_ver_to_str(version: ValueVersion) -> str:
+    """Return 'ON' if version is ON_VER or 'OFF' if version is OFF_VER."""
+    if version == ON_VER:
+        return "ON"
+    if version == OFF_VER:
+        return "OFF"
+    raise RuntimeError(f"given version {version} is not ON_VER (1.0.0) or OFF_VER (0.0.0)")
