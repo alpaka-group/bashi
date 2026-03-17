@@ -198,6 +198,10 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
         12.4,
         12.5,
         12.6,
+        12.7,
+        12.8,
+        12.9,
+        13.0,
     ],
     HIPCC: [5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 6.0, 6.1, 6.2],
     ICPX: ["2025.0"],
@@ -244,6 +248,8 @@ VERSIONS[CLANG_CUDA] = copy.copy(VERSIONS[CLANG])
 #   NvccHostSupport("12.0", "12"),
 #   NvccHostSupport("11.4", "11"),
 NVCC_GCC_MAX_VERSION: List[NvccHostSupport] = [
+    NvccHostSupport("13.0", "15"),
+    NvccHostSupport("12.9", "14"),
     NvccHostSupport("12.6", "13"),
     NvccHostSupport("12.4", "13"),
     NvccHostSupport("12.0", "12"),
@@ -263,6 +269,8 @@ NVCC_GCC_MAX_VERSION.sort(reverse=True)
 #   NvccHostSupport("12.2", "15"),
 #   NvccHostSupport("12.1", "15"),
 NVCC_CLANG_MAX_VERSION: List[NvccHostSupport] = [
+    NvccHostSupport("13.0", "20"),
+    NvccHostSupport("12.9", "19"),
     NvccHostSupport("12.6", "18"),
     NvccHostSupport("12.4", "17"),
     NvccHostSupport("12.3", "16"),
