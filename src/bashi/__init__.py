@@ -15,6 +15,7 @@ from bashi.printer import (
     print_row_nice,
     add_print_row_nice_parameter_alias,
     add_print_row_nice_version_alias,
+    ubuntu_version_to_string,
 )
 from bashi.filter import FilterBase
 from bashi.results import get_expected_bashi_parameter_value_pairs
