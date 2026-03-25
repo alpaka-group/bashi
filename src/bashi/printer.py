@@ -154,3 +154,12 @@ def ubuntu_version_to_string(version: ValueVersion) -> str:
         str: string representation of the Ubuntu version
     """
     return f"{version.major}.{version.minor:02}"
+
+
+def on_off_ver_to_str(version: ValueVersion) -> str:
+    """Return 'ON' if version is ON_VER or 'OFF' if version is OFF_VER."""
+    if version == ON_VER:
+        return "ON"
+    if version == OFF_VER:
+        return "OFF"
+    raise RuntimeError(f"given version {version} is not ON_VER (1.0.0) or OFF_VER (0.0.0)")
