@@ -14,7 +14,9 @@ from utils_test import (
 
 from bashi.types import ParameterValue, ParameterValueSingle, ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import VERSIONS, CLANG_CUDA_MAX_CUDA_VERSION
+from bashi.versions import VERSIONS
+from bashi.version.dependencies.clang_cuda import CLANG_CUDA_MAX_CUDA_VERSION
+
 
 # pyright: reportPrivateUsage=false
 from bashi.results import (

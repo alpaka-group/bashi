@@ -11,6 +11,7 @@ from packaging.specifiers import SpecifierSet
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ValueName, ValueVersion, ParameterValue, ParameterValueMatrix
 from bashi.exceptions import BashiUnknownVersion
+from bashi.version.dependencies.clang_cuda import ClangCudaSDKSupport, CLANG_CUDA_MAX_CUDA_VERSION
 
 
 class VersionSupportBase:
@@ -49,23 +50,6 @@ class NvccHostSupport(VersionSupportBase):
 
     def __str__(self) -> str:
         return f"nvcc {str(self.nvcc)} + host version {self.host}"
-
-
-# pylint: disable=too-few-public-methods
-class ClangCudaSDKSupport(VersionSupportBase):
-    """Contains a nvcc version and host compiler version. Does automatically parse the input strings
-    to package.version.Version.
-
-    Provides comparision operators for sorting.
-    """
-
-    def __init__(self, clang_cuda_version: str, cuda_version: str):
-        VersionSupportBase.__init__(self, clang_cuda_version, cuda_version)
-        self.clang_cuda: packaging.version.Version = self.version1
-        self.cuda: packaging.version.Version = self.version2
-
-    def __str__(self) -> str:
-        return f"Clang-CUDA {str(self.clang_cuda)} + CUDA SDK {self.cuda}"
 
 
 # pylint: disable=too-few-public-methods
@@ -287,17 +271,6 @@ NVCC_CLANG_MAX_VERSION: List[NvccHostSupport] = [
 ]
 NVCC_CLANG_MAX_VERSION.sort(reverse=True)
 
-CLANG_CUDA_MAX_CUDA_VERSION: List[ClangCudaSDKSupport] = [
-    ClangCudaSDKSupport("7", "9.2"),
-    ClangCudaSDKSupport("8", "10.0"),
-    ClangCudaSDKSupport("10", "10.1"),
-    ClangCudaSDKSupport("12", "11.0"),
-    ClangCudaSDKSupport("13", "11.2"),
-    ClangCudaSDKSupport("14", "11.5"),
-    ClangCudaSDKSupport("16", "11.8"),
-    ClangCudaSDKSupport("17", "12.1"),
-]
-CLANG_CUDA_MAX_CUDA_VERSION.sort(reverse=True)
 
 # define the maximum supported cxx version for a specific gcc version
 GCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = [

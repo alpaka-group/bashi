@@ -18,6 +18,7 @@ from bashi.versions import (
     UBUNTU_CUDA_VERSION_RANGE,
     UBUNTU_CLANG_CUDA_SDK_SUPPORT,
 )
+from bashi.version.relation import VersionRelation
 from bashi.printer import ubuntu_version_to_string
 
 
@@ -44,9 +45,10 @@ class SoftwareDependencyFilter(FilterBase):
     def __init__(
         self,
         runtime_infos: Dict[str, Callable[..., bool]] | None = None,
+        version_relation: VersionRelation = VersionRelation(),
         output: IO[str] | None = None,
     ):
-        super().__init__(runtime_infos, output)
+        super().__init__(runtime_infos, version_relation, output)
 
     def __call__(
         self,

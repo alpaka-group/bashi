@@ -8,12 +8,12 @@ from bashi.versions import (
     COMPILERS,
     NVCC_GCC_MAX_VERSION,
     NVCC_CLANG_MAX_VERSION,
-    CLANG_CUDA_MAX_CUDA_VERSION,
     UBUNTU_CUDA_VERSION_RANGE,
     UBUNTU_CLANG_CUDA_SDK_SUPPORT,
     NvccHostSupport,
     ClangCudaSDKSupport,
 )
+from bashi.version.relation import VersionRelation
 from bashi.utils import remove_parameter_value_pairs_ranges, bi_filter
 from bashi.result_modules.sdk_helper import (
     remove_unsupported_sdk_ubuntu_combinations,
@@ -24,6 +24,7 @@ from bashi.result_modules.sdk_helper import (
 def remove_cuda_specific_parameter_value_pairs(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version_relation: VersionRelation,
     runtime_infos: Dict[str, Callable[..., bool]],
 ):
     """Apply several filter functions to remove invalid CUDA related parameter-value-pairs.
@@ -33,6 +34,9 @@ def remove_cuda_specific_parameter_value_pairs(
         removed_parameter_value_pairs (List[ParameterValuePair): list with removed
             parameter-value-pairs
         runtime_infos: Dict[str, Callable[..., bool]]: Dict of functors which checks if the given
+        version_relation (VersionRelation): Provides information about the relationships between
+                the versions of various parameter-values. For example, which GCC version supports
+                which C++ standard.
         parameter-values (combinations) are valid.
     """
     _remove_nvcc_host_compiler(parameter_value_pairs, removed_parameter_value_pairs)
@@ -51,7 +55,7 @@ def remove_cuda_specific_parameter_value_pairs(
     )
     _remove_specific_cuda_clang_combinations(parameter_value_pairs, removed_parameter_value_pairs)
     _remove_unsupported_clang_sdk_versions_for_clang_cuda(
-        parameter_value_pairs, removed_parameter_value_pairs
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
     )
     _remove_unsupported_cmake_versions_for_clangcuda(
         parameter_value_pairs, removed_parameter_value_pairs
@@ -411,6 +415,7 @@ def _remove_specific_cuda_clang_combinations(
 def _remove_unsupported_clang_sdk_versions_for_clang_cuda(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version: VersionRelation = VersionRelation(),
 ):
     """Remove all CUDA SDK versions, which are not supported by a specific clang-cuda version.
     Includes also disabled CUDA backends.
@@ -443,14 +448,14 @@ def _remove_unsupported_clang_sdk_versions_for_clang_cuda(
                     # to assume, that it supports every CUDA SDK version
                     if (
                         param_val1.parameterValue.version
-                        > CLANG_CUDA_MAX_CUDA_VERSION[0].clang_cuda
+                        > version.get_clang_cuda_max_cuda_version()[0].clang_cuda
                     ):
                         return True
 
                     # create variable, that it is not unbound in the else branch of the for loop
                     # create dummy object to avoid None
                     version_combination = ClangCudaSDKSupport("0", "9999")
-                    for version_combination in CLANG_CUDA_MAX_CUDA_VERSION:
+                    for version_combination in version.get_clang_cuda_max_cuda_version():
                         if param_val1.parameterValue.version >= version_combination.clang_cuda:
                             if param_val2.parameterValue.version > version_combination.cuda:
                                 return False

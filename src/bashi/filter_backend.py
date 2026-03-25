@@ -12,7 +12,8 @@ import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValueTuple
-from bashi.versions import NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION, CLANG_CUDA_MAX_CUDA_VERSION
+from bashi.versions import NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION
+from bashi.version.relation import VersionRelation
 from bashi.filter import FilterBase
 
 
@@ -26,9 +27,10 @@ class BackendFilter(FilterBase):
     def __init__(
         self,
         runtime_infos: Dict[str, Callable[..., bool]] | None = None,
+        version_relation: VersionRelation = VersionRelation(),
         output: IO[str] | None = None,
     ):
-        super().__init__(runtime_infos, output)
+        super().__init__(runtime_infos, version_relation, output)
 
     def __call__(
         self,
@@ -208,8 +210,11 @@ class BackendFilter(FilterBase):
                 if compiler in row and row[compiler].name == CLANG_CUDA:
                     # if a clang-cuda version is newer than the latest known clang-cuda version,
                     # we needs to assume that it supports every CUDA SDK version
-                    if row[compiler].version <= CLANG_CUDA_MAX_CUDA_VERSION[0].clang_cuda:
-                        for version_combination in CLANG_CUDA_MAX_CUDA_VERSION:
+                    if (
+                        row[compiler].version
+                        <= self.version.get_clang_cuda_max_cuda_version()[0].clang_cuda
+                    ):
+                        for version_combination in self.version.get_clang_cuda_max_cuda_version():
                             if row[compiler].version >= version_combination.clang_cuda:
                                 if (
                                     row[ALPAKA_ACC_GPU_CUDA_ENABLE].version

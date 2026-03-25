@@ -17,6 +17,7 @@ from bashi.filter import FilterBase
 from bashi.filter_chain import get_default_filter_chain, FilterChain
 from bashi.runtime_info import get_sdk_supporting_ubuntus
 from bashi.versions import UBUNTU_HIP_VERSION_RANGE, UBUNTU_CUDA_VERSION_RANGE
+from bashi.version.relation import VersionRelation
 
 
 def get_runtime_infos(
@@ -68,6 +69,7 @@ def generate_combination_list(
     parameter_value_matrix: ParameterValueMatrix,
     runtime_infos: Dict[str, Callable[..., bool]],
     custom_filter: FilterBase = FilterBase(),
+    version_relation: VersionRelation = VersionRelation(),
     debug_print: FilterDebugMode = FilterDebugMode.OFF,
 ) -> CombinationList:
     """Generate combination-list from the parameter-value-matrix. The combination list contains
@@ -78,6 +80,9 @@ def generate_combination_list(
             parameter-values.
         custom_filter (FilterFunction, optional): Custom filter function to extend bashi
             filters. Defaults is lambda _: True.
+        version_relation (VersionRelation): Provides information about the relationships between
+                the versions of various parameter-values. For example, which GCC version supports
+                which C++ standard.
         debug_print (FilterDebugMode): Depending on the debug mode, print additional information
             for each row passing the filter function. Defaults to FilterDebugMode.OFF.
     Returns:
@@ -85,7 +90,7 @@ def generate_combination_list(
     """
 
     filter_chain: FilterChain = get_default_filter_chain(
-        runtime_infos=runtime_infos, custom_filter=custom_filter
+        runtime_infos=runtime_infos, custom_filter=custom_filter, version_relation=version_relation
     )
     filter_chain.set_debug_print(debug_print)
 

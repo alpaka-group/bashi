@@ -11,6 +11,7 @@ from bashi.utils import (
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.versions import COMPILERS
+from bashi.version.relation import VersionRelation
 from bashi.result_modules.cuda_support import remove_cuda_specific_parameter_value_pairs
 from bashi.result_modules.hip_support import remove_hip_specific_parameter_value_pairs
 from bashi.result_modules.cxx_compiler_support import remove_cxx_specific_parameter_value_pairs
@@ -20,6 +21,7 @@ from bashi.result_modules.cxx_compiler_support import remove_cxx_specific_parame
 def get_expected_bashi_parameter_value_pairs(
     parameter_matrix: ParameterValueMatrix,
     runtime_infos: Dict[str, Callable[..., bool]],
+    version_relation: VersionRelation = VersionRelation(),
 ) -> Tuple[List[ParameterValuePair], List[ParameterValuePair]]:
     """Takes parameter-value-matrix and creates a list of all expected parameter-values-pairs
     allowed by the bashi library. First it generates a complete list of parameter-value-pairs and
@@ -27,6 +29,13 @@ def get_expected_bashi_parameter_value_pairs(
 
     Args:
         parameter_matrix (ParameterValueMatrix): matrix of parameter values
+        runtime_infos (Dict[str, Callable[..., bool]], optional): Runtime infos will be
+                constructed depending on the input parameter-value-matrix. The functions are named
+                by a string, takes an arbitrary number of arguments and return if the combination of
+                the given parameter-values are valid.
+        version_relation (VersionRelation): Provides information about the relationships between
+                the versions of various parameter-values. For example, which GCC version supports
+                which C++ standard.
 
     Returns:
         List[ParameterValuePair]: list of all parameter-value-pairs supported by bashi
@@ -55,7 +64,7 @@ def get_expected_bashi_parameter_value_pairs(
 
     remove_cxx_specific_parameter_value_pairs(param_val_pair_list, removed_param_val_pair_list)
     remove_cuda_specific_parameter_value_pairs(
-        param_val_pair_list, removed_param_val_pair_list, runtime_infos
+        param_val_pair_list, removed_param_val_pair_list, version_relation, runtime_infos
     )
     remove_hip_specific_parameter_value_pairs(
         param_val_pair_list, removed_param_val_pair_list, runtime_infos
