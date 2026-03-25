@@ -140,7 +140,7 @@ def print_row_nice(
     print(get_str_row_nice(row, init, bashi_validate))
 
 
-def ubuntu_version_to_string(version: packaging.version.Version) -> str:
+def ubuntu_version_to_string(version: ValueVersion) -> str:
     """Returns the Ubuntu version representation correctly. Ubuntu versions
     use a leading 0 in their version scheme for months before October. pkv.parse()`
     parses e.g. the 04 from 20.04 to 4. Therefore the string representation of
