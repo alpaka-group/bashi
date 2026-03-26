@@ -7,14 +7,11 @@ import packaging.version as pkv
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.versions import (
-    CompilerCxxSupport,
     ClangCudaSDKSupport,
-    _get_clang_cuda_cuda_sdk_cxx_support,
-    MAX_CUDA_SDK_CXX_SUPPORT,
-    NVCC_CXX_SUPPORT_VERSION,
     ClangBase,
     _get_clang_base_compiler_cxx_support,
 )
+from bashi.version.relation import VersionRelation, CompilerCxxSupport
 from bashi.filter_compiler import (
     compiler_filter_typechecked,
     _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc,
@@ -132,9 +129,10 @@ class TestGetMaximumSupportedCXXStandardForCUDASdk(unittest.TestCase):
             CompilerCxxSupport("11.5", "20"),
             CompilerCxxSupport("10.0", "17"),
         ]
-        result = _get_clang_cuda_cuda_sdk_cxx_support(
-            clang_cxx_support_version, clang_cuda_max_cuda_version
-        )
+        result = VersionRelation(
+            clang_cxx_support_version=clang_cxx_support_version,
+            clang_cuda_max_cuda_version=clang_cuda_max_cuda_version,
+        ).get_max_cuda_sdk_cxx_support()
 
         # workaround for Python <= 3.11
         # SyntaxError: f-string expression part cannot include a backslash
@@ -172,9 +170,10 @@ class TestGetMaximumSupportedCXXStandardForCUDASdk(unittest.TestCase):
             CompilerCxxSupport("11.5", "20"),
             CompilerCxxSupport("10.0", "17"),
         ]
-        result = _get_clang_cuda_cuda_sdk_cxx_support(
-            clang_cxx_support_version, clang_cuda_max_cuda_version
-        )
+        result = VersionRelation(
+            clang_cxx_support_version=clang_cxx_support_version,
+            clang_cuda_max_cuda_version=clang_cuda_max_cuda_version,
+        ).get_max_cuda_sdk_cxx_support()
 
         # workaround for Python <= 3.11
         # SyntaxError: f-string expression part cannot include a backslash
@@ -815,8 +814,14 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
             )
 
     def test_cuda_sdk_cxx_support_of_clang_cuda_c27(self):
-        max_clang_cuda_support_cxx = sorted(MAX_CUDA_SDK_CXX_SUPPORT, reverse=True)[0]
-        max_nvcc_supported_cxx = sorted(NVCC_CXX_SUPPORT_VERSION, reverse=True)[0]
+        version_relation = VersionRelation()
+
+        max_clang_cuda_support_cxx = sorted(
+            version_relation.get_max_cuda_sdk_cxx_support(), reverse=True
+        )[0]
+        max_nvcc_supported_cxx = sorted(
+            version_relation.get_nvcc_cxx_support_version(), reverse=True
+        )[0]
 
         # The test only works, if this true. If this assumption does not match the real world use
         # case anymore, the test needs to be modified.

@@ -6,9 +6,6 @@ import packaging.version as pkv
 from bashi.types import ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.versions import (
-    NVCC_CXX_SUPPORT_VERSION,
-    CLANG_CUDA_CXX_SUPPORT_VERSION,
-    MAX_CUDA_SDK_CXX_SUPPORT,
     ICPX_CXX_SUPPORT_VERSION,
     HIPCC_CXX_SUPPORT_VERSION,
 )
@@ -35,11 +32,15 @@ def remove_cxx_specific_parameter_value_pairs(
     _remove_unsupported_cxx_versions_for_clang(
         parameter_value_pairs, removed_parameter_value_pairs, version_relation
     )
-    _remove_unsupported_cxx_versions_for_nvcc(parameter_value_pairs, removed_parameter_value_pairs)
-    _remove_unsupported_cxx_versions_for_clang_cuda(
-        parameter_value_pairs, removed_parameter_value_pairs
+    _remove_unsupported_cxx_versions_for_nvcc(
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
     )
-    _remove_unsupported_cxx_versions_for_cuda(parameter_value_pairs, removed_parameter_value_pairs)
+    _remove_unsupported_cxx_versions_for_clang_cuda(
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
+    )
+    _remove_unsupported_cxx_versions_for_cuda(
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
+    )
     _remove_unsupported_cxx_versions_for_icpx(parameter_value_pairs, removed_parameter_value_pairs)
     _remove_unsupported_cxx_versions_for_hipcc(parameter_value_pairs, removed_parameter_value_pairs)
 
@@ -148,6 +149,7 @@ def _remove_unsupported_cxx_versions_for_clang(
 def _remove_unsupported_cxx_versions_for_nvcc(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version_relation: VersionRelation,
 ):
     """Remove unsupported combinations of Nvcc compiler versions and C++ standard.
 
@@ -160,7 +162,7 @@ def _remove_unsupported_cxx_versions_for_nvcc(
         parameter_value_pairs,
         removed_parameter_value_pairs,
         NVCC,
-        NVCC_CXX_SUPPORT_VERSION,
+        version_relation.get_nvcc_cxx_support_version(),
         DEVICE_COMPILER,
     )
 
@@ -168,6 +170,7 @@ def _remove_unsupported_cxx_versions_for_nvcc(
 def _remove_unsupported_cxx_versions_for_clang_cuda(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version_relation: VersionRelation,
 ):
     """Remove unsupported combinations of Clang-CUDA compiler versions and C++ standard.
 
@@ -181,7 +184,7 @@ def _remove_unsupported_cxx_versions_for_clang_cuda(
             parameter_value_pairs,
             removed_parameter_value_pairs,
             CLANG_CUDA,
-            CLANG_CUDA_CXX_SUPPORT_VERSION,
+            version_relation.get_clang_cuda_cxx_support_version(),
             compiler_type,
         )
 
@@ -189,6 +192,7 @@ def _remove_unsupported_cxx_versions_for_clang_cuda(
 def _remove_unsupported_cxx_versions_for_cuda(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version_relation: VersionRelation,
 ):
     """Remove all combinations of the CUDA backend and the C++ standard, which are not possible with
     the Nvcc or Clang-CUDA compiler.
@@ -208,14 +212,14 @@ def _remove_unsupported_cxx_versions_for_cuda(
 
     cxx_bounds: Dict[str, CUDASdkRange] = {}
 
-    max_cuda_sdk_cxx_support_sorted = sorted(MAX_CUDA_SDK_CXX_SUPPORT)
+    max_cuda_sdk_cxx_support_sorted = sorted(version_relation.get_max_cuda_sdk_cxx_support())
     # because a Clang-CUDA version supports the latest CUDA SDK automatically, a upper bound is set
     for max_clang_cuda_sdk in max_cuda_sdk_cxx_support_sorted:
         cxx_bounds[str(max_clang_cuda_sdk.cxx)] = CUDASdkRange(
             str(max_clang_cuda_sdk.compiler), str(max_cuda_sdk_cxx_support_sorted[-1].compiler)
         )
 
-    for max_nvcc_sdk_support in NVCC_CXX_SUPPORT_VERSION:
+    for max_nvcc_sdk_support in version_relation.get_nvcc_cxx_support_version():
         cxx = str(max_nvcc_sdk_support.cxx)
         # check who supports a C++ standard earlier
         # if a C++ standard is supported by Nvcc all newer version also supports the C++

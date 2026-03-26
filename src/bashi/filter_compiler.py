@@ -13,9 +13,6 @@ from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValueTuple, Parameter, ValueName
 from bashi.versions import (
-    CLANG_CUDA_CXX_SUPPORT_VERSION,
-    NVCC_CXX_SUPPORT_VERSION,
-    MAX_CUDA_SDK_CXX_SUPPORT,
     ICPX_CXX_SUPPORT_VERSION,
     HIPCC_CXX_SUPPORT_VERSION,
 )
@@ -110,7 +107,7 @@ def _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
     Args:
         cuda_sdk_version (pkv.Version): CUDA backend version
         max_cuda_sdk_cxx_support (List[CompilerCxxSupport]): Only for testing
-        purpose. Use MAX_CUDA_SDK_CXX_SUPPORT.
+        purpose. Use VersionRelation().get_max_cuda_sdk_cxx_support(self).
 
     Returns:
         pkv.Version: C++ version
@@ -136,7 +133,7 @@ def _get_max_supported_cxx_version_for_cuda_sdk(
         nvcc_compiler_cxx_support_list (List[CompilerCxxSupport]): Only for testing
         purpose. Use NVCC_CXX_SUPPORT_VERSION.
                 max_cuda_sdk_cxx_support (List[CompilerCxxSupport]): Only for testing
-        purpose. Use MAX_CUDA_SDK_CXX_SUPPORT.
+        purpose. Use VersionRelation().get_max_cuda_sdk_cxx_support(self).
 
     Returns:
         pkv.Version: C++ version
@@ -437,7 +434,11 @@ class CompilerFilter(FilterBase):
 
                     # Rule: c25
                     if _remove_unsupported_compiler_cxx_combination(
-                        row, CLANG_CUDA, compiler, CLANG_CUDA_CXX_SUPPORT_VERSION, self.output
+                        row,
+                        CLANG_CUDA,
+                        compiler,
+                        self.version.get_clang_cuda_cxx_support_version(),
+                        self.output,
                     ):
                         # reason() is inside _remove_unsupported_compiler_cxx_combination
                         return False
@@ -458,7 +459,11 @@ class CompilerFilter(FilterBase):
 
                 # Rule: c23
                 if _remove_unsupported_compiler_cxx_combination(
-                    row, NVCC, DEVICE_COMPILER, NVCC_CXX_SUPPORT_VERSION, self.output
+                    row,
+                    NVCC,
+                    DEVICE_COMPILER,
+                    self.version.get_nvcc_cxx_support_version(),
+                    self.output,
                 ):
                     # reason() is inside _remove_unsupported_compiler_cxx_combination
                     return False
@@ -474,8 +479,8 @@ class CompilerFilter(FilterBase):
                     # device compiler was added to the row.
                     if row[CXX_STANDARD].version > _get_max_supported_cxx_version_for_cuda_sdk(
                         row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
-                        NVCC_CXX_SUPPORT_VERSION,
-                        MAX_CUDA_SDK_CXX_SUPPORT,
+                        self.version.get_nvcc_cxx_support_version(),
+                        self.version.get_max_cuda_sdk_cxx_support(),
                     ):
                         self.reason(
                             f"There is not Nvcc or Clang-CUDA version which supports "
@@ -497,11 +502,12 @@ class CompilerFilter(FilterBase):
                         CXX_STANDARD
                     ].version > _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(
                         row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
-                        NVCC_CXX_SUPPORT_VERSION,
+                        self.version.get_nvcc_cxx_support_version(),
                     ) and row[
                         CXX_STANDARD
                     ].version <= _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
-                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version, MAX_CUDA_SDK_CXX_SUPPORT
+                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
+                        self.version.get_max_cuda_sdk_cxx_support(),
                     ):
                         if (
                             row[ALPAKA_ACC_GPU_CUDA_ENABLE].version
@@ -523,7 +529,7 @@ class CompilerFilter(FilterBase):
                             row,
                             ALPAKA_ACC_GPU_CUDA_ENABLE,
                             ALPAKA_ACC_GPU_CUDA_ENABLE,
-                            NVCC_CXX_SUPPORT_VERSION,
+                            self.version.get_nvcc_cxx_support_version(),
                             None,
                         ):
                             self.reason(

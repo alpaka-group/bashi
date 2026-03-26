@@ -8,6 +8,7 @@ from typing import Dict, Callable, IO
 import packaging.version as pkv
 from utils_test import parse_param_vals
 from bashi.versions import get_parameter_value_matrix
+from bashi.version.relation import VersionRelation
 from bashi.generator import generate_combination_list, get_runtime_infos
 from bashi.utils import (
     get_expected_parameter_value_pairs,
@@ -367,7 +368,9 @@ class TestParameterMatrixFilter(unittest.TestCase):
         self.assertEqual(param_matrix_before, param_matrix)
 
         expected_param_value_pairs, unexpected_param_value_pairs = (
-            get_expected_bashi_parameter_value_pairs(param_matrix, runtime_info)
+            get_expected_bashi_parameter_value_pairs(
+                param_matrix, runtime_infos=runtime_info, version_relation=VersionRelation()
+            )
         )
 
         self.assertTrue(

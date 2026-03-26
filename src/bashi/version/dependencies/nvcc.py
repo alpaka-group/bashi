@@ -2,7 +2,7 @@
 
 from typing import List
 import packaging.version
-from bashi.version.dependencies.base_version_support import VersionSupportBase
+from bashi.version.dependencies.base_version_support import VersionSupportBase, CompilerCxxSupport
 
 
 # pylint suggest to use a dataclass, but it does not work because of the cast
@@ -66,4 +66,11 @@ NVCC_CLANG_MAX_VERSION: List[NvccHostSupport] = [
     NvccHostSupport("11.0", "9"),
     NvccHostSupport("10.1", "8"),
     NvccHostSupport("10.0", "6"),
+]
+
+# define the maximum supported cxx version for a specific nvcc version
+NVCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = [
+    CompilerCxxSupport("10.0", "14"),
+    CompilerCxxSupport("11.0", "17"),
+    CompilerCxxSupport("12.0", "20"),
 ]

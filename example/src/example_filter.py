@@ -5,9 +5,6 @@ import packaging.version as pkv
 from bashi.types import ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter import FilterBase
-from bashi.versions import (
-    NVCC_CXX_SUPPORT_VERSION,
-)
 from bashi.version.dependencies.nvcc import NvccHostSupport
 from bashi import VersionRelation
 
@@ -131,7 +128,7 @@ class ExampleFilter(FilterBase):
                                 max_supported_cuda_version = nvcc_host_ver.nvcc
                                 break
                         max_support_cxx_ver = OFF_VER
-                        for nvcc_cxx_support in NVCC_CXX_SUPPORT_VERSION:
+                        for nvcc_cxx_support in self.version.get_nvcc_cxx_support_version():
                             if max_supported_cuda_version >= nvcc_cxx_support.compiler:
                                 max_support_cxx_ver = nvcc_cxx_support.cxx
                                 break
