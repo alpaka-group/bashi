@@ -8,10 +8,8 @@ from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.versions import (
     ClangCudaSDKSupport,
-    ClangBase,
-    _get_clang_base_compiler_cxx_support,
 )
-from bashi.version.relation import VersionRelation, CompilerCxxSupport
+from bashi.version.relation import VersionRelation, CompilerCxxSupport, ClangBase
 from bashi.filter_compiler import (
     compiler_filter_typechecked,
     _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc,
@@ -886,7 +884,9 @@ class TestClangBasedCompilerCXXSupport(unittest.TestCase):
             ]
         )
 
-        result = sorted(_get_clang_base_compiler_cxx_support(given, clang_cxx_support_version))
+        result = sorted(
+            VersionRelation()._get_clang_base_compiler_cxx_support(given, clang_cxx_support_version)
+        )
 
         # workaround for Python <= 3.11
         # SyntaxError: f-string expression part cannot include a backslash

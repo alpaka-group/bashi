@@ -12,10 +12,6 @@ import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValueTuple, Parameter, ValueName
-from bashi.versions import (
-    ICPX_CXX_SUPPORT_VERSION,
-    HIPCC_CXX_SUPPORT_VERSION,
-)
 from bashi.version.dependencies.base_version_support import CompilerCxxSupport
 from bashi.version.relation import VersionRelation
 from bashi.filter import FilterBase
@@ -445,14 +441,22 @@ class CompilerFilter(FilterBase):
 
                     # Rule: c28
                     if _remove_unsupported_compiler_cxx_combination(
-                        row, ICPX, compiler, ICPX_CXX_SUPPORT_VERSION, self.output
+                        row,
+                        ICPX,
+                        compiler,
+                        self.version.get_icpx_cxx_support_version(),
+                        self.output,
                     ):
                         # reason() is inside _remove_unsupported_compiler_cxx_combination
                         return False
 
                     # Rule: c29
                     if _remove_unsupported_compiler_cxx_combination(
-                        row, HIPCC, compiler, HIPCC_CXX_SUPPORT_VERSION, self.output
+                        row,
+                        HIPCC,
+                        compiler,
+                        self.version.get_hipcc_cxx_support_version(),
+                        self.output,
                     ):
                         # reason() is inside _remove_unsupported_compiler_cxx_combination
                         return False

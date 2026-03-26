@@ -396,6 +396,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_cxx_versions_for_hipcc(self):
@@ -424,4 +425,5 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )

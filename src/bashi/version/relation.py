@@ -7,10 +7,12 @@ from bashi.version.dependencies.nvcc import (
     NVCC_CLANG_MAX_VERSION,
     NVCC_CXX_SUPPORT_VERSION,
 )
-from bashi.version.dependencies.base_version_support import CompilerCxxSupport
+from bashi.version.dependencies.base_version_support import CompilerCxxSupport, ClangBase
 from bashi.version.dependencies.gcc import GCC_CXX_SUPPORT_VERSION
 from bashi.version.dependencies.clang import CLANG_CXX_SUPPORT_VERSION
 from bashi.version.dependencies.clang_cuda import CLANG_CUDA_MAX_CUDA_VERSION, ClangCudaSDKSupport
+from bashi.version.dependencies.icpx import ICPX_CLANG_VERSION
+from bashi.version.dependencies.hipcc import HIPCC_CLANG_VERSION
 
 
 # pylint: disable=too-few-public-methods
@@ -30,6 +32,8 @@ class VersionRelation:
         nvcc_clang_max_version: List[NvccHostSupport] | None = None,
         nvcc_cxx_support_version: List[CompilerCxxSupport] | None = None,
         clang_cuda_max_cuda_version: List[ClangCudaSDKSupport] | None = None,
+        icpx_clang_version: List[ClangBase] | None = None,
+        hipcc_clang_version: List[ClangBase] | None = None,
     ) -> None:
         self._gcc_cxx_support_version = (
             GCC_CXX_SUPPORT_VERSION if gcc_cxx_support_version is None else gcc_cxx_support_version
@@ -69,6 +73,16 @@ class VersionRelation:
 
         self._max_cuda_sdk_cxx_support = self._get_clang_cuda_cuda_sdk_cxx_support(
             self.get_clang_cuda_cxx_support_version(), self._clang_cuda_max_cuda_version
+        )
+
+        self._icpx_cxx_support_version = self._get_clang_base_compiler_cxx_support(
+            ICPX_CLANG_VERSION if icpx_clang_version is None else icpx_clang_version,
+            self._clang_cxx_support_version,
+        )
+
+        self._hipcc_cxx_support_version = self._get_clang_base_compiler_cxx_support(
+            HIPCC_CLANG_VERSION if hipcc_clang_version is None else hipcc_clang_version,
+            self._clang_cxx_support_version,
         )
 
     def _get_clang_cuda_cuda_sdk_cxx_support(
@@ -111,6 +125,42 @@ class VersionRelation:
 
         return comb
 
+    def _get_clang_base_compiler_cxx_support(
+        self, compiler_clang_mapping: List[ClangBase], clang_cxx_support: List[CompilerCxxSupport]
+    ) -> List[CompilerCxxSupport]:
+        """Takes a list of compilers based on specific Clang versions and calculates their C++
+        support based on the C++ support of the underlying Clang versions.
+
+        Args:
+            compiler_clang_mapping (List[ClangBase]): List of Clang-based compiler
+            clang_cxx_support (List[CompilerCxxSupport]): List of Clang C++ standard support
+
+        Returns:
+            List[CompilerCxxSupport]: List of Clang-based compiler C++ standard support
+        """
+
+        compiler_clang_mapping_sorted = sorted(compiler_clang_mapping, reverse=True)
+        clang_cxx_support_sorted = sorted(clang_cxx_support, reverse=True)
+
+        compiler_cxx_support: List[CompilerCxxSupport] = []
+
+        for compiler_clang in compiler_clang_mapping_sorted:
+            if compiler_clang.clang < clang_cxx_support_sorted[-1].compiler:
+                compiler_cxx_support.append(
+                    CompilerCxxSupport(
+                        str(compiler_clang.compiler), str(clang_cxx_support_sorted[-1].cxx)
+                    )
+                )
+                break
+            for clang_cxx in clang_cxx_support_sorted:
+                if compiler_clang.clang >= clang_cxx.compiler:
+                    compiler_cxx_support.append(
+                        CompilerCxxSupport(str(compiler_clang.compiler), str(clang_cxx.cxx))
+                    )
+                    break
+
+        return compiler_cxx_support
+
     def get_gcc_cxx_support_version(self) -> List[CompilerCxxSupport]:
         """Return what is the maximum supported C++ standard for various GCC versions."""
         return self._gcc_cxx_support_version
@@ -152,3 +202,11 @@ class VersionRelation:
         C++17 is possible
         """
         return self._max_cuda_sdk_cxx_support
+
+    def get_icpx_cxx_support_version(self) -> List[CompilerCxxSupport]:
+        """Return what is the maximum supported C++ standard for various icpx versions."""
+        return self._icpx_cxx_support_version
+
+    def get_hipcc_cxx_support_version(self) -> List[CompilerCxxSupport]:
+        """Return what is the maximum supported C++ standard for various hipcc versions."""
+        return self._hipcc_cxx_support_version

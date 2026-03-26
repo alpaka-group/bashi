@@ -11,28 +11,8 @@ from packaging.specifiers import SpecifierSet
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ValueName, ValueVersion, ParameterValue, ParameterValueMatrix
 from bashi.exceptions import BashiUnknownVersion
-from bashi.version.dependencies.base_version_support import VersionSupportBase, CompilerCxxSupport
+from bashi.version.dependencies.base_version_support import VersionSupportBase
 from bashi.version.dependencies.clang_cuda import ClangCudaSDKSupport, CLANG_CUDA_MAX_CUDA_VERSION
-from bashi.version.dependencies.clang import (
-    CLANG_CXX_SUPPORT_VERSION as CLANG_CXX_SUPPORT_VERSION_TMP,
-)
-
-
-# pylint: disable=too-few-public-methods
-class ClangBase(VersionSupportBase):
-    """Contains a compiler version and Clang version which the compiler based on. Does automatically
-    parse the input strings to package.version.Version.
-
-    Provides comparision operators for sorting.
-    """
-
-    def __init__(self, compiler: str, clang: str):
-        VersionSupportBase.__init__(self, compiler, clang)
-        self.compiler: packaging.version.Version = self.version1
-        self.clang: packaging.version.Version = self.version2
-
-    def __str__(self) -> str:
-        return f"Compiler {str(self.compiler)} + Clang {self.clang}"
 
 
 # pylint: disable=too-few-public-methods
@@ -47,32 +27,6 @@ class SDKUbuntuSupport(VersionSupportBase):
         VersionSupportBase.__init__(self, sdk_version, ubuntu_version)
         self.sdk: packaging.version.Version = self.version1
         self.ubuntu: packaging.version.Version = self.version2
-
-
-def _get_clang_base_compiler_cxx_support(
-    compiler_clang_mapping: List[ClangBase], clang_cxx_support: List[CompilerCxxSupport]
-) -> List[CompilerCxxSupport]:
-    compiler_clang_mapping_sorted = sorted(compiler_clang_mapping, reverse=True)
-    clang_cxx_support_sorted = sorted(clang_cxx_support, reverse=True)
-
-    compiler_cxx_support: List[CompilerCxxSupport] = []
-
-    for compiler_clang in compiler_clang_mapping_sorted:
-        if compiler_clang.clang < clang_cxx_support_sorted[-1].compiler:
-            compiler_cxx_support.append(
-                CompilerCxxSupport(
-                    str(compiler_clang.compiler), str(clang_cxx_support_sorted[-1].cxx)
-                )
-            )
-            break
-        for clang_cxx in clang_cxx_support_sorted:
-            if compiler_clang.clang >= clang_cxx.compiler:
-                compiler_cxx_support.append(
-                    CompilerCxxSupport(str(compiler_clang.compiler), str(clang_cxx.cxx))
-                )
-                break
-
-    return compiler_cxx_support
 
 
 VERSIONS: Dict[str, List[Union[str, int, float]]] = {
@@ -137,39 +91,6 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
 # Clang and Clang-CUDA has the same version numbers
 VERSIONS[CLANG_CUDA] = copy.copy(VERSIONS[CLANG])
 
-
-# This list stores which ICPX version based on which Clang
-# The list allows to reuse the knowledge of Clang and apply it on ICPX like the C++ standard
-# support.
-ICPX_CLANG_VERSION: List[ClangBase] = [ClangBase("2025.0", "19")]
-
-ICPX_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = _get_clang_base_compiler_cxx_support(
-    ICPX_CLANG_VERSION, CLANG_CXX_SUPPORT_VERSION_TMP
-)
-
-# This list stores which HIPCC version based on which Clang
-# The list allows to reuse the knowledge of Clang and apply it on HIPCC like the C++ standard
-# support.
-HIPCC_CLANG_VERSION: List[ClangBase] = [
-    ClangBase("5.1", "14"),
-    ClangBase("5.2", "14"),
-    ClangBase("5.3", "15"),
-    ClangBase("5.5", "16"),
-    ClangBase("5.6", "16"),
-    ClangBase("5.7", "17"),
-    ClangBase("6.0", "17"),
-    ClangBase("6.1", "17"),
-    ClangBase("6.2", "18"),
-    ClangBase("6.3", "18"),
-    ClangBase("6.4", "19"),
-    ClangBase("7.0", "20"),
-    ClangBase("7.1", "20"),
-    ClangBase("7.2", "22"),
-]
-
-HIPCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = _get_clang_base_compiler_cxx_support(
-    HIPCC_CLANG_VERSION, CLANG_CXX_SUPPORT_VERSION_TMP
-)
 
 # the list minimum HIP SDK version which can be installed on a specific Ubuntu version
 # the next entry in the list defines exclusive, upper bound of a HIP SDK version range

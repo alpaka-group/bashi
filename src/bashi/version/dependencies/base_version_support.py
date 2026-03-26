@@ -38,3 +38,20 @@ class CompilerCxxSupport(VersionSupportBase):
 
     def __str__(self) -> str:
         return f"compiler {str(self.compiler)} + CXX {self.cxx}"
+
+
+# pylint: disable=too-few-public-methods
+class ClangBase(VersionSupportBase):
+    """Contains a compiler version and Clang version which the compiler based on. Does automatically
+    parse the input strings to package.version.Version.
+
+    Provides comparision operators for sorting.
+    """
+
+    def __init__(self, compiler: str, clang: str):
+        VersionSupportBase.__init__(self, compiler, clang)
+        self.compiler: packaging.version.Version = self.version1
+        self.clang: packaging.version.Version = self.version2
+
+    def __str__(self) -> str:
+        return f"Compiler {str(self.compiler)} + Clang {self.clang}"

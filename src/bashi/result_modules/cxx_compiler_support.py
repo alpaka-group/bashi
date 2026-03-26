@@ -5,10 +5,6 @@ from dataclasses import dataclass
 import packaging.version as pkv
 from bashi.types import ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import (
-    ICPX_CXX_SUPPORT_VERSION,
-    HIPCC_CXX_SUPPORT_VERSION,
-)
 from bashi.version.relation import VersionRelation
 from bashi.version.dependencies.base_version_support import CompilerCxxSupport
 from bashi.utils import remove_parameter_value_pairs_ranges
@@ -41,8 +37,12 @@ def remove_cxx_specific_parameter_value_pairs(
     _remove_unsupported_cxx_versions_for_cuda(
         parameter_value_pairs, removed_parameter_value_pairs, version_relation
     )
-    _remove_unsupported_cxx_versions_for_icpx(parameter_value_pairs, removed_parameter_value_pairs)
-    _remove_unsupported_cxx_versions_for_hipcc(parameter_value_pairs, removed_parameter_value_pairs)
+    _remove_unsupported_cxx_versions_for_icpx(
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
+    )
+    _remove_unsupported_cxx_versions_for_hipcc(
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
+    )
 
 
 def _remove_unsupported_cxx_version_for_compiler(
@@ -292,6 +292,7 @@ def _remove_unsupported_cxx_versions_for_cuda(
 def _remove_unsupported_cxx_versions_for_icpx(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version_relation: VersionRelation,
 ):
     """Remove unsupported combinations of ICPX compiler versions and C++ standard.
 
@@ -305,7 +306,7 @@ def _remove_unsupported_cxx_versions_for_icpx(
             parameter_value_pairs,
             removed_parameter_value_pairs,
             ICPX,
-            ICPX_CXX_SUPPORT_VERSION,
+            version_relation.get_icpx_cxx_support_version(),
             compiler_type,
         )
 
@@ -313,6 +314,7 @@ def _remove_unsupported_cxx_versions_for_icpx(
 def _remove_unsupported_cxx_versions_for_hipcc(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version_relation: VersionRelation,
 ):
     """Remove unsupported combinations of HIPCC compiler versions and C++ standard.
 
@@ -326,6 +328,6 @@ def _remove_unsupported_cxx_versions_for_hipcc(
             parameter_value_pairs,
             removed_parameter_value_pairs,
             HIPCC,
-            HIPCC_CXX_SUPPORT_VERSION,
+            version_relation.get_hipcc_cxx_support_version(),
             compiler_type,
         )
