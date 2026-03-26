@@ -11,46 +11,14 @@ from packaging.specifiers import SpecifierSet
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ValueName, ValueVersion, ParameterValue, ParameterValueMatrix
 from bashi.exceptions import BashiUnknownVersion
+from bashi.version.dependencies.base_version_support import VersionSupportBase, CompilerCxxSupport
 from bashi.version.dependencies.clang_cuda import ClangCudaSDKSupport, CLANG_CUDA_MAX_CUDA_VERSION
-
-
-class VersionSupportBase:
-    """Contains a nvcc version and host compiler version. Does automatically parse the input strings
-    to package.version.Version.
-
-    Provides comparision operators for sorting.
-    """
-
-    def __init__(self, version1: str, version2: str):
-        self.version1 = pkv.parse(version1)
-        self.version2 = pkv.parse(version2)
-
-    def __lt__(self, other: "VersionSupportBase") -> bool:
-        return self.version1 < other.version1
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, type(self)):
-            raise TypeError(f"does not support other types than {type(self).__name__}")
-        return self.version1 == other.version1 and self.version2 == other.version2
+from bashi.version.dependencies.clang import (
+    CLANG_CXX_SUPPORT_VERSION as CLANG_CXX_SUPPORT_VERSION_TMP,
+)
 
 
 # pylint: disable=too-few-public-methods
-class CompilerCxxSupport(VersionSupportBase):
-    """Contains a compiler version and host compiler version. Does automatically parse the input
-    strings to package.version.Version.
-
-    Provides comparision operators for sorting.
-    """
-
-    def __init__(self, compiler_version: str, cxx_version: str):
-        VersionSupportBase.__init__(self, compiler_version, cxx_version)
-        self.compiler: packaging.version.Version = self.version1
-        self.cxx: packaging.version.Version = self.version2
-
-    def __str__(self) -> str:
-        return f"compiler {str(self.compiler)} + CXX {self.cxx}"
-
-
 class ClangBase(VersionSupportBase):
     """Contains a compiler version and Clang version which the compiler based on. Does automatically
     parse the input strings to package.version.Version.
@@ -67,6 +35,7 @@ class ClangBase(VersionSupportBase):
         return f"Compiler {str(self.compiler)} + Clang {self.clang}"
 
 
+# pylint: disable=too-few-public-methods
 class SDKUbuntuSupport(VersionSupportBase):
     """Contains a SDK version and Ubuntu version. Does automatically parse the input strings
     to package.version.Version.
@@ -207,23 +176,7 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
 VERSIONS[CLANG_CUDA] = copy.copy(VERSIONS[CLANG])
 
 
-# define the maximum supported cxx version for a specific gcc version
-GCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = [
-    CompilerCxxSupport("8", "17"),
-    CompilerCxxSupport("10", "20"),
-    CompilerCxxSupport("11", "23"),
-]
-GCC_CXX_SUPPORT_VERSION.sort(reverse=True)
-
-# define the maximum supported cxx version for a specific clang version
-CLANG_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = [
-    CompilerCxxSupport("9", "17"),
-    CompilerCxxSupport("14", "20"),
-    CompilerCxxSupport("17", "23"),
-]
-CLANG_CXX_SUPPORT_VERSION.sort(reverse=True)
-
-CLANG_CUDA_CXX_SUPPORT_VERSION = CLANG_CXX_SUPPORT_VERSION
+CLANG_CUDA_CXX_SUPPORT_VERSION = CLANG_CXX_SUPPORT_VERSION_TMP
 
 # define the maximum supported cxx version for a specific nvcc version
 NVCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = [
@@ -252,7 +205,7 @@ MAX_CUDA_SDK_CXX_SUPPORT: List[CompilerCxxSupport] = _get_clang_cuda_cuda_sdk_cx
 ICPX_CLANG_VERSION: List[ClangBase] = [ClangBase("2025.0", "19")]
 
 ICPX_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = _get_clang_base_compiler_cxx_support(
-    ICPX_CLANG_VERSION, CLANG_CXX_SUPPORT_VERSION
+    ICPX_CLANG_VERSION, CLANG_CXX_SUPPORT_VERSION_TMP
 )
 
 # This list stores which HIPCC version based on which Clang
@@ -276,7 +229,7 @@ HIPCC_CLANG_VERSION: List[ClangBase] = [
 ]
 
 HIPCC_CXX_SUPPORT_VERSION: List[CompilerCxxSupport] = _get_clang_base_compiler_cxx_support(
-    HIPCC_CLANG_VERSION, CLANG_CXX_SUPPORT_VERSION
+    HIPCC_CLANG_VERSION, CLANG_CXX_SUPPORT_VERSION_TMP
 )
 
 # the list minimum HIP SDK version which can be installed on a specific Ubuntu version

@@ -13,15 +13,13 @@ from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValueTuple, Parameter, ValueName
 from bashi.versions import (
-    CompilerCxxSupport,
-    GCC_CXX_SUPPORT_VERSION,
-    CLANG_CXX_SUPPORT_VERSION,
     CLANG_CUDA_CXX_SUPPORT_VERSION,
     NVCC_CXX_SUPPORT_VERSION,
     MAX_CUDA_SDK_CXX_SUPPORT,
     ICPX_CXX_SUPPORT_VERSION,
     HIPCC_CXX_SUPPORT_VERSION,
 )
+from bashi.version.dependencies.base_version_support import CompilerCxxSupport
 from bashi.version.relation import VersionRelation
 from bashi.filter import FilterBase
 from bashi.utils import reason
@@ -422,13 +420,17 @@ class CompilerFilter(FilterBase):
                 for compiler in (HOST_COMPILER, DEVICE_COMPILER):
                     # Rule: c21
                     if _remove_unsupported_compiler_cxx_combination(
-                        row, GCC, compiler, GCC_CXX_SUPPORT_VERSION, self.output
+                        row, GCC, compiler, self.version.get_gcc_cxx_support_version(), self.output
                     ):
                         # reason() is inside _remove_unsupported_compiler_cxx_combination
                         return False
                     # Rule: c22
                     if _remove_unsupported_compiler_cxx_combination(
-                        row, CLANG, compiler, CLANG_CXX_SUPPORT_VERSION, self.output
+                        row,
+                        CLANG,
+                        compiler,
+                        self.version.get_clang_cxx_support_version(),
+                        self.output,
                     ):
                         # reason() is inside _remove_unsupported_compiler_cxx_combination
                         return False

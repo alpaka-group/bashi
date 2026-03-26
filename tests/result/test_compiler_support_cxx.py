@@ -15,7 +15,9 @@ from bashi.result_modules.cxx_compiler_support import (
 )
 from bashi.types import ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import CompilerCxxSupport, MAX_CUDA_SDK_CXX_SUPPORT
+from bashi.versions import MAX_CUDA_SDK_CXX_SUPPORT
+from bashi.version.relation import VersionRelation
+from bashi.version.dependencies.base_version_support import CompilerCxxSupport
 from utils_test import (
     parse_expected_val_pairs2,
     default_remove_test,
@@ -136,6 +138,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_cxx_versions_for_clang(self):
@@ -203,6 +206,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_cxx_versions_for_nvcc(self):

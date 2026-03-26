@@ -6,6 +6,9 @@ from bashi.version.dependencies.nvcc import (
     NVCC_GCC_MAX_VERSION,
     NVCC_CLANG_MAX_VERSION,
 )
+from bashi.version.dependencies.base_version_support import CompilerCxxSupport
+from bashi.version.dependencies.gcc import GCC_CXX_SUPPORT_VERSION
+from bashi.version.dependencies.clang import CLANG_CXX_SUPPORT_VERSION
 from bashi.version.dependencies.clang_cuda import CLANG_CUDA_MAX_CUDA_VERSION, ClangCudaSDKSupport
 
 
@@ -18,10 +21,24 @@ class VersionRelation:
 
     def __init__(
         self,
+        gcc_cxx_support_version: List[CompilerCxxSupport] | None = None,
+        clang_cxx_support_version: List[CompilerCxxSupport] | None = None,
         nvcc_gcc_max_version: List[NvccHostSupport] | None = None,
         nvcc_clang_max_version: List[NvccHostSupport] | None = None,
         clang_cuda_max_cuda_version: List[ClangCudaSDKSupport] | None = None,
     ) -> None:
+        self._gcc_cxx_support_version = (
+            GCC_CXX_SUPPORT_VERSION if gcc_cxx_support_version is None else gcc_cxx_support_version
+        )
+        self._gcc_cxx_support_version.sort(reverse=True)
+
+        self._clang_cxx_support_version = (
+            CLANG_CXX_SUPPORT_VERSION
+            if clang_cxx_support_version is None
+            else clang_cxx_support_version
+        )
+        self._clang_cxx_support_version.sort(reverse=True)
+
         self._nvcc_gcc_max_version = (
             NVCC_GCC_MAX_VERSION if nvcc_gcc_max_version is None else nvcc_gcc_max_version
         )
@@ -38,6 +55,14 @@ class VersionRelation:
             else clang_cuda_max_cuda_version
         )
         self._clang_cuda_max_cuda_version.sort(reverse=True)
+
+    def get_gcc_cxx_support_version(self) -> List[CompilerCxxSupport]:
+        """Return what is the maximum supported C++ standard for various GCC versions."""
+        return self._gcc_cxx_support_version
+
+    def get_clang_cxx_support_version(self) -> List[CompilerCxxSupport]:
+        """Return what is the maximum supported C++ standard for various Clang versions."""
+        return self._clang_cxx_support_version
 
     def get_nvcc_gcc_max_version(self) -> List[NvccHostSupport]:
         """Return what is the maximum supported GCC versions for various NVCC versions."""

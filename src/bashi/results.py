@@ -62,7 +62,9 @@ def get_expected_bashi_parameter_value_pairs(
         param_val_pair_list, removed_param_val_pair_list
     )
 
-    remove_cxx_specific_parameter_value_pairs(param_val_pair_list, removed_param_val_pair_list)
+    remove_cxx_specific_parameter_value_pairs(
+        param_val_pair_list, removed_param_val_pair_list, version_relation
+    )
     remove_cuda_specific_parameter_value_pairs(
         param_val_pair_list, removed_param_val_pair_list, version_relation, runtime_infos
     )
