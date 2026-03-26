@@ -6,11 +6,11 @@ from bashi.types import ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter import FilterBase
 from bashi.versions import (
-    NvccHostSupport,
-    NVCC_GCC_MAX_VERSION,
-    NVCC_CLANG_MAX_VERSION,
     NVCC_CXX_SUPPORT_VERSION,
 )
+from bashi.version.dependencies.nvcc import NvccHostSupport
+from bashi import VersionRelation
+
 from .globals import BUILD_TYPE, CMAKE_RELEASE_VER
 
 
@@ -21,9 +21,10 @@ class ExampleFilter(FilterBase):
     def __init__(
         self,
         runtime_infos: Dict[str, Callable[..., bool]] | None = None,
+        version_relation: VersionRelation = VersionRelation(),
         output: IO[str] | None = None,
     ):
-        super().__init__(runtime_infos, output)
+        super().__init__(runtime_infos, version_relation, output)
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
@@ -117,9 +118,13 @@ class ExampleFilter(FilterBase):
                     if cpu_backend in row and row[cpu_backend].version == OFF_VER:
                         nvcc_host_compiler_max_version: List[NvccHostSupport] = []
                         if row[HOST_COMPILER].name == GCC:
-                            nvcc_host_compiler_max_version = sorted(NVCC_GCC_MAX_VERSION)
+                            nvcc_host_compiler_max_version = sorted(
+                                self.version.get_nvcc_gcc_max_version()
+                            )
                         else:
-                            nvcc_host_compiler_max_version = sorted(NVCC_CLANG_MAX_VERSION)
+                            nvcc_host_compiler_max_version = sorted(
+                                self.version.get_nvcc_clang_max_version()
+                            )
                         max_supported_cuda_version = OFF_VER
                         for nvcc_host_ver in nvcc_host_compiler_max_version:
                             if row[HOST_COMPILER].version <= nvcc_host_ver.host:
@@ -179,8 +184,8 @@ class ExampleFilter(FilterBase):
         # if nvcc does not support a gcc/clang version, the gcc/clang compiler can be only used as
         # cpu compiler
         for compiler_name, max_supported_version in (
-            (GCC, max(comb.host for comb in NVCC_GCC_MAX_VERSION)),
-            (CLANG, max(comb.host for comb in NVCC_CLANG_MAX_VERSION)),
+            (GCC, max(comb.host for comb in self.version.get_nvcc_gcc_max_version())),
+            (CLANG, max(comb.host for comb in self.version.get_nvcc_clang_max_version())),
         ):
             if (
                 HOST_COMPILER in row

@@ -36,9 +36,8 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.versions import (
     get_parameter_value_matrix,
     VERSIONS,
-    NVCC_GCC_MAX_VERSION,
-    NVCC_CLANG_MAX_VERSION,
 )
+from bashi.version.relation import VersionRelation
 from src.example_filter import ExampleFilter
 from src.globals import (
     BUILD_TYPE,
@@ -67,8 +66,10 @@ def verify(
     Returns:
         bool: True if it found all pairs
     """
+    version_relation = VersionRelation()
+
     bashi_parameter_value_pairs_tuple: Tuple[List[ParameterValuePair], List[ParameterValuePair]] = (
-        get_expected_bashi_parameter_value_pairs(param_value_matrix, run_infos)
+        get_expected_bashi_parameter_value_pairs(param_value_matrix, run_infos, version_relation)
     )
 
     expected_param_val_tuple, unexpected_param_val_tuple = bashi_parameter_value_pairs_tuple
@@ -167,8 +168,12 @@ def verify(
     # nvcc does not support all gcc and clang versions
     # therefore there are some gcc and clang host compiler versions which can only works with
     # enabled cpu backends
-    max_supported_nvcc_gcc_version = max(comb.host for comb in NVCC_GCC_MAX_VERSION).major
-    max_supported_nvcc_clang_version = max(comb.host for comb in NVCC_CLANG_MAX_VERSION).major
+    max_supported_nvcc_gcc_version = max(
+        comb.host for comb in version_relation.get_nvcc_gcc_max_version()
+    ).major
+    max_supported_nvcc_clang_version = max(
+        comb.host for comb in version_relation.get_nvcc_clang_max_version()
+    ).major
     for cpu_backend in cpu_backends:
         remove_parameter_value_pairs_ranges(
             expected_param_val_tuple,

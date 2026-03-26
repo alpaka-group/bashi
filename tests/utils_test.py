@@ -13,6 +13,7 @@ from bashi.types import (
 )
 from bashi.utils import create_parameter_value_pair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from bashi.version.relation import VersionRelation
 
 
 def parse_param_val(param_val: Tuple[ValueName, Union[str, int, float]]) -> ParameterValue:
@@ -217,6 +218,7 @@ def default_remove_test(
     test_parameter_value_pairs: List[ParameterValuePair],
     expected_results: List[ParameterValuePair],
     test_self: unittest.TestCase,
+    version_relation: VersionRelation | None = None,
     runtime_infos: Dict[str, Callable[..., bool]] | None = None,
 ):
     """Test template for sub-functions of the get_expected_bashi_parameter_value_pairs() function.
@@ -244,10 +246,23 @@ def default_remove_test(
     )
 
     unexpected_test_param_value_pairs: List[ParameterValuePair] = []
-    if runtime_infos is None:
-        function(test_parameter_value_pairs, unexpected_test_param_value_pairs)
+    if version_relation is None:
+        if runtime_infos is None:
+            function(test_parameter_value_pairs, unexpected_test_param_value_pairs)
+        else:
+            function(test_parameter_value_pairs, unexpected_test_param_value_pairs, runtime_infos)
     else:
-        function(test_parameter_value_pairs, unexpected_test_param_value_pairs, runtime_infos)
+        if runtime_infos is None:
+            function(
+                test_parameter_value_pairs, unexpected_test_param_value_pairs, version_relation
+            )
+        else:
+            function(
+                test_parameter_value_pairs,
+                unexpected_test_param_value_pairs,
+                version_relation,
+                runtime_infos,
+            )
 
     test_parameter_value_pairs.sort()
     unexpected_test_param_value_pairs.sort()

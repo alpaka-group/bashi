@@ -12,7 +12,6 @@ import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValueTuple
-from bashi.versions import NVCC_GCC_MAX_VERSION, NVCC_CLANG_MAX_VERSION
 from bashi.version.relation import VersionRelation
 from bashi.filter import FilterBase
 
@@ -147,9 +146,12 @@ class BackendFilter(FilterBase):
 
                 # if a cuda sdk version is not supported by bashi, assume that the version supports
                 # the latest gcc compiler version
-                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version <= NVCC_GCC_MAX_VERSION[0].nvcc:
+                if (
+                    row[ALPAKA_ACC_GPU_CUDA_ENABLE].version
+                    <= self.version.get_nvcc_gcc_max_version()[0].nvcc
+                ):
                     # check the maximum supported gcc version for the given nvcc version
-                    for nvcc_gcc_comb in NVCC_GCC_MAX_VERSION:
+                    for nvcc_gcc_comb in self.version.get_nvcc_gcc_max_version():
                         if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version >= nvcc_gcc_comb.nvcc:
                             if row[HOST_COMPILER].version > nvcc_gcc_comb.host:
                                 self.reason(
@@ -170,9 +172,12 @@ class BackendFilter(FilterBase):
 
                 # Rule: b12
                 # related to rule c6
-                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version <= NVCC_CLANG_MAX_VERSION[0].nvcc:
+                if (
+                    row[ALPAKA_ACC_GPU_CUDA_ENABLE].version
+                    <= self.version.get_nvcc_clang_max_version()[0].nvcc
+                ):
                     # check the maximum supported clang version for the given cuda sdk version
-                    for nvcc_clang_comb in NVCC_CLANG_MAX_VERSION:
+                    for nvcc_clang_comb in self.version.get_nvcc_clang_max_version():
                         if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version >= nvcc_clang_comb.nvcc:
                             if row[HOST_COMPILER].version > nvcc_clang_comb.host:
                                 self.reason(

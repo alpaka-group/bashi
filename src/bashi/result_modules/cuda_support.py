@@ -6,13 +6,11 @@ from bashi.types import ParameterValueSingle, ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.versions import (
     COMPILERS,
-    NVCC_GCC_MAX_VERSION,
-    NVCC_CLANG_MAX_VERSION,
     UBUNTU_CUDA_VERSION_RANGE,
     UBUNTU_CLANG_CUDA_SDK_SUPPORT,
-    NvccHostSupport,
     ClangCudaSDKSupport,
 )
+from bashi.version.dependencies.nvcc import NvccHostSupport
 from bashi.version.relation import VersionRelation
 from bashi.utils import remove_parameter_value_pairs_ranges, bi_filter
 from bashi.result_modules.sdk_helper import (
@@ -42,13 +40,19 @@ def remove_cuda_specific_parameter_value_pairs(
     _remove_nvcc_host_compiler(parameter_value_pairs, removed_parameter_value_pairs)
     _remove_unsupported_clang_cuda_version(parameter_value_pairs, removed_parameter_value_pairs)
     _remove_unsupported_nvcc_host_compiler(parameter_value_pairs, removed_parameter_value_pairs)
-    _remove_nvcc_unsupported_gcc_versions(parameter_value_pairs, removed_parameter_value_pairs)
-    _remove_nvcc_unsupported_clang_versions(parameter_value_pairs, removed_parameter_value_pairs)
+    _remove_nvcc_unsupported_gcc_versions(
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
+    )
+    _remove_nvcc_unsupported_clang_versions(
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
+    )
     _remove_specific_nvcc_clang_combinations(parameter_value_pairs, removed_parameter_value_pairs)
     _remove_nvcc_and_cuda_version_not_same(parameter_value_pairs, removed_parameter_value_pairs)
-    _remove_cuda_sdk_unsupported_gcc_versions(parameter_value_pairs, removed_parameter_value_pairs)
+    _remove_cuda_sdk_unsupported_gcc_versions(
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
+    )
     _remove_cuda_sdk_unsupported_clang_versions(
-        parameter_value_pairs, removed_parameter_value_pairs
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
     )
     _remove_device_compiler_gcc_clang_enabled_cuda_backend(
         parameter_value_pairs, removed_parameter_value_pairs
@@ -137,6 +141,7 @@ def _remove_unsupported_nvcc_host_compiler(
 def _remove_nvcc_unsupported_gcc_versions(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version_relation: VersionRelation,
 ):
     """Remove all gcc version, which are to new for a specific nvcc version.
 
@@ -149,13 +154,14 @@ def _remove_nvcc_unsupported_gcc_versions(
         GCC,
         DEVICE_COMPILER,
         NVCC,
-        NVCC_GCC_MAX_VERSION,
+        version_relation.get_nvcc_gcc_max_version(),
     )
 
 
 def _remove_nvcc_unsupported_clang_versions(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version_relation: VersionRelation,
 ):
     """Remove all clang version, which are to new for a specific nvcc version.
 
@@ -168,7 +174,7 @@ def _remove_nvcc_unsupported_clang_versions(
         CLANG,
         DEVICE_COMPILER,
         NVCC,
-        NVCC_CLANG_MAX_VERSION,
+        version_relation.get_nvcc_clang_max_version(),
     )
 
 
@@ -334,6 +340,7 @@ def _remove_nvcc_and_cuda_version_not_same(
 def _remove_cuda_sdk_unsupported_gcc_versions(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version_relation: VersionRelation,
 ):
     """Remove all gcc version, which are to new for a specific cuda sdk version.
 
@@ -346,13 +353,14 @@ def _remove_cuda_sdk_unsupported_gcc_versions(
         GCC,
         ALPAKA_ACC_GPU_CUDA_ENABLE,
         ALPAKA_ACC_GPU_CUDA_ENABLE,
-        NVCC_GCC_MAX_VERSION,
+        version_relation.get_nvcc_gcc_max_version(),
     )
 
 
 def _remove_cuda_sdk_unsupported_clang_versions(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version_relation: VersionRelation,
 ):
     """Remove all clang version, which are to new for a specific cuda sdk version.
 
@@ -365,7 +373,7 @@ def _remove_cuda_sdk_unsupported_clang_versions(
         CLANG,
         ALPAKA_ACC_GPU_CUDA_ENABLE,
         ALPAKA_ACC_GPU_CUDA_ENABLE,
-        NVCC_CLANG_MAX_VERSION,
+        version_relation.get_nvcc_clang_max_version(),
     )
 
 
@@ -415,7 +423,7 @@ def _remove_specific_cuda_clang_combinations(
 def _remove_unsupported_clang_sdk_versions_for_clang_cuda(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
-    version: VersionRelation = VersionRelation(),
+    version: VersionRelation,
 ):
     """Remove all CUDA SDK versions, which are not supported by a specific clang-cuda version.
     Includes also disabled CUDA backends.

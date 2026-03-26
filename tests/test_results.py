@@ -15,6 +15,7 @@ from utils_test import (
 from bashi.types import ParameterValue, ParameterValueSingle, ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.versions import VERSIONS
+from bashi.version.relation import VersionRelation
 from bashi.version.dependencies.clang_cuda import CLANG_CUDA_MAX_CUDA_VERSION
 
 
@@ -55,7 +56,7 @@ from bashi.result_modules.hip_support import (
     _remove_enabled_sycl_backend_for_hipcc,
     _remove_enabled_cuda_backend_for_hipcc,
 )
-from bashi.versions import NvccHostSupport, NVCC_GCC_MAX_VERSION
+from bashi.version.dependencies.nvcc import NvccHostSupport, NVCC_GCC_MAX_VERSION
 
 
 class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
@@ -739,7 +740,11 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
         )
 
         default_remove_test(
-            _remove_nvcc_unsupported_gcc_versions, test_param_value_pairs, expected_results, self
+            _remove_nvcc_unsupported_gcc_versions,
+            test_param_value_pairs,
+            expected_results,
+            self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_nvcc_unsupported_clang_versions(self):
@@ -826,6 +831,7 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
 
@@ -1850,6 +1856,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_cuda_sdk_unsupported_clang_versions(self):
@@ -1912,6 +1919,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_device_compiler_gcc_clang_enabled_cuda_backend(self):
@@ -2330,6 +2338,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_gcc_versions_for_ubuntu2004_and_later(self):

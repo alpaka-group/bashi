@@ -88,7 +88,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
             self.default_input,
             self.default_input,
             self,
-            {},
+            runtime_infos={},
         )
 
     def test_remove_unsupported_hip_backend_ubuntu_combinations_normal_runtime_info(self):
@@ -113,7 +113,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
             self.default_input,
             expected_output,
             self,
-            runtime_info,
+            runtime_infos=runtime_info,
         )
 
     def test_remove_unsupported_hip_backend_ubuntu_combinations_gapped_runtime_info(self):
@@ -139,5 +139,5 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
             self.default_input,
             expected_output,
             self,
-            runtime_info,
+            runtime_infos=runtime_info,
         )

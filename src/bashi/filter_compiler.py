@@ -14,8 +14,6 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.types import ParameterValueTuple, Parameter, ValueName
 from bashi.versions import (
     CompilerCxxSupport,
-    NVCC_GCC_MAX_VERSION,
-    NVCC_CLANG_MAX_VERSION,
     GCC_CXX_SUPPORT_VERSION,
     CLANG_CXX_SUPPORT_VERSION,
     CLANG_CUDA_CXX_SUPPORT_VERSION,
@@ -226,9 +224,9 @@ class CompilerFilter(FilterBase):
 
                 # if a nvcc version is not supported by bashi, assume that the version supports the
                 # latest gcc compiler version
-                if row[DEVICE_COMPILER].version <= NVCC_GCC_MAX_VERSION[0].nvcc:
+                if row[DEVICE_COMPILER].version <= self.version.get_nvcc_gcc_max_version()[0].nvcc:
                     # check the maximum supported gcc version for the given nvcc version
-                    for nvcc_gcc_comb in NVCC_GCC_MAX_VERSION:
+                    for nvcc_gcc_comb in self.version.get_nvcc_gcc_max_version():
                         if row[DEVICE_COMPILER].version >= nvcc_gcc_comb.nvcc:
                             if row[HOST_COMPILER].version > nvcc_gcc_comb.host:
                                 self.reason(
@@ -256,9 +254,12 @@ class CompilerFilter(FilterBase):
 
                 # if a nvcc version is not supported by bashi, assume that the version supports the
                 # latest clang compiler version
-                if row[DEVICE_COMPILER].version <= NVCC_CLANG_MAX_VERSION[0].nvcc:
+                if (
+                    row[DEVICE_COMPILER].version
+                    <= self.version.get_nvcc_clang_max_version()[0].nvcc
+                ):
                     # check the maximum supported gcc version for the given nvcc version
-                    for nvcc_clang_comb in NVCC_CLANG_MAX_VERSION:
+                    for nvcc_clang_comb in self.version.get_nvcc_clang_max_version():
                         if row[DEVICE_COMPILER].version >= nvcc_clang_comb.nvcc:
                             if row[HOST_COMPILER].version > nvcc_clang_comb.host:
                                 self.reason(
