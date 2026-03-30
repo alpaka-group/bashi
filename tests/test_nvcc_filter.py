@@ -6,7 +6,7 @@ from collections import OrderedDict as OD
 import packaging.version as pkv
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import VERSIONS
+from bashi.version import VERSIONS
 from bashi.version.dependencies.nvcc import NvccHostSupport
 from bashi.filter_compiler import compiler_filter_typechecked
 from bashi.filter_backend import backend_filter_typechecked

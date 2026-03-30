@@ -1,6 +1,7 @@
 # pylint: disable=missing-docstring
 import unittest
-from bashi.versions import VERSIONS, get_parameter_value_matrix
+from bashi.version import VERSIONS
+from bashi.version.utils import get_parameter_value_matrix
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 

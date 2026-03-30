@@ -4,7 +4,6 @@ from typing import List, Optional, Dict, Callable
 from packaging.specifiers import SpecifierSet
 from bashi.types import ParameterValueSingle, ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import COMPILERS
 from bashi.version.dependencies.nvcc import NvccHostSupport
 from bashi.version.dependencies.clang_cuda import ClangCudaSDKSupport
 from bashi.version.relation import VersionRelation

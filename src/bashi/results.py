@@ -10,7 +10,7 @@ from bashi.utils import (
     bi_filter,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import COMPILERS
+from bashi.globals import COMPILERS
 from bashi.version.relation import VersionRelation
 from bashi.result_modules.cuda_support import remove_cuda_specific_parameter_value_pairs
 from bashi.result_modules.hip_support import remove_hip_specific_parameter_value_pairs

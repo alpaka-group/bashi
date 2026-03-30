@@ -1,9 +1,9 @@
 """Provides relations between different parameter-values and its versions."""
 
 from typing import List, Dict
+from operator import attrgetter
 import packaging.version
 import packaging.specifiers
-from operator import attrgetter
 from bashi.version.dependencies.nvcc import (
     NvccHostSupport,
     NVCC_GCC_MAX_VERSION,
@@ -25,6 +25,7 @@ from bashi.version.dependencies.ubuntu import (
 
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-instance-attributes
 class VersionRelation:
     """Provides relationships between different parameter values and their versions. The object also
     calculates new relationships based on the input. Enables the extension and modification of
@@ -114,8 +115,8 @@ class VersionRelation:
         clang_cuda_max_cuda_support: List[ClangCudaSDKSupport],
     ) -> List[CompilerCxxSupport]:
         """Generate a list containing the latest Clang CUDA version that supports a specific C++
-        standard. Two factors must be taken into account. Which C++ standard does a Clang-CUDA version
-        support and up to which CUDA SDK version does a Clang-CUDA version support.
+        standard. Two factors must be taken into account. Which C++ standard does a Clang-CUDA
+        version support and up to which CUDA SDK version does a Clang-CUDA version support.
 
         Args:
             clang_cuda_cxx_support (List[CompilerCxxSupport]): Contains which Clang-CUDA version
@@ -125,10 +126,11 @@ class VersionRelation:
 
         Returns:
             List[CompilerCxxSupport]: List of Clang-CUDA version with C++ standard. Up to the given
-            Clang-CUDA version the related C++ standard is possible. If Clang-CUDA version is younger
-            than the latest entry, no C++ standard is possible. If a Clang-CUDA version is older, than
-            the oldest version, we assume the older version can have the same C++ standard like the
-            oldest defined version. The List is ordered from latest to oldest Clang-CUDA release.
+            Clang-CUDA version the related C++ standard is possible. If Clang-CUDA version is
+            younger than the latest entry, no C++ standard is possible. If a Clang-CUDA version is
+            older, than the oldest version, we assume the older version can have the same C++
+            standard like the oldest defined version. The List is ordered from latest to oldest
+            Clang-CUDA release.
         """
         clang_cuda_cxx_support_sorted: List[CompilerCxxSupport] = sorted(
             clang_cuda_cxx_support, reverse=True

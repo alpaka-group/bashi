@@ -3,7 +3,8 @@ import unittest
 import packaging.version as pkv
 from packaging.specifiers import SpecifierSet
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import get_parameter_value_matrix, VERSIONS
+from bashi.version import VERSIONS
+from bashi.version.utils import get_parameter_value_matrix
 from bashi.version.relation import VersionRelation
 from bashi.version.dependencies.ubuntu import UbuntuSDKMinMax
 from bashi.runtime_info import get_sdk_supporting_ubuntus

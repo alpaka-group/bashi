@@ -7,13 +7,14 @@ from collections import OrderedDict
 import packaging.version
 from typeguard import typechecked
 from bashi.types import ParameterValue, ParameterValueTuple
-from bashi.versions import is_supported_version
+from bashi.version.utils import is_supported_version
 from bashi.filter import FilterBase
 from bashi.filter_compiler import CompilerFilter
 from bashi.filter_backend import BackendFilter
 from bashi.filter_software_dependency import SoftwareDependencyFilter
 from bashi.exceptions import BashiUnknownVersion
-from bashi.versions import VERSIONS, get_parameter_value_matrix
+from bashi.version import VERSIONS
+from bashi.version.utils import get_parameter_value_matrix
 from bashi.version.relation import VersionRelation
 from bashi.generator import get_runtime_infos
 from .arguments import get_validator_args, ArgumentAlias, VersionCheck, AliasParser

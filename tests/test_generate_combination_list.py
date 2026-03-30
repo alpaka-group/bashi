@@ -7,7 +7,7 @@ from collections import OrderedDict
 from typing import Dict, Callable, IO
 import packaging.version as pkv
 from utils_test import parse_param_vals
-from bashi.versions import get_parameter_value_matrix
+from bashi.version.utils import get_parameter_value_matrix
 from bashi.version.relation import VersionRelation
 from bashi.generator import generate_combination_list, get_runtime_infos
 from bashi.utils import (
