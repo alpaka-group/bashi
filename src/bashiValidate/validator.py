@@ -57,6 +57,7 @@ class Validator:
         # list of software names, where the available versions can be set via CLI arguments
         self.software_version_names = list(VERSIONS.keys())
         self.runtime_infos: Dict[str, Callable[..., bool]] = {}
+        self.version_relation = version_relation
 
     @typechecked
     def add_software_version_parameter(
@@ -226,7 +227,7 @@ class Validator:
 
         # merge custom runtime info with bashi runtime info functions
         self.runtime_infos = self.runtime_infos | get_runtime_infos(
-            get_parameter_value_matrix(software_versions=sw_versions)
+            get_parameter_value_matrix(software_versions=sw_versions), self.version_relation
         )
 
         for filter_stage in self.filter_stages:

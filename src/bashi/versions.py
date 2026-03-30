@@ -1,32 +1,13 @@
 """Provides all supported software versions"""
 
 import copy
-from typing import Dict, List, Union, NamedTuple
+from typing import Dict, List, Union
 from collections import OrderedDict
-from operator import attrgetter
 from typeguard import typechecked
 import packaging.version as pkv
-from packaging.version import Version
-from packaging.specifiers import SpecifierSet
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ValueName, ValueVersion, ParameterValue, ParameterValueMatrix
 from bashi.exceptions import BashiUnknownVersion
-from bashi.version.dependencies.base_version_support import VersionSupportBase
-from bashi.version.dependencies.clang_cuda import ClangCudaSDKSupport, CLANG_CUDA_MAX_CUDA_VERSION
-
-
-# pylint: disable=too-few-public-methods
-class SDKUbuntuSupport(VersionSupportBase):
-    """Contains a SDK version and Ubuntu version. Does automatically parse the input strings
-    to package.version.Version.
-
-    Provides comparision operators for sorting.
-    """
-
-    def __init__(self, sdk_version: str, ubuntu_version: str):
-        VersionSupportBase.__init__(self, sdk_version, ubuntu_version)
-        self.sdk: packaging.version.Version = self.version1
-        self.ubuntu: packaging.version.Version = self.version2
 
 
 VERSIONS: Dict[str, List[Union[str, int, float]]] = {
@@ -90,113 +71,6 @@ VERSIONS: Dict[str, List[Union[str, int, float]]] = {
 }
 # Clang and Clang-CUDA has the same version numbers
 VERSIONS[CLANG_CUDA] = copy.copy(VERSIONS[CLANG])
-
-
-# the list minimum HIP SDK version which can be installed on a specific Ubuntu version
-# the next entry in the list defines exclusive, upper bound of a HIP SDK version range
-HIP_MIN_UBUNTU: List[SDKUbuntuSupport] = [
-    SDKUbuntuSupport("5.0", "20.04"),
-    SDKUbuntuSupport("6.0", "22.04"),
-    SDKUbuntuSupport("6.3", "24.04"),
-]
-
-# the list minimum CUDA SDK version which can be installed on a specific Ubuntu version
-# the next entry in the list defines exclusive, upper bound of a HIP SDK version range
-CUDA_MIN_UBUNTU: List[SDKUbuntuSupport] = [
-    SDKUbuntuSupport("10.0", "18.04"),
-    SDKUbuntuSupport("11.0", "20.04"),
-    SDKUbuntuSupport("12.0", "24.04"),
-]
-
-UbuntuSDKMinMax = NamedTuple("UbuntuSDKMinMax", [("ubuntu", Version), ("sdk_range", SpecifierSet)])
-
-
-def _get_ubuntu_sdk_min_max(sdk_min_ubuntu: List[SDKUbuntuSupport]) -> List[UbuntuSDKMinMax]:
-    """Convert an SDKUbuntuSupport object to an UbuntuSDKMinMax object. The SDKUbuntuSupport defines
-    a version range implicit and a UbuntuSDKMinMax object explicit.
-
-    Args:
-        sdk_min_ubuntu (List[SDKUbuntuSupport]): Input list
-
-    Returns:
-        List[UbuntuSDKMinMax]: Output list
-    """
-    l: List[UbuntuSDKMinMax] = []
-    if not sdk_min_ubuntu:
-        return l
-    sdk_min_ubuntu_sorted = sorted(sdk_min_ubuntu)
-
-    l.append(
-        UbuntuSDKMinMax(
-            ubuntu=sdk_min_ubuntu_sorted[0].ubuntu,
-            sdk_range=SpecifierSet(f"<{sdk_min_ubuntu_sorted[0].sdk}"),
-        )
-    )
-
-    for i in range(len(sdk_min_ubuntu_sorted) - 1):
-        l.append(
-            UbuntuSDKMinMax(
-                ubuntu=sdk_min_ubuntu_sorted[i].ubuntu,
-                sdk_range=SpecifierSet(
-                    f">={sdk_min_ubuntu_sorted[i].sdk}, <{sdk_min_ubuntu_sorted[i+1].sdk}"
-                ),
-            )
-        )
-
-    l.append(
-        UbuntuSDKMinMax(
-            ubuntu=sdk_min_ubuntu_sorted[-1].ubuntu,
-            sdk_range=SpecifierSet(f">={sdk_min_ubuntu_sorted[-1].sdk}"),
-        )
-    )
-
-    return l
-
-
-# list of ubuntu version with supported HIP SDKs
-UBUNTU_HIP_VERSION_RANGE: List[UbuntuSDKMinMax] = _get_ubuntu_sdk_min_max(HIP_MIN_UBUNTU)
-
-# list of ubuntu version with supported CUDA SDKs
-UBUNTU_CUDA_VERSION_RANGE: List[UbuntuSDKMinMax] = _get_ubuntu_sdk_min_max(CUDA_MIN_UBUNTU)
-
-
-def _get_ubuntu_clang_cuda_sdk_support(
-    ubuntu_cuda_version_range: List[UbuntuSDKMinMax] | None = None,
-    clang_cuda_max_cuda_version: List[ClangCudaSDKSupport] | None = None,
-) -> Dict[Version, SpecifierSet]:
-    """Calculates since which Clang-CUDA version, there is an supported CUDA SDK which can be
-    installed on a specific Ubuntu version.
-
-    Args:
-        ubuntu_cuda_version_range (List[UbuntuSDKMinMax], optional): List with supported CUDA
-            versions for a specific Ubuntu version. Defaults to UBUNTU_CUDA_VERSION_RANGE.
-        clang_cuda_max_cuda_version (List[ClangCudaSDKSupport], optional): List which defines the
-            maximum CUDA support for a specific Clang-CUDA version. Defaults to
-            CLANG_CUDA_MAX_CUDA_VERSION.
-
-    Returns:
-        Dict[Version, SpecifierSet]: Dict which shows Ubuntu supports which Clang-CUDA versions.
-    """
-    if ubuntu_cuda_version_range is None:
-        ubuntu_cuda_version_range = UBUNTU_CUDA_VERSION_RANGE
-    if clang_cuda_max_cuda_version is None:
-        clang_cuda_max_cuda_version = CLANG_CUDA_MAX_CUDA_VERSION
-
-    support_dict: Dict[Version, SpecifierSet] = {}
-
-    ubuntu_cuda_version_range_sorted = sorted(ubuntu_cuda_version_range, key=attrgetter("ubuntu"))
-
-    for ub_cuda in ubuntu_cuda_version_range_sorted:
-        for clang_cuda_sdk in sorted(clang_cuda_max_cuda_version):
-            if clang_cuda_sdk.cuda in ub_cuda.sdk_range:
-                if ub_cuda.ubuntu not in support_dict:
-                    support_dict[ub_cuda.ubuntu] = SpecifierSet(f">={clang_cuda_sdk.clang_cuda}")
-                break
-
-    return support_dict
-
-
-UBUNTU_CLANG_CUDA_SDK_SUPPORT: Dict[Version, SpecifierSet] = _get_ubuntu_clang_cuda_sdk_support()
 
 
 # pylint: disable=too-many-branches

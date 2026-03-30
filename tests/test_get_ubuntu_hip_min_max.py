@@ -2,12 +2,13 @@ import unittest
 from typing import List
 import packaging.version as pkv
 from packaging.specifiers import SpecifierSet
-from bashi.versions import SDKUbuntuSupport, UbuntuSDKMinMax, _get_ubuntu_sdk_min_max
+from bashi.version.relation import VersionRelation
+from bashi.version.dependencies.ubuntu import SDKUbuntuSupport, UbuntuSDKMinMax
 
 
 class TestGetUbuntuHipMinMax(unittest.TestCase):
     def test_get_ubuntu_sdk_min_max_empty_input(self):
-        self.assertEqual(len(_get_ubuntu_sdk_min_max([])), 0)
+        self.assertEqual(len(VersionRelation(hip_min_ubuntu=[]).get_ubuntu_hip_version_range()), 0)
 
     def test_get_ubuntu_sdk_min_max_normal_list(self):
         hip_min_ubuntu: List[SDKUbuntuSupport] = [
@@ -17,7 +18,7 @@ class TestGetUbuntuHipMinMax(unittest.TestCase):
         ]
 
         self.assertEqual(
-            _get_ubuntu_sdk_min_max(hip_min_ubuntu),
+            VersionRelation(hip_min_ubuntu=hip_min_ubuntu).get_ubuntu_hip_version_range(),
             [
                 UbuntuSDKMinMax(pkv.parse("20.04"), SpecifierSet("<5.0")),
                 UbuntuSDKMinMax(pkv.parse("20.04"), SpecifierSet(">=5.0, <6.0")),
@@ -32,7 +33,7 @@ class TestGetUbuntuHipMinMax(unittest.TestCase):
         ]
 
         self.assertEqual(
-            _get_ubuntu_sdk_min_max(hip_min_ubuntu),
+            VersionRelation(hip_min_ubuntu=hip_min_ubuntu).get_ubuntu_hip_version_range(),
             [
                 UbuntuSDKMinMax(pkv.parse("22.04"), SpecifierSet("<6.0")),
                 UbuntuSDKMinMax(pkv.parse("22.04"), SpecifierSet(">=6.0")),
@@ -46,7 +47,7 @@ class TestGetUbuntuHipMinMax(unittest.TestCase):
         ]
 
         self.assertEqual(
-            _get_ubuntu_sdk_min_max(hip_min_ubuntu),
+            VersionRelation(hip_min_ubuntu=hip_min_ubuntu).get_ubuntu_hip_version_range(),
             [
                 UbuntuSDKMinMax(pkv.parse("20.04"), SpecifierSet("<5.0")),
                 UbuntuSDKMinMax(pkv.parse("20.04"), SpecifierSet(">=5.0, <6.0")),

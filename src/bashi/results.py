@@ -69,7 +69,7 @@ def get_expected_bashi_parameter_value_pairs(
         param_val_pair_list, removed_param_val_pair_list, version_relation, runtime_infos
     )
     remove_hip_specific_parameter_value_pairs(
-        param_val_pair_list, removed_param_val_pair_list, runtime_infos
+        param_val_pair_list, removed_param_val_pair_list, version_relation, runtime_infos
     )
     return (param_val_pair_list, removed_param_val_pair_list)
 

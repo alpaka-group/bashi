@@ -4,7 +4,7 @@ from typing import List, Dict, Callable
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValuePair
 from bashi.utils import remove_parameter_value_pairs, remove_parameter_value_pairs_ranges
-from bashi.versions import UBUNTU_HIP_VERSION_RANGE
+from bashi.version.relation import VersionRelation
 from bashi.result_modules.sdk_helper import (
     remove_unsupported_sdk_ubuntu_combinations,
     remove_runtime_not_available_ubuntu_versions,
@@ -14,6 +14,7 @@ from bashi.result_modules.sdk_helper import (
 def remove_hip_specific_parameter_value_pairs(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version_relation: VersionRelation,
     runtime_infos: Dict[str, Callable[..., bool]],
 ):
     """Apply several filter functions to remove invalid HIP related parameter-value-pairs.
@@ -32,7 +33,7 @@ def remove_hip_specific_parameter_value_pairs(
     _remove_enabled_sycl_backend_for_hipcc(parameter_value_pairs, removed_parameter_value_pairs)
     _remove_enabled_cuda_backend_for_hipcc(parameter_value_pairs, removed_parameter_value_pairs)
     _remove_unsupported_hipcc_ubuntu_combinations(
-        parameter_value_pairs, removed_parameter_value_pairs
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
     )
     _remove_runtime_unsupported_hip_backend_ubuntu_combinations(
         parameter_value_pairs, removed_parameter_value_pairs, runtime_infos
@@ -133,6 +134,7 @@ def _remove_enabled_cuda_backend_for_hipcc(
 def _remove_unsupported_hipcc_ubuntu_combinations(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version_relation: VersionRelation,
 ):
     """Remove all pairs where HIPCC does not support a specific Ubuntu version
 
@@ -147,7 +149,7 @@ def _remove_unsupported_hipcc_ubuntu_combinations(
             removed_parameter_value_pairs,
             compiler_type,
             HIPCC,
-            UBUNTU_HIP_VERSION_RANGE,
+            version_relation.get_ubuntu_hip_version_range(),
         )
 
 

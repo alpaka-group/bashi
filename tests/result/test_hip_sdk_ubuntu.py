@@ -15,6 +15,7 @@ from bashi.result_modules.hip_support import (
     _remove_unsupported_hipcc_ubuntu_combinations,
     _remove_runtime_unsupported_hip_backend_ubuntu_combinations,
 )
+from bashi.version.relation import VersionRelation
 
 
 class TestHipSDKUbuntuStaticInfo(unittest.TestCase):
@@ -59,6 +60,7 @@ class TestHipSDKUbuntuStaticInfo(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
 

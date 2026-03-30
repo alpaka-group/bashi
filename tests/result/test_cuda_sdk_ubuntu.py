@@ -11,7 +11,8 @@ from utils_test import (
 )
 from bashi.runtime_info import ValidUbuntuSDK
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import CUDA_MIN_UBUNTU
+from bashi.version.dependencies.ubuntu import CUDA_MIN_UBUNTU
+from bashi.version.relation import VersionRelation
 
 from bashi.result_modules.cuda_support import (
     _remove_unsupported_nvcc_ubuntu_combinations,
@@ -59,6 +60,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_cuda_backend_ubuntu_combinations(self):
@@ -107,6 +109,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_clang_cuda_ubuntu_combinations(self):
@@ -152,6 +155,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
 

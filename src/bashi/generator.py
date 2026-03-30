@@ -16,18 +16,19 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.filter import FilterBase
 from bashi.filter_chain import get_default_filter_chain, FilterChain
 from bashi.runtime_info import get_sdk_supporting_ubuntus
-from bashi.versions import UBUNTU_HIP_VERSION_RANGE, UBUNTU_CUDA_VERSION_RANGE
 from bashi.version.relation import VersionRelation
 
 
 def get_runtime_infos(
-    parameter_value_matrix: ParameterValueMatrix,
+    parameter_value_matrix: ParameterValueMatrix, version_relation: VersionRelation
 ) -> Dict[str, Callable[..., bool]]:
     """Get several runtime filter rules for the given input parameter-value-matrix
 
     Args:
         parameter_value_matrix (ParameterValueMatrix): parameter-value-matrix
-
+        version_relation (VersionRelation): Provides information about the relationships between
+                the versions of various parameter-values. For example, which GCC version supports
+                which C++ standard.
     Returns:
         Dict[str, Callable[..., bool]]: Dict of filter functions
     """
@@ -41,12 +42,12 @@ def get_runtime_infos(
             for sdk_name, version_range, rt_func_name in [
                 (
                     HIPCC,
-                    UBUNTU_HIP_VERSION_RANGE,
+                    version_relation.get_ubuntu_hip_version_range(),
                     RT_AVAILABLE_HIP_SDK_UBUNTU_VER,
                 ),
                 (
                     NVCC,
-                    UBUNTU_CUDA_VERSION_RANGE,
+                    version_relation.get_ubuntu_cuda_version_range(),
                     RT_AVAILABLE_CUDA_SDK_UBUNTU_VER,
                 ),
             ]:

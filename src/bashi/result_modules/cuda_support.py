@@ -4,13 +4,9 @@ from typing import List, Optional, Dict, Callable
 from packaging.specifiers import SpecifierSet
 from bashi.types import ParameterValueSingle, ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import (
-    COMPILERS,
-    UBUNTU_CUDA_VERSION_RANGE,
-    UBUNTU_CLANG_CUDA_SDK_SUPPORT,
-    ClangCudaSDKSupport,
-)
+from bashi.versions import COMPILERS
 from bashi.version.dependencies.nvcc import NvccHostSupport
+from bashi.version.dependencies.clang_cuda import ClangCudaSDKSupport
 from bashi.version.relation import VersionRelation
 from bashi.utils import remove_parameter_value_pairs_ranges, bi_filter
 from bashi.result_modules.sdk_helper import (
@@ -65,13 +61,13 @@ def remove_cuda_specific_parameter_value_pairs(
         parameter_value_pairs, removed_parameter_value_pairs
     )
     _remove_unsupported_nvcc_ubuntu_combinations(
-        parameter_value_pairs, removed_parameter_value_pairs
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
     )
     _remove_unsupported_cuda_backend_ubuntu_combinations(
-        parameter_value_pairs, removed_parameter_value_pairs
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
     )
     _remove_unsupported_clang_cuda_ubuntu_combinations(
-        parameter_value_pairs, removed_parameter_value_pairs
+        parameter_value_pairs, removed_parameter_value_pairs, version_relation
     )
     _remove_runtime_unsupported_cuda_backend_ubuntu_combinations(
         parameter_value_pairs, removed_parameter_value_pairs, runtime_infos
@@ -506,6 +502,7 @@ def _remove_unsupported_cmake_versions_for_clangcuda(
 def _remove_unsupported_nvcc_ubuntu_combinations(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version: VersionRelation,
 ):
     """Remove all pairs where NVCC does not support a specific Ubuntu version
 
@@ -519,13 +516,14 @@ def _remove_unsupported_nvcc_ubuntu_combinations(
         removed_parameter_value_pairs,
         DEVICE_COMPILER,
         NVCC,
-        UBUNTU_CUDA_VERSION_RANGE,
+        version.get_ubuntu_cuda_version_range(),
     )
 
 
 def _remove_unsupported_cuda_backend_ubuntu_combinations(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version: VersionRelation,
 ):
     """Remove all pairs where the CUDA backend does not support a specific Ubuntu version
 
@@ -539,13 +537,14 @@ def _remove_unsupported_cuda_backend_ubuntu_combinations(
         removed_parameter_value_pairs,
         ALPAKA_ACC_GPU_CUDA_ENABLE,
         ALPAKA_ACC_GPU_CUDA_ENABLE,
-        UBUNTU_CUDA_VERSION_RANGE,
+        version.get_ubuntu_cuda_version_range(),
     )
 
 
 def _remove_unsupported_clang_cuda_ubuntu_combinations(
     parameter_value_pairs: List[ParameterValuePair],
     removed_parameter_value_pairs: List[ParameterValuePair],
+    version: VersionRelation,
 ):
     """Remove all pairs where Clang-CUDA does not support a specific Ubuntu version
 
@@ -560,7 +559,7 @@ def _remove_unsupported_clang_cuda_ubuntu_combinations(
             removed_parameter_value_pairs,
             compiler_type,
             CLANG_CUDA,
-            UBUNTU_CLANG_CUDA_SDK_SUPPORT,
+            version.get_ubuntu_clang_cuda_sdk_support(),
         )
 
 

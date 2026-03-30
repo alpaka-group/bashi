@@ -49,7 +49,7 @@ class TestGeneratorTestData(unittest.TestCase):
         cls.param_matrix[CMAKE] = parse_param_vals([(CMAKE, 3.22), (CMAKE, 3.23)])
         cls.param_matrix[BOOST] = parse_param_vals([(BOOST, 1.81), (BOOST, 1.82), (BOOST, 1.83)])
 
-        cls.runtime_info = get_runtime_infos(cls.param_matrix)
+        cls.runtime_info = get_runtime_infos(cls.param_matrix, VersionRelation())
 
         cls.generated_parameter_value_pairs, cls.generated_unexpected_parameter_value_pairs = (
             get_expected_bashi_parameter_value_pairs(cls.param_matrix, cls.runtime_info)
@@ -227,7 +227,7 @@ class TestGeneratorRealData(unittest.TestCase):
         # of both list should be equal the number of elements of the list, which
         # get_parameter_value_matrix() generates.
         param_val_matrix = get_parameter_value_matrix()
-        runtime_info = get_runtime_infos(param_val_matrix)
+        runtime_info = get_runtime_infos(param_val_matrix, VersionRelation())
         unfiltered_param_val_pairs = get_expected_parameter_value_pairs(param_val_matrix)
         expected_param_val_pairs, unexpected_param_val_pairs = (
             get_expected_bashi_parameter_value_pairs(param_val_matrix, runtime_info)
@@ -243,7 +243,7 @@ class TestGeneratorRealData(unittest.TestCase):
 
     def test_generator_without_custom_filter(self):
         param_val_matrix = get_parameter_value_matrix()
-        runtime_info = get_runtime_infos(param_val_matrix)
+        runtime_info = get_runtime_infos(param_val_matrix, VersionRelation())
         expected_param_val_pairs, unexpected_param_val_pairs = (
             get_expected_bashi_parameter_value_pairs(param_val_matrix, runtime_info)
         )
@@ -282,7 +282,7 @@ class TestGeneratorRealData(unittest.TestCase):
         custom_filter = CustomFilter()
 
         param_val_matrix = get_parameter_value_matrix()
-        runtime_info = get_runtime_infos(param_val_matrix)
+        runtime_info = get_runtime_infos(param_val_matrix, VersionRelation())
         reduced_expected_param_val_pairs, reduced_unexpected_param_val_pairs = (
             get_expected_bashi_parameter_value_pairs(param_val_matrix, runtime_info)
         )
@@ -361,7 +361,7 @@ class TestParameterMatrixFilter(unittest.TestCase):
             param_matrix[DEVICE_COMPILER].append(ParameterValue(NVCC, pkv.parse(str(nvcc_version))))
         param_matrix_before = copy.deepcopy(param_matrix)
 
-        runtime_info = get_runtime_infos(param_matrix)
+        runtime_info = get_runtime_infos(param_matrix, VersionRelation())
         comb_list = generate_combination_list(param_matrix, runtime_info)
 
         # generate_combination_list should not modify the param_matrix
@@ -394,7 +394,7 @@ class TestParameterMatrixFilter(unittest.TestCase):
                 ParameterValue(CLANG_CUDA, pkv.parse(str(clang_cuda_version)))
             )
         param_matrix_before = copy.deepcopy(param_matrix)
-        runtime_info = get_runtime_infos(param_matrix_before)
+        runtime_info = get_runtime_infos(param_matrix_before, VersionRelation())
 
         comb_list = generate_combination_list(
             parameter_value_matrix=param_matrix, runtime_infos=runtime_info

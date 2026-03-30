@@ -4,7 +4,7 @@ from typing import List, Dict, Callable
 from packaging.specifiers import SpecifierSet
 from bashi.types import Parameter, ValueName, ParameterValueSingle, ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import UbuntuSDKMinMax
+from bashi.version.dependencies.ubuntu import UbuntuSDKMinMax
 
 
 def remove_unsupported_sdk_ubuntu_combinations(

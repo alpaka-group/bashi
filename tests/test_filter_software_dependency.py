@@ -12,7 +12,7 @@ from bashi.filter_software_dependency import (
     SoftwareDependencyFilter,
 )
 from bashi.runtime_info import ValidUbuntuSDK
-from bashi.versions import CUDA_MIN_UBUNTU
+from bashi.version.dependencies.ubuntu import CUDA_MIN_UBUNTU
 
 
 class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
