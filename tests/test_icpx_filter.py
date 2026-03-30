@@ -7,9 +7,13 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.filter_compiler import compiler_filter_typechecked
 from bashi.filter_backend import backend_filter_typechecked
 from bashi.types import ParameterValueTuple
+from bashi.version.relation import VersionRelation
 
 
 class TestIcpxCompilerFilter(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_icpx_requires_enabled_sycl_backend_pass_c12(self):
         for icpx_version in ("2023.3.0", "2024.2.1", "2024.3.0"):
             for comb in [
@@ -70,7 +74,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                     else:
                         row[name] = ppv((name, value))
 
-                self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+                self.assertTrue(compiler_filter_typechecked(row, self.version_relation), f"{row}")
 
             self.assertTrue(
                 compiler_filter_typechecked(
@@ -82,7 +86,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             BOOST: ppv((BOOST, "1.78.0")),
                             ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -117,7 +122,9 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         row[name] = ppv((name, value))
 
                 reason_msg = io.StringIO()
-                self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+                self.assertFalse(
+                    compiler_filter_typechecked(row, self.version_relation, reason_msg), f"{row}"
+                )
 
                 self.assertEqual(reason_msg.getvalue(), "icpx requires an enabled SYCL backend.")
 
@@ -130,7 +137,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_ONEAPI_CPU_ENABLE should be off for {compiler_name}",
             )
@@ -142,7 +150,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_SYCL_ENABLE should be off for {compiler_name}",
             )
@@ -157,7 +166,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                                 (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, OFF)
                             ),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_ONEAPI_FPGA_ENABLE should be off for {compiler_name}",
             )
@@ -172,7 +182,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             BOOST: ppv((BOOST, "1.78.0")),
                             ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_SYCL_ENABLE should be off for {compiler_name}",
             )
@@ -185,7 +196,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF)),
                             ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 "ALPAKA_ACC_ONEAPI_CPU_ENABLE and ALPAKA_ACC_ONEAPI_GPU_ENABLE should be off for "
                 f"{compiler_name}",
@@ -202,7 +214,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                                 (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, OFF)
                             ),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 "ALPAKA_ACC_ONEAPI_CPU_ENABLE, ALPAKA_ACC_ONEAPI_GPU_ENABLE and "
                 f"ALPAKA_ACC_ONEAPI_FPGA_ENABLE should be off for {compiler_name}",
@@ -215,7 +228,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         DEVICE_COMPILER: ppv((NVCC, 9999)),
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                     }
-                )
+                ),
+                self.version_relation,
             ),
             "ALPAKA_ACC_SYCL_ENABLE should be off for nvcc",
         )
@@ -229,7 +243,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((NVCC, 9999)),
                             ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_SYCL_ENABLE should be off for nvcc + {host_compiler}",
             )
@@ -244,7 +259,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             BOOST: ppv((BOOST, "1.78.0")),
                             ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_SYCL_ENABLE should be off for nvcc + {host_compiler}",
             )
@@ -260,6 +276,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 ),
                 f"{compiler_name} should not pass the filter if ALPAKA_ACC_SYCL_ENABLE is on",
@@ -277,6 +294,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg2,
                 ),
                 f"{compiler_name} should not pass the filter if ALPAKA_ACC_SYCL_ENABLE is on",
@@ -295,6 +313,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_ONEAPI_FPGA_ENABLE: ppv((ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg3,
                 ),
                 f"{compiler_name} should not pass the filter if ALPAKA_ACC_SYCL_ENABLE is on",
@@ -315,6 +334,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg4,
                 ),
                 f"{compiler_name} should not pass the filter if ALPAKA_ACC_SYCL_ENABLE is on",
@@ -332,6 +352,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg5,
             ),
             "nvcc should not pass the filter if ALPAKA_ACC_SYCL_ENABLE is on",
@@ -351,6 +372,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg6,
                 ),
                 f"nvcc + {host_compiler} should not pass the filter if "
@@ -369,6 +391,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg7,
                 ),
                 f"nvcc + {host_compiler} should not pass the filter if "
@@ -385,6 +408,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg8,
             ),
             "ICPX should not pass the filter if there is no enabled SYCL backend.",
@@ -404,6 +428,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_FPGA_ENABLE: ppv((ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg9,
             ),
             "ICPX should not pass the filter if there is no enabled SYCL backend.",
@@ -421,7 +446,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -432,7 +458,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -444,7 +471,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -456,7 +484,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((ICPX, version)),
                             DEVICE_COMPILER: ppv((ICPX, version)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -470,7 +499,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             BOOST: ppv((BOOST, "1.78.0")),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -485,6 +515,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 )
             )
@@ -499,6 +530,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg2,
                 )
             )
@@ -514,6 +546,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg3,
                 )
             )
@@ -529,6 +562,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((ICPX, version)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg4,
                 )
             )
@@ -546,6 +580,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg5,
                 )
             )
@@ -560,6 +595,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -571,6 +607,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -582,6 +619,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -594,6 +632,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg1,
             )
         )
@@ -611,6 +650,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -626,6 +666,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg2,
             )
         )
@@ -642,7 +683,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -653,7 +695,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -665,7 +708,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -677,7 +721,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((ICPX, version)),
                             DEVICE_COMPILER: ppv((ICPX, version)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -691,7 +736,8 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             BOOST: ppv((BOOST, "1.78.0")),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -706,6 +752,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 )
             )
@@ -720,6 +767,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg2,
                 )
             )
@@ -735,6 +783,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg3,
                 )
             )
@@ -750,6 +799,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((ICPX, version)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg4,
                 )
             )
@@ -767,6 +817,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg5,
                 )
             )
@@ -781,6 +832,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -792,6 +844,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -803,6 +856,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -815,6 +869,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg1,
             )
         )
@@ -832,6 +887,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -847,6 +903,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg2,
             )
         )
@@ -877,7 +934,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             row: ParameterValueTuple = OD()
             for name, value in comb:
                 row[name] = ppv((name, value))
-            self.assertTrue(backend_filter_typechecked(row), f"{row}")
+            self.assertTrue(backend_filter_typechecked(row, self.version_relation), f"{row}")
 
     def test_invalid_only_one_active_sycl_backend_b18(self):
         for comb in [
@@ -904,7 +961,9 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                 row[name] = ppv((name, value))
 
             reason_msg = io.StringIO()
-            self.assertFalse(backend_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertFalse(
+                backend_filter_typechecked(row, self.version_relation, reason_msg), f"{row}"
+            )
             self.assertEqual(
                 reason_msg.getvalue(),
                 "Only one SYCL backend can be enabled.",

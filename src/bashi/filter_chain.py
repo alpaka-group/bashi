@@ -19,13 +19,16 @@ class FilterChain:
 
     def __init__(
         self,
+        version_relation: VersionRelation,
         runtime_infos: Dict[str, Callable[..., bool]] | None = None,
         custom_filter: FilterBase = FilterBase(),
-        version_relation: VersionRelation = VersionRelation(),
     ):
         """Construct new FitlerChain.
 
         Args:
+            version_relation (VersionRelation): Provides information about the relationships between
+                the versions of various parameter-values. For example, which GCC version supports
+                which C++ standard.
             runtime_infos (Dict[str, Callable[..., bool]], optional): Runtime infos will be
                 constructed depending on the input parameter-value-matrix. The functions are named
                 by a string, takes an arbitrary number of arguments and return if the combination of
@@ -33,9 +36,6 @@ class FilterChain:
             custom_filter (FilterBase, optional): This functor is added as the last filter level and
                 allows the user to add custom filter rules without having to create the entire
                 filter chain from scratch. Defaults to FilterBase().
-            version_relation (VersionRelation): Provides information about the relationships between
-                the versions of various parameter-values. For example, which GCC version supports
-                which C++ standard.
         """
         self.compiler_filter = CompilerFilter(
             runtime_infos=runtime_infos, version_relation=version_relation
@@ -73,14 +73,17 @@ class FilterChain:
 
 @typechecked
 def get_default_filter_chain(
+    version_relation: VersionRelation,
     runtime_infos: Dict[str, Callable[..., bool]] | None = None,
     custom_filter: FilterBase = FilterBase(),
-    version_relation: VersionRelation = VersionRelation(),
 ) -> FilterChain:
     """Concatenate the bashi filter functions in the default order and return them as one function
     with a single entry point.
 
     Args:
+        version_relation (VersionRelation): Provides information about the relationships between
+                the versions of various parameter-values. For example, which GCC version supports
+                which C++ standard.
         runtime_infos (Dict[str, Callable[..., bool]], optional): Runtime infos will be
                 constructed depending on the input parameter-value-matrix. The functions are named
                 by a string, takes an arbitrary number of arguments and return if the combination of
@@ -94,5 +97,5 @@ def get_default_filter_chain(
     """
 
     return FilterChain(
-        runtime_infos=runtime_infos, custom_filter=custom_filter, version_relation=version_relation
+        version_relation=version_relation, runtime_infos=runtime_infos, custom_filter=custom_filter
     )

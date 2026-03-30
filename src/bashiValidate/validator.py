@@ -29,17 +29,17 @@ class Validator:
 
     def __init__(
         self,
+        version_relation: VersionRelation,
         args: List[str] | None = None,
-        version_relation: VersionRelation = VersionRelation(),
         silent: bool = False,
     ):
         """Setup default configuration for bashi filter rules.
 
         Args:
-            args (List[str] | None, optional): Set command line arguments manually. Defaults to
-                None.
             version_relation (VersionRelation): Contains relations between different
                 parameter-values.
+            args (List[str] | None, optional): Set command line arguments manually. Defaults to
+                None.
             silent (bool, optional): If True, disable terminal output. Defaults to False.
         """
         self.parser, self.argument_alias, self.param_order = get_validator_args()

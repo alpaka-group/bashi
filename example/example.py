@@ -33,10 +33,8 @@ from bashi.types import (
     CombinationList,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import (
-    get_parameter_value_matrix,
-    VERSIONS,
-)
+from bashi.version import VERSIONS
+from bashi.version.utils import get_parameter_value_matrix
 from bashi.version.relation import VersionRelation
 from src.example_filter import ExampleFilter
 from src.globals import (
@@ -69,7 +67,7 @@ def verify(
     """
 
     bashi_parameter_value_pairs_tuple: Tuple[List[ParameterValuePair], List[ParameterValuePair]] = (
-        get_expected_bashi_parameter_value_pairs(param_value_matrix, run_infos, version)
+        get_expected_bashi_parameter_value_pairs(param_value_matrix, version, run_infos)
     )
 
     expected_param_val_tuple, unexpected_param_val_tuple = bashi_parameter_value_pairs_tuple

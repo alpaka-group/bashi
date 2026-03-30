@@ -39,8 +39,8 @@ class SoftwareDependencyFilter(FilterBase):
 
     def __init__(
         self,
+        version_relation: VersionRelation,
         runtime_infos: Dict[str, Callable[..., bool]] | None = None,
-        version_relation: VersionRelation = VersionRelation(),
         output: IO[str] | None = None,
     ):
         super().__init__(runtime_infos, version_relation, output)
@@ -214,9 +214,10 @@ class SoftwareDependencyFilter(FilterBase):
 @typechecked
 def software_dependency_filter_typechecked(
     row: ParameterValueTuple,
+    version_relation: VersionRelation,
     output: Optional[IO[str]] = None,
 ) -> bool:
     """Type-checked version of SoftwareDependencyFilter()(). Type checking has a big performance
     cost, which is why the non type-checked version is used for the pairwise generator.
     """
-    return SoftwareDependencyFilter(output=output)(row)
+    return SoftwareDependencyFilter(version_relation=version_relation, output=output)(row)

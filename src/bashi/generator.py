@@ -68,9 +68,9 @@ def get_runtime_infos(
 
 def generate_combination_list(
     parameter_value_matrix: ParameterValueMatrix,
+    version_relation: VersionRelation,
     runtime_infos: Dict[str, Callable[..., bool]],
     custom_filter: FilterBase = FilterBase(),
-    version_relation: VersionRelation = VersionRelation(),
     debug_print: FilterDebugMode = FilterDebugMode.OFF,
 ) -> CombinationList:
     """Generate combination-list from the parameter-value-matrix. The combination list contains
@@ -79,11 +79,11 @@ def generate_combination_list(
     Args:
         parameter_value_matrix (ParameterValueMatrix): Input matrix with parameter and
             parameter-values.
-        custom_filter (FilterFunction, optional): Custom filter function to extend bashi
-            filters. Defaults is lambda _: True.
         version_relation (VersionRelation): Provides information about the relationships between
                 the versions of various parameter-values. For example, which GCC version supports
                 which C++ standard.
+        custom_filter (FilterFunction, optional): Custom filter function to extend bashi
+            filters. Defaults is lambda _: True.
         debug_print (FilterDebugMode): Depending on the debug mode, print additional information
             for each row passing the filter function. Defaults to FilterDebugMode.OFF.
     Returns:

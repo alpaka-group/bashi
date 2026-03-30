@@ -4,11 +4,12 @@
 
 import sys
 import bashiValidate
+from bashi import VersionRelation
 
 
 def main() -> None:
     """Entry point for the application."""
-    validator = bashiValidate.Validator()
+    validator = bashiValidate.Validator(VersionRelation())
     sys.exit(int(not validator.validate()))
 
 

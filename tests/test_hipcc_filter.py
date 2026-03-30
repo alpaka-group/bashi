@@ -6,9 +6,13 @@ from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter_compiler import compiler_filter_typechecked
 from bashi.filter_backend import backend_filter_typechecked
+from bashi.version.relation import VersionRelation
 
 
 class TestHipccCompilerFilter(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_hipcc_requires_enabled_hip_backend_pass_c9(self):
         for version in (4.5, 5.3, 6.0):
             self.assertTrue(
@@ -18,7 +22,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((HIPCC, version)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -29,7 +34,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((HIPCC, version)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -41,7 +47,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((HIPCC, version)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -53,7 +60,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((HIPCC, version)),
                             DEVICE_COMPILER: ppv((HIPCC, version)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -67,7 +75,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             BOOST: ppv((BOOST, "1.78.0")),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -82,6 +91,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 )
             )
@@ -96,6 +106,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg2,
                 )
             )
@@ -111,6 +122,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg3,
                 )
             )
@@ -126,6 +138,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((HIPCC, version)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg4,
                 )
             )
@@ -143,6 +156,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg5,
                 )
             )
@@ -157,7 +171,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_GPU_HIP_ENABLE should be off for {compiler_name}",
             )
@@ -169,7 +184,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_GPU_HIP_ENABLE should be off for {compiler_name}",
             )
@@ -182,7 +198,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_GPU_HIP_ENABLE should be off for {compiler_name}",
             )
@@ -197,7 +214,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             BOOST: ppv((BOOST, "1.78.0")),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_GPU_HIP_ENABLE should be off for {compiler_name}",
             )
@@ -209,7 +227,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         DEVICE_COMPILER: ppv((NVCC, 9999)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                     }
-                )
+                ),
+                self.version_relation,
             ),
             "ALPAKA_ACC_GPU_HIP_ENABLE should be off for nvcc",
         )
@@ -223,7 +242,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((NVCC, 9999)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_GPU_HIP_ENABLE should be off for nvcc + {host_compiler}",
             )
@@ -238,7 +258,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             BOOST: ppv((BOOST, "1.78.0")),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_GPU_HIP_ENABLE should be off for nvcc + {host_compiler}",
             )
@@ -254,6 +275,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 ),
                 f"{compiler_name} should not pass the filter if ALPAKA_ACC_GPU_HIP_ENABLE is on",
@@ -271,6 +293,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg2,
                 ),
                 f"{compiler_name} should not pass the filter if ALPAKA_ACC_GPU_HIP_ENABLE is on",
@@ -289,6 +312,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg3,
                 ),
                 f"{compiler_name} should not pass the filter if ALPAKA_ACC_GPU_HIP_ENABLE is on",
@@ -309,6 +333,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg4,
                 ),
                 f"{compiler_name} should not pass the filter if ALPAKA_ACC_GPU_HIP_ENABLE is on",
@@ -326,6 +351,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg5,
             ),
             "nvcc should not pass the filter if ALPAKA_ACC_GPU_HIP_ENABLE is on",
@@ -345,6 +371,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg6,
                 ),
                 f"nvcc + {host_compiler} should not pass the filter if "
@@ -363,6 +390,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg7,
                 ),
                 f"nvcc + {host_compiler} should not pass the filter if "
@@ -391,7 +419,9 @@ class TestHipccCompilerFilter(unittest.TestCase):
                 ]:
                     for backend_name in comb:
                         row[backend_name] = ppv((backend_name, OFF))
-                    self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+                    self.assertTrue(
+                        compiler_filter_typechecked(row, self.version_relation), f"{row}"
+                    )
 
     def test_hipcc_requires_disabled_sycl_backend_not_pass_c10(self):
         for version in (4.5, 5.3, 6.0):
@@ -432,7 +462,10 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         row[backend_name] = ppv((backend_name, value))
 
                     reason_msg = io.StringIO()
-                    self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+                    self.assertFalse(
+                        compiler_filter_typechecked(row, self.version_relation, reason_msg),
+                        f"{row}",
+                    )
                     self.assertEqual(
                         reason_msg.getvalue(), "hipcc does not support the SYCL backend."
                     )
@@ -446,6 +479,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -457,6 +491,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -468,6 +503,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_FPGA_ENABLE: ppv((ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -480,6 +516,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg1,
             )
         )
@@ -497,6 +534,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -511,6 +549,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_FPGA_ENABLE: ppv((ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg2,
             )
         )
@@ -527,7 +566,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((HIPCC, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -538,7 +578,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((HIPCC, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -550,7 +591,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((HIPCC, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -562,7 +604,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((HIPCC, version)),
                             DEVICE_COMPILER: ppv((HIPCC, version)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -576,7 +619,8 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             BOOST: ppv((BOOST, "1.78.0")),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -591,6 +635,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 )
             )
@@ -605,6 +650,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg2,
                 )
             )
@@ -620,6 +666,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg3,
                 )
             )
@@ -635,6 +682,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((HIPCC, version)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg4,
                 )
             )
@@ -652,6 +700,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg5,
                 )
             )
@@ -666,6 +715,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -677,6 +727,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -688,6 +739,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -700,6 +752,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg1,
             )
         )
@@ -717,6 +770,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -731,6 +785,7 @@ class TestHipccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg2,
             )
         )
