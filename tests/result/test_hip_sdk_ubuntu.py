@@ -15,6 +15,7 @@ from bashi.result_modules.hip_support import (
     _remove_unsupported_hipcc_ubuntu_combinations,
     _remove_runtime_unsupported_hip_backend_ubuntu_combinations,
 )
+from bashi.version.relation import VersionRelation
 
 
 class TestHipSDKUbuntuStaticInfo(unittest.TestCase):
@@ -59,6 +60,7 @@ class TestHipSDKUbuntuStaticInfo(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
 
@@ -88,7 +90,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
             self.default_input,
             self.default_input,
             self,
-            {},
+            runtime_infos={},
         )
 
     def test_remove_unsupported_hip_backend_ubuntu_combinations_normal_runtime_info(self):
@@ -113,7 +115,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
             self.default_input,
             expected_output,
             self,
-            runtime_info,
+            runtime_infos=runtime_info,
         )
 
     def test_remove_unsupported_hip_backend_ubuntu_combinations_gapped_runtime_info(self):
@@ -139,5 +141,5 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
             self.default_input,
             expected_output,
             self,
-            runtime_info,
+            runtime_infos=runtime_info,
         )

@@ -7,12 +7,17 @@ from collections import OrderedDict as OD
 import packaging.version as pkv
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import VERSIONS, CLANG_CUDA_MAX_CUDA_VERSION
+from bashi.version import VERSIONS
+from bashi.version.relation import VersionRelation
+from bashi.version.dependencies.clang_cuda import CLANG_CUDA_MAX_CUDA_VERSION
 from bashi.filter_compiler import compiler_filter_typechecked
 from bashi.filter_backend import backend_filter_typechecked
 
 
 class TestClangCUDACompilerFilter(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_clang_cuda_requires_enabled_cuda_backend_c15(self):
         for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
             self.assertTrue(
@@ -22,7 +27,8 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
                             compiler_type: ppv((CLANG_CUDA, 15)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -35,6 +41,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 )
             )
@@ -80,6 +87,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
                                 ),
                             }
                         ),
+                        self.version_relation,
                         reason_msg1,
                     ),
                     expected_filter_result,
@@ -114,6 +122,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 9.0)),
                         }
                     ),
+                    self.version_relation,
                 ),
                 f"clang-cuda {unsupported_new_clang_cuda_version} + CUDA 9.0",
             )
@@ -128,6 +137,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
                             ),
                         }
                     ),
+                    self.version_relation,
                 ),
                 f"clang-cuda {unsupported_new_clang_cuda_version} + "
                 f"CUDA {sorted(VERSIONS[NVCC])[-1]}",
@@ -143,6 +153,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
                             ),
                         }
                     ),
+                    self.version_relation,
                 ),
                 f"clang-cuda {unsupported_new_clang_cuda_version} + "
                 f"CUDA {unsupported_new_cuda_sdk_version}",
@@ -157,7 +168,8 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
                             compiler_type: ppv((CLANG_CUDA, 15)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -170,6 +182,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 )
             )
@@ -196,7 +209,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
             ]:
                 for backend_name in comb:
                     row[backend_name] = ppv((backend_name, OFF))
-                self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+                self.assertTrue(compiler_filter_typechecked(row, self.version_relation), f"{row}")
 
     def test_invalid_clang_cuda_does_not_support_the_sycl_backend_c18(self):
         for row in [
@@ -236,13 +249,18 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
                     row[backend_name] = ppv((backend_name, value))
 
                 reason_msg = io.StringIO()
-                self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+                self.assertFalse(
+                    compiler_filter_typechecked(row, self.version_relation, reason_msg), f"{row}"
+                )
                 self.assertEqual(
                     reason_msg.getvalue(), "clang-cuda does not support the SYCL backend."
                 )
 
 
 class TestClangCUDABackendFilter(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_cuda_backend_supported_clang_cuda_version_b17(self):
         self.assertEqual(
             CLANG_CUDA_MAX_CUDA_VERSION[0].clang_cuda,
@@ -282,6 +300,7 @@ class TestClangCUDABackendFilter(unittest.TestCase):
                                 ),
                             }
                         ),
+                        self.version_relation,
                         reason_msg1,
                     ),
                     expected_filter_result,
@@ -316,6 +335,7 @@ class TestClangCUDABackendFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 9.0)),
                         }
                     ),
+                    self.version_relation,
                 ),
                 f"clang-cuda {unsupported_new_clang_cuda_version} + CUDA 9.0",
             )
@@ -330,6 +350,7 @@ class TestClangCUDABackendFilter(unittest.TestCase):
                             ),
                         }
                     ),
+                    self.version_relation,
                 ),
                 f"clang-cuda {unsupported_new_clang_cuda_version} + "
                 f"CUDA {sorted(VERSIONS[NVCC])[-1]}",
@@ -345,6 +366,7 @@ class TestClangCUDABackendFilter(unittest.TestCase):
                             ),
                         }
                     ),
+                    self.version_relation,
                 ),
                 f"clang-cuda {unsupported_new_clang_cuda_version} + "
                 f"CUDA {unsupported_new_cuda_sdk_version}",

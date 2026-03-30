@@ -6,15 +6,8 @@ from collections import OrderedDict as OD
 import packaging.version as pkv
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import (
-    CompilerCxxSupport,
-    ClangCudaSDKSupport,
-    _get_clang_cuda_cuda_sdk_cxx_support,
-    MAX_CUDA_SDK_CXX_SUPPORT,
-    NVCC_CXX_SUPPORT_VERSION,
-    ClangBase,
-    _get_clang_base_compiler_cxx_support,
-)
+from bashi.version.dependencies.clang_cuda import ClangCudaSDKSupport
+from bashi.version.relation import VersionRelation, CompilerCxxSupport, ClangBase
 from bashi.filter_compiler import (
     compiler_filter_typechecked,
     _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc,
@@ -132,9 +125,10 @@ class TestGetMaximumSupportedCXXStandardForCUDASdk(unittest.TestCase):
             CompilerCxxSupport("11.5", "20"),
             CompilerCxxSupport("10.0", "17"),
         ]
-        result = _get_clang_cuda_cuda_sdk_cxx_support(
-            clang_cxx_support_version, clang_cuda_max_cuda_version
-        )
+        result = VersionRelation(
+            clang_cxx_support_version=clang_cxx_support_version,
+            clang_cuda_max_cuda_version=clang_cuda_max_cuda_version,
+        ).get_max_cuda_sdk_cxx_support()
 
         # workaround for Python <= 3.11
         # SyntaxError: f-string expression part cannot include a backslash
@@ -172,9 +166,10 @@ class TestGetMaximumSupportedCXXStandardForCUDASdk(unittest.TestCase):
             CompilerCxxSupport("11.5", "20"),
             CompilerCxxSupport("10.0", "17"),
         ]
-        result = _get_clang_cuda_cuda_sdk_cxx_support(
-            clang_cxx_support_version, clang_cuda_max_cuda_version
-        )
+        result = VersionRelation(
+            clang_cxx_support_version=clang_cxx_support_version,
+            clang_cuda_max_cuda_version=clang_cuda_max_cuda_version,
+        ).get_max_cuda_sdk_cxx_support()
 
         # workaround for Python <= 3.11
         # SyntaxError: f-string expression part cannot include a backslash
@@ -189,12 +184,22 @@ class TestGetMaximumSupportedCXXStandardForCUDASdk(unittest.TestCase):
 
 
 class TestCompilerCXXSupportFilterRules(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_ignore_combination_gcc_cxx_support_c21(self):
-        self.assertTrue(compiler_filter_typechecked(OD({HOST_COMPILER: ppv((GCC, 10))})))
-        self.assertTrue(compiler_filter_typechecked(OD({CXX_STANDARD: ppv((CXX_STANDARD, 20))})))
+        self.assertTrue(
+            compiler_filter_typechecked(OD({HOST_COMPILER: ppv((GCC, 10))}), self.version_relation)
+        )
         self.assertTrue(
             compiler_filter_typechecked(
-                OD({CXX_STANDARD: ppv((CXX_STANDARD, 20)), CMAKE: ppv((CMAKE, 3.18))})
+                OD({CXX_STANDARD: ppv((CXX_STANDARD, 20))}), self.version_relation
+            )
+        )
+        self.assertTrue(
+            compiler_filter_typechecked(
+                OD({CXX_STANDARD: ppv((CXX_STANDARD, 20)), CMAKE: ppv((CMAKE, 3.18))}),
+                self.version_relation,
             )
         )
 
@@ -285,7 +290,7 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
                 }
             ),
         ]:
-            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+            self.assertTrue(compiler_filter_typechecked(row, self.version_relation), f"{row}")
 
     def test_invalid_in_range_gcc_cxx_support_c21(self):
         for row in [
@@ -371,7 +376,9 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
             reason_msg = io.StringIO()
 
-            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertFalse(
+                compiler_filter_typechecked(row, self.version_relation, reason_msg), f"{row}"
+            )
             self.assertEqual(
                 reason_msg.getvalue(),
                 f"{compiler_type} gcc {row[compiler_type].version} does not support "
@@ -429,7 +436,7 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
                 }
             ),
         ]:
-            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+            self.assertTrue(compiler_filter_typechecked(row, self.version_relation), f"{row}")
 
     def test_invalid_in_range_clang_cxx_support_c22(self):
         for row in [
@@ -479,7 +486,9 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
             reason_msg = io.StringIO()
 
-            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertFalse(
+                compiler_filter_typechecked(row, self.version_relation, reason_msg), f"{row}"
+            )
             self.assertEqual(
                 reason_msg.getvalue(),
                 f"{compiler_type} clang {row[compiler_type].version} does not support "
@@ -531,7 +540,7 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
                 }
             ),
         ]:
-            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+            self.assertTrue(compiler_filter_typechecked(row, self.version_relation), f"{row}")
 
     def test_invalid_in_range_nvcc_cxx_support_c23(self):
         for row in [
@@ -562,7 +571,9 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
         ]:
             reason_msg = io.StringIO()
 
-            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertFalse(
+                compiler_filter_typechecked(row, self.version_relation, reason_msg), f"{row}"
+            )
             self.assertEqual(
                 reason_msg.getvalue(),
                 f"{DEVICE_COMPILER} nvcc {row[DEVICE_COMPILER].version} does not support "
@@ -607,7 +618,8 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
         ]:
             reason_msg = io.StringIO()
             self.assertTrue(
-                compiler_filter_typechecked(row, reason_msg), f"{reason_msg.getvalue()}\n{row}"
+                compiler_filter_typechecked(row, self.version_relation, reason_msg),
+                f"{reason_msg.getvalue()}\n{row}",
             )
 
     def test_invalid_combination_cxx_cuda_backend_host_compiler_c24(self):
@@ -643,7 +655,9 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
         ]:
             reason_msg = io.StringIO()
 
-            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertFalse(
+                compiler_filter_typechecked(row, self.version_relation, reason_msg), f"{row}"
+            )
             self.assertEqual(
                 reason_msg.getvalue(),
                 f"{row[HOST_COMPILER].name} {row[HOST_COMPILER].version} + "
@@ -685,7 +699,7 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
                 }
             ),
         ]:
-            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+            self.assertTrue(compiler_filter_typechecked(row, self.version_relation), f"{row}")
 
     def test_invalid_in_range_clang_cuda_cxx_support_c25(self):
         for row in [
@@ -723,7 +737,9 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
             reason_msg = io.StringIO()
 
-            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertFalse(
+                compiler_filter_typechecked(row, self.version_relation, reason_msg), f"{row}"
+            )
             self.assertEqual(
                 reason_msg.getvalue(),
                 f"{compiler_type} clang-cuda {row[compiler_type].version} does not support "
@@ -775,7 +791,7 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
                 }
             ),
         ]:
-            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+            self.assertTrue(compiler_filter_typechecked(row, self.version_relation), f"{row}")
 
     def test_invalid_cuda_sdk_max_supported_cxx_c26(self):
         for row in [
@@ -806,7 +822,9 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
         ]:
             reason_msg = io.StringIO()
 
-            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertFalse(
+                compiler_filter_typechecked(row, self.version_relation, reason_msg), f"{row}"
+            )
             self.assertEqual(
                 reason_msg.getvalue(),
                 f"There is not Nvcc or Clang-CUDA version which supports "
@@ -815,8 +833,14 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
             )
 
     def test_cuda_sdk_cxx_support_of_clang_cuda_c27(self):
-        max_clang_cuda_support_cxx = sorted(MAX_CUDA_SDK_CXX_SUPPORT, reverse=True)[0]
-        max_nvcc_supported_cxx = sorted(NVCC_CXX_SUPPORT_VERSION, reverse=True)[0]
+        version_relation = VersionRelation()
+
+        max_clang_cuda_support_cxx = sorted(
+            version_relation.get_max_cuda_sdk_cxx_support(), reverse=True
+        )[0]
+        max_nvcc_supported_cxx = sorted(
+            version_relation.get_nvcc_cxx_support_version(), reverse=True
+        )[0]
 
         # The test only works, if this true. If this assumption does not match the real world use
         # case anymore, the test needs to be modified.
@@ -830,7 +854,9 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
                 CXX_STANDARD: ppv((CXX_STANDARD, str(max_clang_cuda_support_cxx.cxx))),
             }
         )
-        self.assertTrue(compiler_filter_typechecked(valid_row), f"{valid_row}")
+        self.assertTrue(
+            compiler_filter_typechecked(valid_row, self.version_relation), f"{valid_row}"
+        )
 
         invalid_cuda_sdk_version = float(str(max_clang_cuda_support_cxx.compiler)) + 0.1
         invalid_row = OD(
@@ -845,7 +871,10 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
             }
         )
         reason_msg = io.StringIO()
-        self.assertFalse(compiler_filter_typechecked(invalid_row, reason_msg), f"{invalid_row}")
+        self.assertFalse(
+            compiler_filter_typechecked(invalid_row, self.version_relation, reason_msg),
+            f"{invalid_row}",
+        )
         self.assertEqual(
             reason_msg.getvalue(),
             f"For the potential combination of C++-{max_clang_cuda_support_cxx.cxx} + "
@@ -855,6 +884,9 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
 
 class TestClangBasedCompilerCXXSupport(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_get_clang_base_compiler_cxx_support(self):
         clang_cxx_support_version: List[CompilerCxxSupport] = [
             CompilerCxxSupport("9", "17"),
@@ -881,7 +913,9 @@ class TestClangBasedCompilerCXXSupport(unittest.TestCase):
             ]
         )
 
-        result = sorted(_get_clang_base_compiler_cxx_support(given, clang_cxx_support_version))
+        result = sorted(
+            VersionRelation()._get_clang_base_compiler_cxx_support(given, clang_cxx_support_version)
+        )
 
         # workaround for Python <= 3.11
         # SyntaxError: f-string expression part cannot include a backslash
@@ -920,7 +954,7 @@ class TestClangBasedCompilerCXXSupport(unittest.TestCase):
                 }
             ),
         ]:
-            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+            self.assertTrue(compiler_filter_typechecked(row, self.version_relation), f"{row}")
 
     def test_invalid_icpx_supported_cxx_c27(self):
         for row in [
@@ -946,7 +980,9 @@ class TestClangBasedCompilerCXXSupport(unittest.TestCase):
 
             reason_msg = io.StringIO()
 
-            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertFalse(
+                compiler_filter_typechecked(row, self.version_relation, reason_msg), f"{row}"
+            )
             self.assertEqual(
                 reason_msg.getvalue(),
                 f"{compiler_type} icpx {row[compiler_type].version} does not support "
@@ -980,7 +1016,7 @@ class TestClangBasedCompilerCXXSupport(unittest.TestCase):
                 }
             ),
         ]:
-            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+            self.assertTrue(compiler_filter_typechecked(row, self.version_relation), f"{row}")
 
     def test_invalid_hipcc_supported_cxx_c28(self):
         for row in [
@@ -1006,7 +1042,9 @@ class TestClangBasedCompilerCXXSupport(unittest.TestCase):
 
             reason_msg = io.StringIO()
 
-            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertFalse(
+                compiler_filter_typechecked(row, self.version_relation, reason_msg), f"{row}"
+            )
             self.assertEqual(
                 reason_msg.getvalue(),
                 f"{compiler_type} hipcc {row[compiler_type].version} does not support "

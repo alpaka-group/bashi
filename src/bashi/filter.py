@@ -3,6 +3,7 @@
 from typing import Dict, Callable, Optional, IO
 from bashi.types import ParameterValueTuple
 from bashi.globals import FilterDebugMode
+from bashi.version.relation import VersionRelation
 
 
 class FilterBase:
@@ -15,6 +16,7 @@ class FilterBase:
     def __init__(
         self,
         runtime_infos: Dict[str, Callable[..., bool]] | None = None,
+        version_relation: VersionRelation = VersionRelation(),
         output: Optional[IO[str]] = None,
         debug_print: FilterDebugMode = FilterDebugMode.OFF,
     ):
@@ -25,6 +27,9 @@ class FilterBase:
                 constructed depending on the input parameter-value-matrix. The functions are named
                 by a string, takes an arbitrary number of arguments and return if the combination of
                 the given parameter-values are valid. Defaults to None.
+            version_relation (VersionRelation): Provides information about the relationships between
+                the versions of various parameter-values. For example, which GCC version supports
+                which C++ standard.
             output (Optional[IO[str]], optional): Write the message to output if it is not None.
                 This function is used in filter functions to print additional information about
                 filter decisions. Defaults to None.
@@ -34,6 +39,7 @@ class FilterBase:
         self.runtime_infos: Dict[str, Callable[..., bool]] = {}
         if runtime_infos:
             self.runtime_infos = runtime_infos
+        self.version = version_relation
         self.output = output
         self.debug_print = debug_print
 

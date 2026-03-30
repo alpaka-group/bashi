@@ -8,6 +8,7 @@ from bashi.types import Parameter, Combination, CombinationList, ParameterValueM
 from bashi.filter_chain import get_default_filter_chain
 from bashi.generator import generate_combination_list, get_runtime_infos
 from bashi.versions import get_parameter_value_matrix
+from bashi.version.relation import VersionRelation
 
 # print numbers with dots or commas as thousand delimiter depending on the local settings
 locale.setlocale(locale.LC_ALL, "")
@@ -86,7 +87,7 @@ if __name__ == "__main__":
         f"{num_combinations_dense_matrix.value:n}"
     )
 
-    rt_info = get_runtime_infos(param_matrix)
+    rt_info = get_runtime_infos(param_matrix, VersionRelation())
     comb_list: CombinationList = generate_combination_list(
         parameter_value_matrix=param_matrix, runtime_infos=rt_info
     )

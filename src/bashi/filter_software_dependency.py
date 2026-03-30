@@ -13,11 +13,7 @@ from typeguard import typechecked
 from bashi.types import ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter import FilterBase
-from bashi.versions import (
-    UBUNTU_HIP_VERSION_RANGE,
-    UBUNTU_CUDA_VERSION_RANGE,
-    UBUNTU_CLANG_CUDA_SDK_SUPPORT,
-)
+from bashi.version.relation import VersionRelation
 from bashi.printer import ubuntu_version_to_string
 
 
@@ -43,10 +39,11 @@ class SoftwareDependencyFilter(FilterBase):
 
     def __init__(
         self,
+        version_relation: VersionRelation,
         runtime_infos: Dict[str, Callable[..., bool]] | None = None,
         output: IO[str] | None = None,
     ):
-        super().__init__(runtime_infos, output)
+        super().__init__(runtime_infos, version_relation, output)
 
     def __call__(
         self,
@@ -96,7 +93,7 @@ class SoftwareDependencyFilter(FilterBase):
             # check if a hipcc version is available on an ubuntu version
             for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
                 if compiler_type in row and row[compiler_type].name == HIPCC:
-                    for ubuntu_hip_range in UBUNTU_HIP_VERSION_RANGE:
+                    for ubuntu_hip_range in self.version.get_ubuntu_hip_version_range():
                         if (
                             row[compiler_type].version in ubuntu_hip_range.sdk_range
                             and row[UBUNTU].version != ubuntu_hip_range.ubuntu
@@ -124,7 +121,7 @@ class SoftwareDependencyFilter(FilterBase):
 
             # Rule: d6
             if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
-                for ubuntu_cuda_range in UBUNTU_CUDA_VERSION_RANGE:
+                for ubuntu_cuda_range in self.version.get_ubuntu_cuda_version_range():
                     if (
                         row[DEVICE_COMPILER].version in ubuntu_cuda_range.sdk_range
                         and row[UBUNTU].version != ubuntu_cuda_range.ubuntu
@@ -141,7 +138,7 @@ class SoftwareDependencyFilter(FilterBase):
                 ALPAKA_ACC_GPU_CUDA_ENABLE in row
                 and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
             ):
-                for ubuntu_cuda_range in UBUNTU_CUDA_VERSION_RANGE:
+                for ubuntu_cuda_range in self.version.get_ubuntu_cuda_version_range():
                     if (
                         row[ALPAKA_ACC_GPU_CUDA_ENABLE].version in ubuntu_cuda_range.sdk_range
                         and row[UBUNTU].version != ubuntu_cuda_range.ubuntu
@@ -156,7 +153,7 @@ class SoftwareDependencyFilter(FilterBase):
             # Rule: d8
             for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
                 if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
-                    if row[UBUNTU].version not in UBUNTU_CLANG_CUDA_SDK_SUPPORT:
+                    if row[UBUNTU].version not in self.version.get_ubuntu_clang_cuda_sdk_support():
                         self.reason(
                             "There is no installable CUDA SDK available for "
                             f"Ubuntu {ubuntu_version_to_string(row[UBUNTU].version)}"
@@ -165,7 +162,7 @@ class SoftwareDependencyFilter(FilterBase):
 
                     if (
                         row[compiler_type].version
-                        not in UBUNTU_CLANG_CUDA_SDK_SUPPORT[row[UBUNTU].version]
+                        not in self.version.get_ubuntu_clang_cuda_sdk_support()[row[UBUNTU].version]
                     ):
                         self.reason(
                             "There is no compatible CUDA SDK for Clang-CUDA "
@@ -217,9 +214,10 @@ class SoftwareDependencyFilter(FilterBase):
 @typechecked
 def software_dependency_filter_typechecked(
     row: ParameterValueTuple,
+    version_relation: VersionRelation,
     output: Optional[IO[str]] = None,
 ) -> bool:
     """Type-checked version of SoftwareDependencyFilter()(). Type checking has a big performance
     cost, which is why the non type-checked version is used for the pairwise generator.
     """
-    return SoftwareDependencyFilter(output=output)(row)
+    return SoftwareDependencyFilter(version_relation=version_relation, output=output)(row)

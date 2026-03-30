@@ -2,7 +2,8 @@
 import unittest
 from typing import List, Union
 import packaging.version as pkv
-from bashi.versions import VERSIONS, is_supported_version
+from bashi.version import VERSIONS
+from bashi.version.utils import is_supported_version
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.exceptions import BashiUnknownVersion
 

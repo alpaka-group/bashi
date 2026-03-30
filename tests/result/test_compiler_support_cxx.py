@@ -15,7 +15,8 @@ from bashi.result_modules.cxx_compiler_support import (
 )
 from bashi.types import ParameterValuePair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import CompilerCxxSupport, MAX_CUDA_SDK_CXX_SUPPORT
+from bashi.version.relation import VersionRelation
+from bashi.version.dependencies.base_version_support import CompilerCxxSupport
 from utils_test import (
     parse_expected_val_pairs2,
     default_remove_test,
@@ -136,6 +137,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_cxx_versions_for_clang(self):
@@ -203,6 +205,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_cxx_versions_for_nvcc(self):
@@ -240,6 +243,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_cxx_versions_for_clang_cuda(self):
@@ -291,10 +295,14 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_cxx_versions_for_cuda(self):
-        lasts_supported_version = sorted(MAX_CUDA_SDK_CXX_SUPPORT, reverse=True)[0]
+        version_relation = VersionRelation()
+        lasts_supported_version = sorted(
+            version_relation.get_max_cuda_sdk_cxx_support(), reverse=True
+        )[0]
         test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
                 ((HOST_COMPILER, CLANG, 9), (CXX_STANDARD, 14)),
@@ -352,10 +360,11 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
                 test_param_value_pairs,
                 expected_results,
                 self,
+                version_relation=VersionRelation(),
             )
         except Exception as e:
-            output = "MAX_CUDA_SDK_CXX_SUPPORT:\n"
-            for v in MAX_CUDA_SDK_CXX_SUPPORT:
+            output = "version_relation.get_max_cuda_sdk_cxx_support():\n"
+            for v in version_relation.get_max_cuda_sdk_cxx_support():
                 output += f"  {str(v)}\n"
             e.add_note(output)
             raise (e)
@@ -387,6 +396,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_cxx_versions_for_hipcc(self):
@@ -415,4 +425,5 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )

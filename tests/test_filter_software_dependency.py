@@ -12,15 +12,20 @@ from bashi.filter_software_dependency import (
     SoftwareDependencyFilter,
 )
 from bashi.runtime_info import ValidUbuntuSDK
-from bashi.versions import CUDA_MIN_UBUNTU
+from bashi.version.dependencies.ubuntu import CUDA_MIN_UBUNTU
+from bashi.version.relation import VersionRelation
 
 
 class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_valid_gcc_is_in_ubuntu_2004_d1(self):
         for gcc_version in [7, 13, 99]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
                     OD({HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "22.04"))}),
+                    self.version_relation,
                 )
             )
 
@@ -32,12 +37,14 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                             UBUNTU: ppv((UBUNTU, "22.04")),
                         }
                     ),
+                    self.version_relation,
                 )
             )
         for gcc_version in [7, 13, 99]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
                     OD({HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "20.04"))}),
+                    self.version_relation,
                 )
             )
 
@@ -49,18 +56,21 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                             UBUNTU: ppv((UBUNTU, "20.04")),
                         }
                     ),
+                    self.version_relation,
                 )
             )
         for gcc_version in [1, 3, 6, 7, 13, 99]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
                     OD({HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "18.04"))}),
+                    self.version_relation,
                 )
             )
         for gcc_version in [1, 3, 6, 7, 13, 99]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
                     OD({DEVICE_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "18.04"))}),
+                    self.version_relation,
                 )
             )
         for gcc_version in [1, 3, 6, 7, 13, 99]:
@@ -72,6 +82,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                             UBUNTU: ppv((UBUNTU, "18.04")),
                         }
                     ),
+                    self.version_relation,
                 )
             )
         for gcc_version in [1, 3, 6, 7, 13, 99]:
@@ -83,6 +94,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                             UBUNTU: ppv((UBUNTU, "18.04")),
                         }
                     ),
+                    self.version_relation,
                 )
             )
 
@@ -92,6 +104,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             self.assertFalse(
                 software_dependency_filter_typechecked(
                     OD({HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "20.04"))}),
+                    self.version_relation,
                     reason_msg,
                 ),
                 f"host compiler GCC {gcc_version} + Ubuntu 20.04",
@@ -105,6 +118,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             self.assertFalse(
                 software_dependency_filter_typechecked(
                     OD({HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "22.04"))}),
+                    self.version_relation,
                     reason_msg,
                 ),
                 f"host compiler GCC {gcc_version} + Ubuntu 22.04",
@@ -119,6 +133,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             self.assertFalse(
                 software_dependency_filter_typechecked(
                     OD({DEVICE_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "20.04"))}),
+                    self.version_relation,
                     reason_msg,
                 ),
                 f"device compiler GCC {gcc_version} + Ubuntu 20.04",
@@ -132,6 +147,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             self.assertFalse(
                 software_dependency_filter_typechecked(
                     OD({DEVICE_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "22.04"))}),
+                    self.version_relation,
                     reason_msg,
                 ),
                 f"device compiler GCC {gcc_version} + Ubuntu 22.04",
@@ -151,6 +167,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                             CMAKE: ppv((CMAKE, cmake_version)),
                         }
                     ),
+                    self.version_relation,
                 )
             )
 
@@ -163,6 +180,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                             CMAKE: ppv((CMAKE, cmake_version)),
                         }
                     ),
+                    self.version_relation,
                 )
             )
 
@@ -172,6 +190,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             self.assertFalse(
                 software_dependency_filter_typechecked(
                     OD({HOST_COMPILER: ppv((CLANG_CUDA, 14)), CMAKE: ppv((CMAKE, cmake_version))}),
+                    self.version_relation,
                     reason_msg,
                 ),
                 f"host compiler CLANG_CUDA + CMAKE {cmake_version}",
@@ -188,6 +207,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
                     OD(
                         {DEVICE_COMPILER: ppv((CLANG_CUDA, 15)), CMAKE: ppv((CMAKE, cmake_version))}
                     ),
+                    self.version_relation,
                     reason_msg,
                 ),
                 f"device compiler CLANG_CUDA + CMAKE {cmake_version}",
@@ -199,6 +219,9 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
 
 
 class TestHIPUbuntu(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_valid_hipcc_ubuntu_d3(self):
         for ubuntu_ver, hipcc_ver in [
             ("20.04", 5.0),
@@ -217,6 +240,7 @@ class TestHIPUbuntu(unittest.TestCase):
                                 UBUNTU: ppv((UBUNTU, ubuntu_ver)),
                             }
                         ),
+                        self.version_relation,
                     )
                 )
 
@@ -240,6 +264,7 @@ class TestHIPUbuntu(unittest.TestCase):
                                 UBUNTU: ppv((UBUNTU, ubuntu_ver)),
                             }
                         ),
+                        self.version_relation,
                         reason_msg,
                     )
                 )
@@ -267,6 +292,7 @@ class TestHIPUbuntu(unittest.TestCase):
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
                         }
                     ),
+                    self.version_relation,
                 )
             )
 
@@ -275,7 +301,9 @@ class TestHIPUbuntu(unittest.TestCase):
         runtime_info[RT_AVAILABLE_HIP_SDK_UBUNTU_VER] = ValidUbuntuSDK(
             parse_value_version(["20.04", "22.04", "26.04"])
         )
-        sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info)
+        sw_dep_filter = SoftwareDependencyFilter(
+            version_relation=self.version_relation, runtime_infos=runtime_info
+        )
 
         for ubuntu_ver in [
             "20.04",
@@ -305,7 +333,11 @@ class TestHIPUbuntu(unittest.TestCase):
             "30.04",
         ]:
             reason_msg = io.StringIO()
-            sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info, output=reason_msg)
+            sw_dep_filter = SoftwareDependencyFilter(
+                version_relation=self.version_relation,
+                runtime_infos=runtime_info,
+                output=reason_msg,
+            )
 
             self.assertFalse(
                 sw_dep_filter(
@@ -325,6 +357,9 @@ class TestHIPUbuntu(unittest.TestCase):
 
 
 class TestCUDAUbuntu(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_valid_hipcc_ubuntu_d6(self):
         max_version_ubuntu = str(sorted(CUDA_MIN_UBUNTU)[-1].ubuntu)
 
@@ -347,6 +382,7 @@ class TestCUDAUbuntu(unittest.TestCase):
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
                         }
                     ),
+                    self.version_relation,
                 )
             )
 
@@ -367,6 +403,7 @@ class TestCUDAUbuntu(unittest.TestCase):
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg,
                 ),
                 f"Nvcc {nvcc_ver} + Ubuntu {ubuntu_ver}",
@@ -403,6 +440,7 @@ class TestCUDAUbuntu(unittest.TestCase):
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
                         }
                     ),
+                    self.version_relation,
                 )
             )
 
@@ -423,6 +461,7 @@ class TestCUDAUbuntu(unittest.TestCase):
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg,
                 ),
                 f"Nvcc {cuda_ver} + Ubuntu {ubuntu_ver}",
@@ -457,6 +496,7 @@ class TestCUDAUbuntu(unittest.TestCase):
                                 UBUNTU: ppv((UBUNTU, ubuntu_ver)),
                             }
                         ),
+                        self.version_relation,
                     )
                 )
 
@@ -475,6 +515,7 @@ class TestCUDAUbuntu(unittest.TestCase):
                                 UBUNTU: ppv((UBUNTU, ubuntu_ver)),
                             }
                         ),
+                        self.version_relation,
                         reason_msg,
                     ),
                     f"Nvcc {clang_cuda_ver} + Ubuntu {ubuntu_ver}",
@@ -504,6 +545,7 @@ class TestCUDAUbuntu(unittest.TestCase):
                                 UBUNTU: ppv((UBUNTU, ubuntu_ver)),
                             }
                         ),
+                        self.version_relation,
                         reason_msg,
                     ),
                     f"Nvcc {clang_cuda_ver} + Ubuntu {ubuntu_ver}",
@@ -521,7 +563,9 @@ class TestCUDAUbuntu(unittest.TestCase):
         runtime_info[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER] = ValidUbuntuSDK(
             parse_value_version(["18.04", "20.04", "22.04", "24.04"])
         )
-        sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info)
+        sw_dep_filter = SoftwareDependencyFilter(
+            version_relation=self.version_relation, runtime_infos=runtime_info
+        )
 
         for ubuntu_ver, clang_cuda_ver in [
             ("18.04", 12),
@@ -555,7 +599,9 @@ class TestCUDAUbuntu(unittest.TestCase):
             for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
                 reason_msg = io.StringIO()
                 sw_dep_filter = SoftwareDependencyFilter(
-                    runtime_infos=runtime_info, output=reason_msg
+                    version_relation=self.version_relation,
+                    runtime_infos=runtime_info,
+                    output=reason_msg,
                 )
 
                 self.assertFalse(
@@ -581,7 +627,9 @@ class TestCUDAUbuntu(unittest.TestCase):
         runtime_info[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER] = ValidUbuntuSDK(
             parse_value_version(["18.04", "20.04", "22.04", "24.04"])
         )
-        sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info)
+        sw_dep_filter = SoftwareDependencyFilter(
+            version_relation=self.version_relation, runtime_infos=runtime_info
+        )
 
         for ubuntu_ver, cuda_ver in [
             ("18.04", 10.2),
@@ -612,7 +660,11 @@ class TestCUDAUbuntu(unittest.TestCase):
             ("24.04", 12.0),
         ]:
             reason_msg = io.StringIO()
-            sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info, output=reason_msg)
+            sw_dep_filter = SoftwareDependencyFilter(
+                version_relation=self.version_relation,
+                runtime_infos=runtime_info,
+                output=reason_msg,
+            )
 
             self.assertFalse(
                 sw_dep_filter(
@@ -636,7 +688,9 @@ class TestCUDAUbuntu(unittest.TestCase):
         runtime_info[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER] = ValidUbuntuSDK(
             parse_value_version(["18.04", "20.04", "22.04", "24.04"])
         )
-        sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info)
+        sw_dep_filter = SoftwareDependencyFilter(
+            version_relation=self.version_relation, runtime_infos=runtime_info
+        )
 
         for ubuntu_ver, cuda_ver in [
             ("18.04", 10.2),
@@ -667,7 +721,11 @@ class TestCUDAUbuntu(unittest.TestCase):
             ("24.04", 12.0),
         ]:
             reason_msg = io.StringIO()
-            sw_dep_filter = SoftwareDependencyFilter(runtime_infos=runtime_info, output=reason_msg)
+            sw_dep_filter = SoftwareDependencyFilter(
+                version_relation=self.version_relation,
+                runtime_infos=runtime_info,
+                output=reason_msg,
+            )
 
             self.assertFalse(
                 sw_dep_filter(

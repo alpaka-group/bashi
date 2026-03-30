@@ -33,12 +33,9 @@ from bashi.types import (
     CombinationList,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import (
-    get_parameter_value_matrix,
-    VERSIONS,
-    NVCC_GCC_MAX_VERSION,
-    NVCC_CLANG_MAX_VERSION,
-)
+from bashi.version import VERSIONS
+from bashi.version.utils import get_parameter_value_matrix
+from bashi.version.relation import VersionRelation
 from src.example_filter import ExampleFilter
 from src.globals import (
     BUILD_TYPE,
@@ -55,6 +52,7 @@ from src.globals import (
 def verify(
     combination_list: CombinationList,
     param_value_matrix: ParameterValueMatrix,
+    version: VersionRelation,
     run_infos: Dict[str, Callable[..., bool]],
 ) -> bool:
     """Check if all expected parameter-value-pairs exists in the combination-list.
@@ -67,8 +65,9 @@ def verify(
     Returns:
         bool: True if it found all pairs
     """
+
     bashi_parameter_value_pairs_tuple: Tuple[List[ParameterValuePair], List[ParameterValuePair]] = (
-        get_expected_bashi_parameter_value_pairs(param_value_matrix, run_infos)
+        get_expected_bashi_parameter_value_pairs(param_value_matrix, version, run_infos)
     )
 
     expected_param_val_tuple, unexpected_param_val_tuple = bashi_parameter_value_pairs_tuple
@@ -167,8 +166,12 @@ def verify(
     # nvcc does not support all gcc and clang versions
     # therefore there are some gcc and clang host compiler versions which can only works with
     # enabled cpu backends
-    max_supported_nvcc_gcc_version = max(comb.host for comb in NVCC_GCC_MAX_VERSION).major
-    max_supported_nvcc_clang_version = max(comb.host for comb in NVCC_CLANG_MAX_VERSION).major
+    max_supported_nvcc_gcc_version = max(
+        comb.host for comb in version.get_nvcc_gcc_max_version()
+    ).major
+    max_supported_nvcc_clang_version = max(
+        comb.host for comb in version.get_nvcc_clang_max_version()
+    ).major
     for cpu_backend in cpu_backends:
         remove_parameter_value_pairs_ranges(
             expected_param_val_tuple,
@@ -396,12 +399,15 @@ if __name__ == "__main__":
 
     custom_filter = ExampleFilter()
 
-    rt_infos = get_runtime_infos(param_matrix)
+    version_relation = VersionRelation()
+
+    rt_infos = get_runtime_infos(param_matrix, version_relation)
 
     comb_list: CombinationList = generate_combination_list(
         parameter_value_matrix=param_matrix,
         runtime_infos=rt_infos,
         custom_filter=custom_filter,
+        version_relation=version_relation,
         # change me to display which combinations passed and did not pass the filter chain
         debug_print=FilterDebugMode.OFF,
     )
@@ -410,7 +416,7 @@ if __name__ == "__main__":
     print(f"number of combinations: {len(comb_list)}")
 
     print("verify combination-list")
-    if verify(comb_list, param_matrix, rt_infos):
+    if verify(comb_list, param_matrix, version_relation, rt_infos):
         print("verification passed")
         sys.exit(0)
 

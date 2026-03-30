@@ -11,7 +11,8 @@ from utils_test import (
 )
 from bashi.runtime_info import ValidUbuntuSDK
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import CUDA_MIN_UBUNTU
+from bashi.version.dependencies.ubuntu import CUDA_MIN_UBUNTU
+from bashi.version.relation import VersionRelation
 
 from bashi.result_modules.cuda_support import (
     _remove_unsupported_nvcc_ubuntu_combinations,
@@ -59,6 +60,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_cuda_backend_ubuntu_combinations(self):
@@ -107,6 +109,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
     def test_remove_unsupported_clang_cuda_ubuntu_combinations(self):
@@ -152,6 +155,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
             test_param_value_pairs,
             expected_results,
             self,
+            version_relation=VersionRelation(),
         )
 
 
@@ -190,7 +194,7 @@ class TestCUDASDKUbuntuRuntimeInfo(unittest.TestCase):
             self.default_input,
             self.default_input,
             self,
-            {},
+            runtime_infos={},
         )
 
     def test__remove_runtime_unsupported_cuda_backend_ubuntu_combinations_normal_runtime_info(self):
@@ -223,7 +227,7 @@ class TestCUDASDKUbuntuRuntimeInfo(unittest.TestCase):
             self.default_input,
             expected_output,
             self,
-            runtime_info,
+            runtime_infos=runtime_info,
         )
 
     def test_remove_runtime_unsupported_clang_cuda_ubuntu_combinations_empty_runtime(self):
@@ -232,7 +236,7 @@ class TestCUDASDKUbuntuRuntimeInfo(unittest.TestCase):
             self.default_input,
             self.default_input,
             self,
-            {},
+            runtime_infos={},
         )
 
     def test_remove_runtime_unsupported_clang_cuda_ubuntu_combinations_normal_runtime_info(self):
@@ -261,5 +265,5 @@ class TestCUDASDKUbuntuRuntimeInfo(unittest.TestCase):
             self.default_input,
             expected_output,
             self,
-            runtime_info,
+            runtime_infos=runtime_info,
         )

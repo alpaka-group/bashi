@@ -6,6 +6,7 @@ import packaging.version as pkv
 from bashi.types import ParameterValue, ParameterValueTuple, FilterFunction
 from bashi.filter import FilterBase
 from bashi.filter_chain import get_default_filter_chain
+from bashi.version.relation import VersionRelation
 
 
 class TestFilterChain(unittest.TestCase):
@@ -25,7 +26,7 @@ class TestFilterChain(unittest.TestCase):
             cls.test_row.append(param_val)
 
     def test_filter_chain_default(self):
-        filter_chain: FilterBase = get_default_filter_chain()
+        filter_chain: FilterBase = get_default_filter_chain(VersionRelation())
         self.assertTrue(
             filter_chain(self.param_val_tuple),
             "The filter should return true every time, "
@@ -48,7 +49,9 @@ class TestFilterChain(unittest.TestCase):
 
         custom_filter = CustomFilter()
 
-        filter_chain: FilterFunction = get_default_filter_chain(custom_filter=custom_filter)
+        filter_chain: FilterFunction = get_default_filter_chain(
+            version_relation=VersionRelation(), custom_filter=custom_filter
+        )
         self.assertTrue(
             filter_chain(self.param_val_tuple),
             "The production filters should return True all the time, because the test data set "
@@ -72,7 +75,9 @@ class TestFilterChain(unittest.TestCase):
 
         custom_filter = CustomFilter()
 
-        filter_chain: FilterFunction = get_default_filter_chain(custom_filter=custom_filter)
+        filter_chain: FilterFunction = get_default_filter_chain(
+            version_relation=VersionRelation(), custom_filter=custom_filter
+        )
         self.assertFalse(
             filter_chain(self.param_val_tuple),
             "The production filters should return True all the time, because the test data set "

@@ -19,7 +19,9 @@ def main(args: List[str], silent: bool) -> bool:
         bool: True if parameter-value-pair passed all filters
     """
     # setting args and silent are only required for the unit tests
-    validator = bashiValidate.Validator(args=args, silent=silent)
+    validator = bashiValidate.Validator(
+        version_relation=bashi.VersionRelation(), args=args, silent=silent
+    )
     validator.parser.add_argument(
         "--missing-parameters",
         action="store_true",

@@ -2,6 +2,7 @@
 import sys
 import os
 import unittest
+from bashi import VersionRelation
 import bashiValidate
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "example"))
@@ -9,8 +10,12 @@ from example.validate import main as validator_main
 
 
 class TestBashiValidate(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_bashi_validate_valid_input(self):
         validator = bashiValidate.Validator(
+            version_relation=self.version_relation,
             args=[
                 "--host-compiler",
                 "gcc@11",
@@ -27,7 +32,9 @@ class TestBashiValidate(unittest.TestCase):
 
     def test_bashi_validate_invalid_input(self):
         validator = bashiValidate.Validator(
-            args=["--host-compiler", "gcc@12", "--device-compiler", "gcc@11"], silent=True
+            version_relation=self.version_relation,
+            args=["--host-compiler", "gcc@12", "--device-compiler", "gcc@11"],
+            silent=True,
         )
         self.assertFalse(validator.validate())
 

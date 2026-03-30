@@ -9,6 +9,7 @@ from bashi.filter import FilterBase
 from bashi.filter_compiler import CompilerFilter
 from bashi.filter_backend import BackendFilter
 from bashi.filter_software_dependency import SoftwareDependencyFilter
+from bashi.version.relation import VersionRelation
 
 
 # pylint: disable=too-few-public-methods
@@ -18,12 +19,16 @@ class FilterChain:
 
     def __init__(
         self,
+        version_relation: VersionRelation,
         runtime_infos: Dict[str, Callable[..., bool]] | None = None,
         custom_filter: FilterBase = FilterBase(),
     ):
         """Construct new FitlerChain.
 
         Args:
+            version_relation (VersionRelation): Provides information about the relationships between
+                the versions of various parameter-values. For example, which GCC version supports
+                which C++ standard.
             runtime_infos (Dict[str, Callable[..., bool]], optional): Runtime infos will be
                 constructed depending on the input parameter-value-matrix. The functions are named
                 by a string, takes an arbitrary number of arguments and return if the combination of
@@ -32,10 +37,17 @@ class FilterChain:
                 allows the user to add custom filter rules without having to create the entire
                 filter chain from scratch. Defaults to FilterBase().
         """
-        self.compiler_filter = CompilerFilter(runtime_infos=runtime_infos)
-        self.backend_filter = BackendFilter(runtime_infos=runtime_infos)
-        self.software_dependency_filter = SoftwareDependencyFilter(runtime_infos=runtime_infos)
+        self.compiler_filter = CompilerFilter(
+            runtime_infos=runtime_infos, version_relation=version_relation
+        )
+        self.backend_filter = BackendFilter(
+            runtime_infos=runtime_infos, version_relation=version_relation
+        )
+        self.software_dependency_filter = SoftwareDependencyFilter(
+            runtime_infos=runtime_infos, version_relation=version_relation
+        )
         self.custom_filter = custom_filter
+        self.version = version_relation
         if runtime_infos:
             self.custom_filter.runtime_infos = runtime_infos
 
@@ -61,6 +73,7 @@ class FilterChain:
 
 @typechecked
 def get_default_filter_chain(
+    version_relation: VersionRelation,
     runtime_infos: Dict[str, Callable[..., bool]] | None = None,
     custom_filter: FilterBase = FilterBase(),
 ) -> FilterChain:
@@ -68,6 +81,9 @@ def get_default_filter_chain(
     with a single entry point.
 
     Args:
+        version_relation (VersionRelation): Provides information about the relationships between
+                the versions of various parameter-values. For example, which GCC version supports
+                which C++ standard.
         runtime_infos (Dict[str, Callable[..., bool]], optional): Runtime infos will be
                 constructed depending on the input parameter-value-matrix. The functions are named
                 by a string, takes an arbitrary number of arguments and return if the combination of
@@ -80,4 +96,6 @@ def get_default_filter_chain(
         FilterFunction: The filter function chain, which can be directly used in bashi.FilterAdapter
     """
 
-    return FilterChain(runtime_infos=runtime_infos, custom_filter=custom_filter)
+    return FilterChain(
+        version_relation=version_relation, runtime_infos=runtime_infos, custom_filter=custom_filter
+    )

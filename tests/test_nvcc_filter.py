@@ -6,24 +6,31 @@ from collections import OrderedDict as OD
 import packaging.version as pkv
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import VERSIONS, NvccHostSupport
+from bashi.version import VERSIONS
+from bashi.version.relation import VersionRelation
+from bashi.version.dependencies.nvcc import NvccHostSupport
 from bashi.filter_compiler import compiler_filter_typechecked
 from bashi.filter_backend import backend_filter_typechecked
 from bashi.types import ParameterValueTuple
 
 
 class TestNoNvccHostCompiler(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_valid_combination_rule_c1(self):
         self.assertTrue(
             compiler_filter_typechecked(
-                OD({HOST_COMPILER: ppv((GCC, 10)), DEVICE_COMPILER: ppv((NVCC, 11.2))})
+                OD({HOST_COMPILER: ppv((GCC, 10)), DEVICE_COMPILER: ppv((NVCC, 11.2))}),
+                self.version_relation,
             )
         )
 
         # version should not matter
         self.assertTrue(
             compiler_filter_typechecked(
-                OD({HOST_COMPILER: ppv((CLANG, 0)), DEVICE_COMPILER: ppv((NVCC, 0))})
+                OD({HOST_COMPILER: ppv((CLANG, 0)), DEVICE_COMPILER: ppv((NVCC, 0))}),
+                self.version_relation,
             )
         )
 
@@ -36,7 +43,8 @@ class TestNoNvccHostCompiler(unittest.TestCase):
                         CMAKE: ppv((CMAKE, "3.23")),
                         BOOST: ppv((BOOST, "1.81")),
                     }
-                )
+                ),
+                self.version_relation,
             )
         )
 
@@ -50,7 +58,8 @@ class TestNoNvccHostCompiler(unittest.TestCase):
                         CMAKE: ppv((CMAKE, "3.23")),
                         BOOST: ppv((BOOST, "1.81")),
                     }
-                )
+                ),
+                self.version_relation,
             )
         )
 
@@ -59,6 +68,7 @@ class TestNoNvccHostCompiler(unittest.TestCase):
         self.assertFalse(
             compiler_filter_typechecked(
                 OD({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((NVCC, 11.2))}),
+                self.version_relation,
                 reason_msg1,
             )
         )
@@ -67,7 +77,9 @@ class TestNoNvccHostCompiler(unittest.TestCase):
         reason_msg2 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((GCC, 11))}), reason_msg2
+                OD({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((GCC, 11))}),
+                self.version_relation,
+                reason_msg2,
             )
         )
         self.assertEqual(reason_msg2.getvalue(), "nvcc is not allowed as host compiler")
@@ -76,6 +88,7 @@ class TestNoNvccHostCompiler(unittest.TestCase):
         self.assertFalse(
             compiler_filter_typechecked(
                 OD({HOST_COMPILER: ppv((NVCC, 12.2)), DEVICE_COMPILER: ppv((HIPCC, 5.1))}),
+                self.version_relation,
                 reason_msg3,
             )
         )
@@ -83,12 +96,17 @@ class TestNoNvccHostCompiler(unittest.TestCase):
 
         reason_msg4 = io.StringIO()
         self.assertFalse(
-            compiler_filter_typechecked(OD({HOST_COMPILER: ppv((NVCC, 10.2))}), reason_msg4)
+            compiler_filter_typechecked(
+                OD({HOST_COMPILER: ppv((NVCC, 10.2))}), self.version_relation, reason_msg4
+            )
         )
         self.assertEqual(reason_msg4.getvalue(), "nvcc is not allowed as host compiler")
 
 
 class TestSupportedNvccHostCompiler(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_invalid_combination_rule_c2(self):
         for compiler_name in [CLANG_CUDA, HIPCC, ICPX, NVCC]:
             for compiler_version in ["0", "13", "32a2"]:
@@ -101,6 +119,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                                 DEVICE_COMPILER: ppv((NVCC, "12.3")),
                             }
                         ),
+                        self.version_relation,
                         reason_msg,
                     )
                 )
@@ -122,6 +141,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                         BOOST: ppv((BOOST, "1.81.0")),
                     }
                 ),
+                self.version_relation,
                 reason_msg1,
             )
         )
@@ -142,6 +162,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                         DEVICE_COMPILER: ppv((NVCC, "12.3")),
                     }
                 ),
+                self.version_relation,
                 reason_msg2,
             )
         )
@@ -160,8 +181,9 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                                 HOST_COMPILER: ppv((compiler_name, compiler_version)),
                                 DEVICE_COMPILER: ppv((NVCC, "12.3")),
                             }
-                        )
-                    )
+                        ),
+                        self.version_relation,
+                    ),
                 )
 
         self.assertTrue(
@@ -173,7 +195,8 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                         BOOST: ppv((BOOST, "1.84.0")),
                         CMAKE: ppv((CMAKE, "3.23")),
                     }
-                )
+                ),
+                self.version_relation,
             )
         )
         self.assertTrue(
@@ -186,7 +209,8 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                         ),
                         DEVICE_COMPILER: ppv((NVCC, "10.1")),
                     }
-                )
+                ),
+                self.version_relation,
             )
         )
 
@@ -277,6 +301,9 @@ class TestNvccHostSupportClass(unittest.TestCase):
 
 
 class TestNvccSupportedGccVersion(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_valid_combination_general_algorithm_rule_c5(self):
         # this tests checks, if also version are respected, which are located between two defined
         # nvcc versions
@@ -332,6 +359,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
                             DEVICE_COMPILER: ppv((NVCC, nvcc_version)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg,
                 ),
                 expected_filter_return_value,
@@ -404,6 +432,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
                             DEVICE_COMPILER: ppv((NVCC, nvcc_version)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg,
                 ),
                 expected_filter_return_value,
@@ -426,7 +455,8 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
                         CMAKE: ppv((CMAKE, 3.18)),
                         BOOST: ppv((BOOST, 1.78)),
                     }
-                )
+                ),
+                self.version_relation,
             )
         )
 
@@ -441,7 +471,8 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
                             (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON)
                         ),
                     }
-                )
+                ),
+                self.version_relation,
             )
         )
 
@@ -457,6 +488,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
                         BOOST: ppv((BOOST, 1.78)),
                     }
                 ),
+                self.version_relation,
                 reason_msg1,
             ),
         )
@@ -478,6 +510,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
                         ),
                     }
                 ),
+                self.version_relation,
                 reason_msg2,
             )
         )
@@ -504,6 +537,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
                         DEVICE_COMPILER: ppv((NVCC, unsupported_nvcc_version)),
                     }
                 ),
+                self.version_relation,
             ),
             f"nvcc {unsupported_nvcc_version} should pass the filter, because it is unknown "
             "version",
@@ -511,6 +545,9 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
 
 
 class TestNvccSupportedClangVersion(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_valid_combination_max_clang_rule_c6_rule_c7(self):
         # change the version, if you added a new cuda release
         # this test is a guard to be sure, that the following test contains the latest nvcc release
@@ -573,6 +610,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                             DEVICE_COMPILER: ppv((NVCC, nvcc_version)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg,
                 ),
                 expected_filter_return_value,
@@ -605,7 +643,8 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                         CMAKE: ppv((CMAKE, 3.18)),
                         BOOST: ppv((BOOST, 1.78)),
                     }
-                )
+                ),
+                self.version_relation,
             )
         )
 
@@ -620,7 +659,8 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                             (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON)
                         ),
                     }
-                )
+                ),
+                self.version_relation,
             )
         )
 
@@ -636,6 +676,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                         BOOST: ppv((BOOST, 1.78)),
                     }
                 ),
+                self.version_relation,
                 reason_msg1,
             ),
         )
@@ -657,6 +698,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                         ),
                     }
                 ),
+                self.version_relation,
                 reason_msg2,
             )
         )
@@ -683,6 +725,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                         DEVICE_COMPILER: ppv((NVCC, unsupported_nvcc_version)),
                     }
                 ),
+                self.version_relation,
             ),
             f"nvcc {unsupported_nvcc_version} should pass the filter, because it is unknown "
             "version",
@@ -700,6 +743,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                                 DEVICE_COMPILER: ppv((NVCC, nvcc_version)),
                             }
                         ),
+                        self.version_relation,
                         reason_msg,
                     ),
                     f"nvcc {nvcc_version} does not allow clang as host compiler",
@@ -725,6 +769,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                                 CMAKE: ppv((CMAKE, 3.18)),
                             }
                         ),
+                        self.version_relation,
                         reason_msg,
                     ),
                     f"nvcc {nvcc_version} does not allow clang as host compiler",
@@ -736,6 +781,9 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
 
 
 class TestNvccCompilerFilter(unittest.TestCase):
+    def setUp(self):
+        self.version_relation = VersionRelation()
+
     def test_nvcc_requires_sane_cuda_backend_version_pass_c15(self):
         for version in ("10.1", "11.2", "12.3"):
             self.assertTrue(
@@ -745,7 +793,8 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((NVCC, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, version)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -757,7 +806,8 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((NVCC, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, version)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -769,7 +819,8 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((GCC, 7)),
                             DEVICE_COMPILER: ppv((NVCC, version)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -783,7 +834,8 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             BOOST: ppv((BOOST, "1.78.0")),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, version)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 )
             )
 
@@ -798,6 +850,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 )
             )
@@ -814,6 +867,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "11.8")),
                         }
                     ),
+                    self.version_relation,
                     reason_msg2,
                 )
             )
@@ -831,6 +885,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg3,
                 )
             )
@@ -848,6 +903,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((NVCC, version)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg4,
                 )
             )
@@ -868,6 +924,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg5,
                 )
             )
@@ -884,6 +941,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -896,6 +954,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg1,
             )
         )
@@ -918,7 +977,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
             row: ParameterValueTuple = OD({DEVICE_COMPILER: ppv((NVCC, 11.2))})
             for backend_name in comb:
                 row[backend_name] = ppv((backend_name, OFF))
-            self.assertTrue(compiler_filter_typechecked(row), f"{row}")
+            self.assertTrue(compiler_filter_typechecked(row, self.version_relation), f"{row}")
 
     def test_invalid_nvcc_requires_disabled_sycl_backend_c17(self):
         for comb in [
@@ -954,7 +1013,9 @@ class TestNvccCompilerFilter(unittest.TestCase):
             row: ParameterValueTuple = OD({DEVICE_COMPILER: ppv((NVCC, 11.2))})
             for backend_name, value in comb:
                 row[backend_name] = ppv((backend_name, value))
-            self.assertFalse(compiler_filter_typechecked(row, reason_msg), f"{row}")
+            self.assertFalse(
+                compiler_filter_typechecked(row, self.version_relation, reason_msg), f"{row}"
+            )
 
             self.assertEqual(reason_msg.getvalue(), "nvcc does not support the SYCL backend.")
 
@@ -967,6 +1028,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg1,
             )
         )
@@ -982,6 +1044,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
                 reason_msg1,
             )
         )
@@ -997,6 +1060,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         DEVICE_COMPILER: ppv((NVCC, 12.2)),
                     }
                 ),
+                self.version_relation,
                 reason_msg2,
             )
         )
@@ -1011,7 +1075,8 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_GPU_CUDA_ENABLE should be off for {compiler_name}",
             )
@@ -1023,7 +1088,8 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_GPU_CUDA_ENABLE should be off for {compiler_name}",
             )
@@ -1036,7 +1102,8 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_GPU_CUDA_ENABLE should be off for {compiler_name}",
             )
@@ -1051,7 +1118,8 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             BOOST: ppv((BOOST, "1.78.0")),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"ALPAKA_ACC_GPU_CUDA_ENABLE should be off for {compiler_name}",
             )
@@ -1070,7 +1138,8 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             HOST_COMPILER: ppv((host_compiler[0], host_compiler[1])),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((cuda_sdk[0], cuda_sdk[1])),
                         }
-                    )
+                    ),
+                    self.version_relation,
                 ),
                 f"{host_compiler[0]} {host_compiler[1]} + CUDA {cuda_sdk[1]}",
             )
@@ -1089,6 +1158,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((cuda_sdk[0], cuda_sdk[1])),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 ),
                 f"{host_compiler[0]} {host_compiler[1]} + CUDA {cuda_sdk[1]}",
@@ -1108,6 +1178,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, version)),
                         }
                     ),
+                    self.version_relation,
                 )
             )
 
@@ -1123,6 +1194,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             ),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 )
             )
@@ -1142,6 +1214,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             ),
                         }
                     ),
+                    self.version_relation,
                 ),
                 f"gcc {gcc_version} + CUDA {version_cuda}",
             )
@@ -1157,6 +1230,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((NVCC, version_cuda)),
                         }
                     ),
+                    self.version_relation,
                 ),
                 f"gcc {gcc_version} + CUDA {version_cuda}",
             )
@@ -1173,6 +1247,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             ),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 ),
                 f"gcc {gcc_version} + CUDA {version_cuda}",
@@ -1195,6 +1270,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                                 ),
                             }
                         ),
+                        self.version_relation,
                         reason_msg1,
                     ),
                     f"clang {clang_version} + CUDA {cuda_version}",
@@ -1216,6 +1292,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             ),
                         }
                     ),
+                    self.version_relation,
                 ),
                 f"clang {clang_version} + CUDA {version_cuda}",
             )
@@ -1231,6 +1308,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             DEVICE_COMPILER: ppv((NVCC, version_cuda)),
                         }
                     ),
+                    self.version_relation,
                 ),
                 f"clang {clang_version} + CUDA {version_cuda}",
             )
@@ -1247,6 +1325,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             ),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 ),
                 f"clang {clang_version} + CUDA {version_cuda}",
@@ -1265,6 +1344,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
                     }
                 ),
+                self.version_relation,
             ),
         )
 
@@ -1276,6 +1356,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
                     }
                 ),
+                self.version_relation,
             ),
         )
 
@@ -1289,6 +1370,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
                         }
                     ),
+                    self.version_relation,
                     reason_msg1,
                 ),
                 f"device-compiler {DEVICE_COMPILER} + CUDA 11.2",
@@ -1307,6 +1389,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -1318,6 +1401,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -1329,6 +1413,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -1341,6 +1426,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg1,
             )
         )
@@ -1358,6 +1444,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 10.2)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -1372,6 +1459,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.3)),
                     }
                 ),
+                self.version_relation,
                 reason_msg2,
             )
         )
@@ -1388,6 +1476,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -1399,6 +1488,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -1410,6 +1500,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_FPGA_ENABLE: ppv((ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -1422,6 +1513,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                     }
                 ),
+                self.version_relation,
                 reason_msg1,
             )
         )
@@ -1439,6 +1531,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 10.2)),
                     }
                 ),
+                self.version_relation,
             )
         )
 
@@ -1453,6 +1546,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.3)),
                     }
                 ),
+                self.version_relation,
                 reason_msg2,
             )
         )

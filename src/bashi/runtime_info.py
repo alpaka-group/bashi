@@ -4,7 +4,7 @@ parameter-value-matrix"""
 from typing import List, Dict
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
-from bashi.versions import UbuntuSDKMinMax
+from bashi.version.dependencies.ubuntu import UbuntuSDKMinMax
 from bashi.types import ValueVersion
 
 

@@ -16,17 +16,19 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.filter import FilterBase
 from bashi.filter_chain import get_default_filter_chain, FilterChain
 from bashi.runtime_info import get_sdk_supporting_ubuntus
-from bashi.versions import UBUNTU_HIP_VERSION_RANGE, UBUNTU_CUDA_VERSION_RANGE
+from bashi.version.relation import VersionRelation
 
 
 def get_runtime_infos(
-    parameter_value_matrix: ParameterValueMatrix,
+    parameter_value_matrix: ParameterValueMatrix, version_relation: VersionRelation
 ) -> Dict[str, Callable[..., bool]]:
     """Get several runtime filter rules for the given input parameter-value-matrix
 
     Args:
         parameter_value_matrix (ParameterValueMatrix): parameter-value-matrix
-
+        version_relation (VersionRelation): Provides information about the relationships between
+                the versions of various parameter-values. For example, which GCC version supports
+                which C++ standard.
     Returns:
         Dict[str, Callable[..., bool]]: Dict of filter functions
     """
@@ -40,12 +42,12 @@ def get_runtime_infos(
             for sdk_name, version_range, rt_func_name in [
                 (
                     HIPCC,
-                    UBUNTU_HIP_VERSION_RANGE,
+                    version_relation.get_ubuntu_hip_version_range(),
                     RT_AVAILABLE_HIP_SDK_UBUNTU_VER,
                 ),
                 (
                     NVCC,
-                    UBUNTU_CUDA_VERSION_RANGE,
+                    version_relation.get_ubuntu_cuda_version_range(),
                     RT_AVAILABLE_CUDA_SDK_UBUNTU_VER,
                 ),
             ]:
@@ -66,6 +68,7 @@ def get_runtime_infos(
 
 def generate_combination_list(
     parameter_value_matrix: ParameterValueMatrix,
+    version_relation: VersionRelation,
     runtime_infos: Dict[str, Callable[..., bool]],
     custom_filter: FilterBase = FilterBase(),
     debug_print: FilterDebugMode = FilterDebugMode.OFF,
@@ -76,6 +79,9 @@ def generate_combination_list(
     Args:
         parameter_value_matrix (ParameterValueMatrix): Input matrix with parameter and
             parameter-values.
+        version_relation (VersionRelation): Provides information about the relationships between
+                the versions of various parameter-values. For example, which GCC version supports
+                which C++ standard.
         custom_filter (FilterFunction, optional): Custom filter function to extend bashi
             filters. Defaults is lambda _: True.
         debug_print (FilterDebugMode): Depending on the debug mode, print additional information
@@ -85,7 +91,7 @@ def generate_combination_list(
     """
 
     filter_chain: FilterChain = get_default_filter_chain(
-        runtime_infos=runtime_infos, custom_filter=custom_filter
+        runtime_infos=runtime_infos, custom_filter=custom_filter, version_relation=version_relation
     )
     filter_chain.set_debug_print(debug_print)
 

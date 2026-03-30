@@ -3,7 +3,10 @@ import unittest
 import packaging.version as pkv
 from packaging.specifiers import SpecifierSet
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import UbuntuSDKMinMax, get_parameter_value_matrix, VERSIONS
+from bashi.version import VERSIONS
+from bashi.version.utils import get_parameter_value_matrix
+from bashi.version.relation import VersionRelation
+from bashi.version.dependencies.ubuntu import UbuntuSDKMinMax
 from bashi.runtime_info import get_sdk_supporting_ubuntus
 from bashi.generator import get_runtime_infos
 from collections import OrderedDict
@@ -121,13 +124,13 @@ class TestGetHipSdkSupportingUbuntus(unittest.TestCase):
 class TestGetRuntimeInfoUbuntuHip(unittest.TestCase):
     def test_get_runtime_infos_ubuntu_hip_all_param_vals_available(self):
         parameter_value_matrix = get_parameter_value_matrix()
-        runtime_info = get_runtime_infos(parameter_value_matrix)
+        runtime_info = get_runtime_infos(parameter_value_matrix, VersionRelation())
         self.assertIn(RT_AVAILABLE_HIP_SDK_UBUNTU_VER, runtime_info)
 
     def test_get_runtime_infos_ubuntu_hip_ubuntu_missing(self):
         parameter_value_matrix = get_parameter_value_matrix()
         del parameter_value_matrix[UBUNTU]
-        runtime_info = get_runtime_infos(parameter_value_matrix)
+        runtime_info = get_runtime_infos(parameter_value_matrix, VersionRelation())
         self.assertNotIn(RT_AVAILABLE_HIP_SDK_UBUNTU_VER, runtime_info)
 
     def test_get_runtime_infos_ubuntu_hip_missing_hipcc(self):
@@ -162,5 +165,5 @@ class TestGetRuntimeInfoUbuntuHip(unittest.TestCase):
                 for version in versions:
                     param_val_matrix[other].append(ParameterValue(other, pkv.parse(str(version))))
 
-        runtime_info = get_runtime_infos(param_val_matrix)
+        runtime_info = get_runtime_infos(param_val_matrix, VersionRelation())
         self.assertNotIn(RT_AVAILABLE_HIP_SDK_UBUNTU_VER, runtime_info)

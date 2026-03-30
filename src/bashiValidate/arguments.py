@@ -20,7 +20,7 @@ from bashi.globals import (
     OFF,
 )
 from bashi.printer import PARAMETER_SHORT_NAME
-from bashi.versions import VERSIONS
+from bashi.version import VERSIONS
 from bashiValidate.utils import exit_error
 
 ArgumentAlias = NamedTuple("ArgumentAlias", [("alias", List[str]), ("parameter", Parameter)])

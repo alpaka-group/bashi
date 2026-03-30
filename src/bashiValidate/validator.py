@@ -7,13 +7,15 @@ from collections import OrderedDict
 import packaging.version
 from typeguard import typechecked
 from bashi.types import ParameterValue, ParameterValueTuple
-from bashi.versions import is_supported_version
+from bashi.version.utils import is_supported_version
 from bashi.filter import FilterBase
 from bashi.filter_compiler import CompilerFilter
 from bashi.filter_backend import BackendFilter
 from bashi.filter_software_dependency import SoftwareDependencyFilter
 from bashi.exceptions import BashiUnknownVersion
-from bashi.versions import VERSIONS, get_parameter_value_matrix
+from bashi.version import VERSIONS
+from bashi.version.utils import get_parameter_value_matrix
+from bashi.version.relation import VersionRelation
 from bashi.generator import get_runtime_infos
 from .arguments import get_validator_args, ArgumentAlias, VersionCheck, AliasParser
 from .utils import cs, Color
@@ -25,19 +27,26 @@ class Validator:
     the filter stages.
     """
 
-    def __init__(self, args: List[str] | None = None, silent: bool = False):
+    def __init__(
+        self,
+        version_relation: VersionRelation,
+        args: List[str] | None = None,
+        silent: bool = False,
+    ):
         """Setup default configuration for bashi filter rules.
 
         Args:
+            version_relation (VersionRelation): Contains relations between different
+                parameter-values.
             args (List[str] | None, optional): Set command line arguments manually. Defaults to
                 None.
             silent (bool, optional): If True, disable terminal output. Defaults to False.
         """
         self.parser, self.argument_alias, self.param_order = get_validator_args()
         self.filter_stages: List[FilterBase] = [
-            CompilerFilter(),
-            BackendFilter(),
-            SoftwareDependencyFilter(),
+            CompilerFilter(version_relation=version_relation),
+            BackendFilter(version_relation=version_relation),
+            SoftwareDependencyFilter(version_relation=version_relation),
         ]
         self.known_version: Dict[str, List[packaging.version.Version]] = {}
         if args:
@@ -49,6 +58,7 @@ class Validator:
         # list of software names, where the available versions can be set via CLI arguments
         self.software_version_names = list(VERSIONS.keys())
         self.runtime_infos: Dict[str, Callable[..., bool]] = {}
+        self.version_relation = version_relation
 
     @typechecked
     def add_software_version_parameter(
@@ -218,7 +228,7 @@ class Validator:
 
         # merge custom runtime info with bashi runtime info functions
         self.runtime_infos = self.runtime_infos | get_runtime_infos(
-            get_parameter_value_matrix(software_versions=sw_versions)
+            get_parameter_value_matrix(software_versions=sw_versions), self.version_relation
         )
 
         for filter_stage in self.filter_stages:

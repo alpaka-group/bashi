@@ -2,17 +2,13 @@ import unittest
 from typing import List
 import packaging.version as pkv
 from packaging.specifiers import SpecifierSet
-from bashi.versions import (
-    ClangCudaSDKSupport,
-    SDKUbuntuSupport,
-    UbuntuSDKMinMax,
-    _get_ubuntu_clang_cuda_sdk_support,
-    _get_ubuntu_sdk_min_max,
-)
+from bashi.version.relation import VersionRelation
+from bashi.version.dependencies.clang_cuda import ClangCudaSDKSupport
+from bashi.version.dependencies.ubuntu import SDKUbuntuSupport
 
 
 class TestGetUbuntuClangCudaSdkSupport(unittest.TestCase):
-    def test_get_ubuntu_clang_cuda_sdk_support_case1(self):
+    def test_get_ubuntu_clang_cuda_sdk_support_case1(self) -> None:
         clang_cuda_max_cuda_version: List[ClangCudaSDKSupport] = [
             ClangCudaSDKSupport("7", "9.2"),
             ClangCudaSDKSupport("8", "10.0"),
@@ -30,11 +26,11 @@ class TestGetUbuntuClangCudaSdkSupport(unittest.TestCase):
             SDKUbuntuSupport("11.0", "20.04"),
             SDKUbuntuSupport("12.0", "24.04"),
         ]
-        ubuntu_cuda_version_range: List[UbuntuSDKMinMax] = _get_ubuntu_sdk_min_max(cuda_min_ubuntu)
 
-        result = _get_ubuntu_clang_cuda_sdk_support(
-            ubuntu_cuda_version_range, clang_cuda_max_cuda_version
-        )
+        result = VersionRelation(
+            cuda_min_ubuntu=cuda_min_ubuntu,
+            clang_cuda_max_cuda_version=clang_cuda_max_cuda_version,
+        ).get_ubuntu_clang_cuda_sdk_support()
 
         self.assertEqual(
             result,
@@ -45,7 +41,7 @@ class TestGetUbuntuClangCudaSdkSupport(unittest.TestCase):
             },
         )
 
-    def test_get_ubuntu_clang_cuda_sdk_support_case2(self):
+    def test_get_ubuntu_clang_cuda_sdk_support_case2(self) -> None:
         clang_cuda_max_cuda_version: List[ClangCudaSDKSupport] = [
             ClangCudaSDKSupport("7", "9.2"),
             ClangCudaSDKSupport("8", "10.0"),
@@ -61,11 +57,11 @@ class TestGetUbuntuClangCudaSdkSupport(unittest.TestCase):
         cuda_min_ubuntu: List[SDKUbuntuSupport] = [
             SDKUbuntuSupport("11.0", "20.04"),
         ]
-        ubuntu_cuda_version_range: List[UbuntuSDKMinMax] = _get_ubuntu_sdk_min_max(cuda_min_ubuntu)
 
-        result = _get_ubuntu_clang_cuda_sdk_support(
-            ubuntu_cuda_version_range, clang_cuda_max_cuda_version
-        )
+        result = VersionRelation(
+            cuda_min_ubuntu=cuda_min_ubuntu,
+            clang_cuda_max_cuda_version=clang_cuda_max_cuda_version,
+        ).get_ubuntu_clang_cuda_sdk_support()
 
         self.assertEqual(
             result,
@@ -74,7 +70,7 @@ class TestGetUbuntuClangCudaSdkSupport(unittest.TestCase):
             },
         )
 
-    def test_get_ubuntu_clang_cuda_sdk_support_case3(self):
+    def test_get_ubuntu_clang_cuda_sdk_support_case3(self) -> None:
         clang_cuda_max_cuda_version: List[ClangCudaSDKSupport] = [
             ClangCudaSDKSupport("7", "9.2"),
             ClangCudaSDKSupport("8", "10.0"),
@@ -90,11 +86,11 @@ class TestGetUbuntuClangCudaSdkSupport(unittest.TestCase):
             SDKUbuntuSupport("11.0", "20.04"),
             SDKUbuntuSupport("12.0", "24.04"),
         ]
-        ubuntu_cuda_version_range: List[UbuntuSDKMinMax] = _get_ubuntu_sdk_min_max(cuda_min_ubuntu)
 
-        result = _get_ubuntu_clang_cuda_sdk_support(
-            ubuntu_cuda_version_range, clang_cuda_max_cuda_version
-        )
+        result = VersionRelation(
+            cuda_min_ubuntu=cuda_min_ubuntu,
+            clang_cuda_max_cuda_version=clang_cuda_max_cuda_version,
+        ).get_ubuntu_clang_cuda_sdk_support()
 
         self.assertEqual(
             result,
@@ -104,7 +100,7 @@ class TestGetUbuntuClangCudaSdkSupport(unittest.TestCase):
             },
         )
 
-    def test_get_ubuntu_clang_cuda_sdk_support_case4(self):
+    def test_get_ubuntu_clang_cuda_sdk_support_case4(self) -> None:
         clang_cuda_max_cuda_version: List[ClangCudaSDKSupport] = [
             ClangCudaSDKSupport("7", "9.2"),
             ClangCudaSDKSupport("8", "10.0"),
@@ -121,11 +117,11 @@ class TestGetUbuntuClangCudaSdkSupport(unittest.TestCase):
             SDKUbuntuSupport("10.0", "18.04"),
             SDKUbuntuSupport("11.0", "20.04"),
         ]
-        ubuntu_cuda_version_range: List[UbuntuSDKMinMax] = _get_ubuntu_sdk_min_max(cuda_min_ubuntu)
 
-        result = _get_ubuntu_clang_cuda_sdk_support(
-            ubuntu_cuda_version_range, clang_cuda_max_cuda_version
-        )
+        result = VersionRelation(
+            cuda_min_ubuntu=cuda_min_ubuntu,
+            clang_cuda_max_cuda_version=clang_cuda_max_cuda_version,
+        ).get_ubuntu_clang_cuda_sdk_support()
 
         self.assertEqual(
             result,

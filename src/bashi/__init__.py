@@ -2,7 +2,8 @@
 
 from bashi.types import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.versions import get_parameter_value_matrix
+from bashi.version.utils import get_parameter_value_matrix
+from bashi.version.relation import VersionRelation
 from bashi.generator import get_runtime_infos, generate_combination_list
 from bashi.utils import (
     check_parameter_value_pair_in_combination_list,

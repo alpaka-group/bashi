@@ -12,19 +12,8 @@ import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValueTuple, Parameter, ValueName
-from bashi.versions import (
-    CompilerCxxSupport,
-    NVCC_GCC_MAX_VERSION,
-    NVCC_CLANG_MAX_VERSION,
-    CLANG_CUDA_MAX_CUDA_VERSION,
-    GCC_CXX_SUPPORT_VERSION,
-    CLANG_CXX_SUPPORT_VERSION,
-    CLANG_CUDA_CXX_SUPPORT_VERSION,
-    NVCC_CXX_SUPPORT_VERSION,
-    MAX_CUDA_SDK_CXX_SUPPORT,
-    ICPX_CXX_SUPPORT_VERSION,
-    HIPCC_CXX_SUPPORT_VERSION,
-)
+from bashi.version.dependencies.base_version_support import CompilerCxxSupport
+from bashi.version.relation import VersionRelation
 from bashi.filter import FilterBase
 from bashi.utils import reason
 
@@ -114,7 +103,7 @@ def _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
     Args:
         cuda_sdk_version (pkv.Version): CUDA backend version
         max_cuda_sdk_cxx_support (List[CompilerCxxSupport]): Only for testing
-        purpose. Use MAX_CUDA_SDK_CXX_SUPPORT.
+        purpose. Use VersionRelation().get_max_cuda_sdk_cxx_support(self).
 
     Returns:
         pkv.Version: C++ version
@@ -140,7 +129,7 @@ def _get_max_supported_cxx_version_for_cuda_sdk(
         nvcc_compiler_cxx_support_list (List[CompilerCxxSupport]): Only for testing
         purpose. Use NVCC_CXX_SUPPORT_VERSION.
                 max_cuda_sdk_cxx_support (List[CompilerCxxSupport]): Only for testing
-        purpose. Use MAX_CUDA_SDK_CXX_SUPPORT.
+        purpose. Use VersionRelation().get_max_cuda_sdk_cxx_support(self).
 
     Returns:
         pkv.Version: C++ version
@@ -163,10 +152,11 @@ class CompilerFilter(FilterBase):
 
     def __init__(
         self,
+        version_relation: VersionRelation,
         runtime_infos: Dict[str, Callable[..., bool]] | None = None,
         output: IO[Parameter] | None = None,
     ):
-        super().__init__(runtime_infos, output)
+        super().__init__(runtime_infos, version_relation, output)
 
     def __call__(
         self,
@@ -225,9 +215,9 @@ class CompilerFilter(FilterBase):
 
                 # if a nvcc version is not supported by bashi, assume that the version supports the
                 # latest gcc compiler version
-                if row[DEVICE_COMPILER].version <= NVCC_GCC_MAX_VERSION[0].nvcc:
+                if row[DEVICE_COMPILER].version <= self.version.get_nvcc_gcc_max_version()[0].nvcc:
                     # check the maximum supported gcc version for the given nvcc version
-                    for nvcc_gcc_comb in NVCC_GCC_MAX_VERSION:
+                    for nvcc_gcc_comb in self.version.get_nvcc_gcc_max_version():
                         if row[DEVICE_COMPILER].version >= nvcc_gcc_comb.nvcc:
                             if row[HOST_COMPILER].version > nvcc_gcc_comb.host:
                                 self.reason(
@@ -255,9 +245,12 @@ class CompilerFilter(FilterBase):
 
                 # if a nvcc version is not supported by bashi, assume that the version supports the
                 # latest clang compiler version
-                if row[DEVICE_COMPILER].version <= NVCC_CLANG_MAX_VERSION[0].nvcc:
+                if (
+                    row[DEVICE_COMPILER].version
+                    <= self.version.get_nvcc_clang_max_version()[0].nvcc
+                ):
                     # check the maximum supported gcc version for the given nvcc version
-                    for nvcc_clang_comb in NVCC_CLANG_MAX_VERSION:
+                    for nvcc_clang_comb in self.version.get_nvcc_clang_max_version():
                         if row[DEVICE_COMPILER].version >= nvcc_clang_comb.nvcc:
                             if row[HOST_COMPILER].version > nvcc_clang_comb.host:
                                 self.reason(
@@ -382,9 +375,12 @@ class CompilerFilter(FilterBase):
                     # if a clang-cuda version is newer than the latest known clang-cuda version,
                     # we needs to assume that it supports every CUDA SDK version
                     # pylint: disable=duplicate-code
-                    if row[compiler].version <= CLANG_CUDA_MAX_CUDA_VERSION[0].clang_cuda:
+                    if (
+                        row[compiler].version
+                        <= self.version.get_clang_cuda_max_cuda_version()[0].clang_cuda
+                    ):
                         # check if know clang-cuda version supports CUDA SDK version
-                        for version_combination in CLANG_CUDA_MAX_CUDA_VERSION:
+                        for version_combination in self.version.get_clang_cuda_max_cuda_version():
                             if row[compiler].version >= version_combination.clang_cuda:
                                 if (
                                     row[ALPAKA_ACC_GPU_CUDA_ENABLE].version
@@ -417,41 +413,61 @@ class CompilerFilter(FilterBase):
                 for compiler in (HOST_COMPILER, DEVICE_COMPILER):
                     # Rule: c21
                     if _remove_unsupported_compiler_cxx_combination(
-                        row, GCC, compiler, GCC_CXX_SUPPORT_VERSION, self.output
+                        row, GCC, compiler, self.version.get_gcc_cxx_support_version(), self.output
                     ):
                         # reason() is inside _remove_unsupported_compiler_cxx_combination
                         return False
                     # Rule: c22
                     if _remove_unsupported_compiler_cxx_combination(
-                        row, CLANG, compiler, CLANG_CXX_SUPPORT_VERSION, self.output
+                        row,
+                        CLANG,
+                        compiler,
+                        self.version.get_clang_cxx_support_version(),
+                        self.output,
                     ):
                         # reason() is inside _remove_unsupported_compiler_cxx_combination
                         return False
 
                     # Rule: c25
                     if _remove_unsupported_compiler_cxx_combination(
-                        row, CLANG_CUDA, compiler, CLANG_CUDA_CXX_SUPPORT_VERSION, self.output
+                        row,
+                        CLANG_CUDA,
+                        compiler,
+                        self.version.get_clang_cuda_cxx_support_version(),
+                        self.output,
                     ):
                         # reason() is inside _remove_unsupported_compiler_cxx_combination
                         return False
 
                     # Rule: c28
                     if _remove_unsupported_compiler_cxx_combination(
-                        row, ICPX, compiler, ICPX_CXX_SUPPORT_VERSION, self.output
+                        row,
+                        ICPX,
+                        compiler,
+                        self.version.get_icpx_cxx_support_version(),
+                        self.output,
                     ):
                         # reason() is inside _remove_unsupported_compiler_cxx_combination
                         return False
 
                     # Rule: c29
                     if _remove_unsupported_compiler_cxx_combination(
-                        row, HIPCC, compiler, HIPCC_CXX_SUPPORT_VERSION, self.output
+                        row,
+                        HIPCC,
+                        compiler,
+                        self.version.get_hipcc_cxx_support_version(),
+                        self.output,
                     ):
                         # reason() is inside _remove_unsupported_compiler_cxx_combination
                         return False
 
                 # Rule: c23
                 if _remove_unsupported_compiler_cxx_combination(
-                    row, NVCC, DEVICE_COMPILER, NVCC_CXX_SUPPORT_VERSION, self.output
+                    row,
+                    NVCC,
+                    DEVICE_COMPILER,
+                    self.version.get_nvcc_cxx_support_version(),
+                    self.output,
                 ):
                     # reason() is inside _remove_unsupported_compiler_cxx_combination
                     return False
@@ -467,8 +483,8 @@ class CompilerFilter(FilterBase):
                     # device compiler was added to the row.
                     if row[CXX_STANDARD].version > _get_max_supported_cxx_version_for_cuda_sdk(
                         row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
-                        NVCC_CXX_SUPPORT_VERSION,
-                        MAX_CUDA_SDK_CXX_SUPPORT,
+                        self.version.get_nvcc_cxx_support_version(),
+                        self.version.get_max_cuda_sdk_cxx_support(),
                     ):
                         self.reason(
                             f"There is not Nvcc or Clang-CUDA version which supports "
@@ -490,15 +506,16 @@ class CompilerFilter(FilterBase):
                         CXX_STANDARD
                     ].version > _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(
                         row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
-                        NVCC_CXX_SUPPORT_VERSION,
+                        self.version.get_nvcc_cxx_support_version(),
                     ) and row[
                         CXX_STANDARD
                     ].version <= _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
-                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version, MAX_CUDA_SDK_CXX_SUPPORT
+                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
+                        self.version.get_max_cuda_sdk_cxx_support(),
                     ):
                         if (
                             row[ALPAKA_ACC_GPU_CUDA_ENABLE].version
-                            > CLANG_CUDA_MAX_CUDA_VERSION[0].cuda
+                            > self.version.get_clang_cuda_max_cuda_version()[0].cuda
                         ):
                             self.reason(
                                 f"For the potential combination of C++-{row[CXX_STANDARD].version} "
@@ -516,7 +533,7 @@ class CompilerFilter(FilterBase):
                             row,
                             ALPAKA_ACC_GPU_CUDA_ENABLE,
                             ALPAKA_ACC_GPU_CUDA_ENABLE,
-                            NVCC_CXX_SUPPORT_VERSION,
+                            self.version.get_nvcc_cxx_support_version(),
                             None,
                         ):
                             self.reason(
@@ -533,9 +550,10 @@ class CompilerFilter(FilterBase):
 @typechecked
 def compiler_filter_typechecked(
     row: ParameterValueTuple,
+    version_relation: VersionRelation,
     output: Optional[IO[str]] = None,
 ) -> bool:
     """Type-checked version of CompilerFilter()(). Type checking has a big performance cost, which
     is why the non type-checked version is used for the pairwise generator.
     """
-    return CompilerFilter(output=output)(row)
+    return CompilerFilter(version_relation=version_relation, output=output)(row)
