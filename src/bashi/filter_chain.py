@@ -2,6 +2,7 @@
 
 from typing import Callable, Dict
 from typeguard import typechecked
+import termcolor
 from bashi.types import ParameterValueTuple
 from bashi.globals import FilterDebugMode
 
@@ -10,6 +11,7 @@ from bashi.filter_compiler import CompilerFilter
 from bashi.filter_backend import BackendFilter
 from bashi.filter_software_dependency import SoftwareDependencyFilter
 from bashi.version.relation import VersionRelation
+from bashi.printer import get_str_row_nice
 
 
 # pylint: disable=too-few-public-methods
@@ -22,6 +24,7 @@ class FilterChain:
         version_relation: VersionRelation,
         runtime_infos: Dict[str, Callable[..., bool]] | None = None,
         custom_filter: FilterBase = FilterBase(),
+        debug_print: FilterDebugMode = FilterDebugMode.OFF,
     ):
         """Construct new FitlerChain.
 
@@ -36,6 +39,8 @@ class FilterChain:
             custom_filter (FilterBase, optional): This functor is added as the last filter level and
                 allows the user to add custom filter rules without having to create the entire
                 filter chain from scratch. Defaults to FilterBase().
+            debug_print (FilterDebugMode): Depending on the debug mode, print additional information
+                for each row passing the filter function. Defaults to FilterDebugMode.OFF.
         """
         self.compiler_filter = CompilerFilter(
             runtime_infos=runtime_infos, version_relation=version_relation
@@ -50,30 +55,35 @@ class FilterChain:
         self.version = version_relation
         if runtime_infos:
             self.custom_filter.runtime_infos = runtime_infos
-
-    def set_debug_print(self, state: FilterDebugMode):
-        """Set the debug print mode for all filter in the chain.
-
-        Args:
-            state (FilterDebugMode): filter debug mode
-        """
-        self.compiler_filter.debug_print = state
-        self.backend_filter.debug_print = state
-        self.software_dependency_filter.debug_print = state
-        self.custom_filter.debug_print = state
+        self.debug_print = debug_print
 
     def __call__(self, row: ParameterValueTuple) -> bool:
-        return (
+        result = (
             self.compiler_filter(row)
             and self.backend_filter(row)
             and self.software_dependency_filter(row)
             and self.custom_filter(row)
         )
 
+        if self.debug_print != FilterDebugMode.OFF:
+            validate_args = self.debug_print == FilterDebugMode.VALIDATOR_ARGS
+            row_string = get_str_row_nice(row, bashi_validate=validate_args)
+            if result:
+                # if the term has no color output or we redirect to a file, we need to add text to
+                # show if a row passed
+                suffix = "" if termcolor.can_colorize() else "\npassed"
+                row_string = termcolor.colored(row_string + suffix, "green")
+            else:
+                row_string = termcolor.colored(row_string, "red")
+            print(row_string)
+
+        return result
+
 
 @typechecked
 def get_default_filter_chain(
     version_relation: VersionRelation,
+    debug_print: FilterDebugMode = FilterDebugMode.OFF,
     runtime_infos: Dict[str, Callable[..., bool]] | None = None,
     custom_filter: FilterBase = FilterBase(),
 ) -> FilterChain:
@@ -84,6 +94,8 @@ def get_default_filter_chain(
         version_relation (VersionRelation): Provides information about the relationships between
                 the versions of various parameter-values. For example, which GCC version supports
                 which C++ standard.
+        debug_print (FilterDebugMode): Depending on the debug mode, print additional information
+                for each row passing the filter function. Defaults to FilterDebugMode.OFF.
         runtime_infos (Dict[str, Callable[..., bool]], optional): Runtime infos will be
                 constructed depending on the input parameter-value-matrix. The functions are named
                 by a string, takes an arbitrary number of arguments and return if the combination of
@@ -97,5 +109,8 @@ def get_default_filter_chain(
     """
 
     return FilterChain(
-        version_relation=version_relation, runtime_infos=runtime_infos, custom_filter=custom_filter
+        version_relation=version_relation,
+        runtime_infos=runtime_infos,
+        custom_filter=custom_filter,
+        debug_print=debug_print,
     )

@@ -3,6 +3,7 @@
 import io
 import sys
 from typing import Dict, List, Callable
+import termcolor
 from collections import OrderedDict
 import packaging.version
 from typeguard import typechecked
@@ -18,7 +19,6 @@ from bashi.version.utils import get_parameter_value_matrix
 from bashi.version.relation import VersionRelation
 from bashi.generator import get_runtime_infos
 from .arguments import get_validator_args, ArgumentAlias, VersionCheck, AliasParser
-from .utils import cs, Color
 
 
 # pylint: disable=too-many-instance-attributes
@@ -182,10 +182,10 @@ class Validator:
         filter_func.output = io.StringIO()
 
         if filter_func(row):
-            self._print(cs(f"{filter_name}() returns True", Color.GREEN))
+            self._print(termcolor.colored(f"{filter_name}() returns True", "green"))
             return True
 
-        self._print(cs(f"{filter_name}() returns False", Color.RED))
+        self._print(termcolor.colored(f"{filter_name}() returns False", "red"))
         if filter_func.output.getvalue() != "":
             self._print("  " + filter_func.output.getvalue())
         return False
@@ -274,9 +274,9 @@ class Validator:
 
             if not known_software:
                 self._print(
-                    cs(
+                    termcolor.colored(
                         f"WARNING: {val_name} {val_version} is not officially supported.",
-                        Color.YELLOW,
+                        "yellow",
                     )
                 )
 

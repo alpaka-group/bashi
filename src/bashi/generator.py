@@ -91,9 +91,11 @@ def generate_combination_list(
     """
 
     filter_chain: FilterChain = get_default_filter_chain(
-        runtime_infos=runtime_infos, custom_filter=custom_filter, version_relation=version_relation
+        version_relation=version_relation,
+        debug_print=debug_print,
+        runtime_infos=runtime_infos,
+        custom_filter=custom_filter,
     )
-    filter_chain.set_debug_print(debug_print)
 
     comb_list: CombinationList = []
 
