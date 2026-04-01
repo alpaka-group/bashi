@@ -204,6 +204,4 @@ class ExampleFilter(FilterBase):
             )
             return False
 
-        if self.debug_print != FilterDebugMode.OFF:
-            print("passed")
         return True

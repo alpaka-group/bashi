@@ -2,7 +2,6 @@
 
 from typing import Dict, Callable, Optional, IO
 from bashi.types import ParameterValueTuple
-from bashi.globals import FilterDebugMode
 from bashi.version.relation import VersionRelation
 
 
@@ -18,7 +17,6 @@ class FilterBase:
         runtime_infos: Dict[str, Callable[..., bool]] | None = None,
         version_relation: VersionRelation = VersionRelation(),
         output: Optional[IO[str]] = None,
-        debug_print: FilterDebugMode = FilterDebugMode.OFF,
     ):
         """Construct new FilterBase object.
 
@@ -33,15 +31,12 @@ class FilterBase:
             output (Optional[IO[str]], optional): Write the message to output if it is not None.
                 This function is used in filter functions to print additional information about
                 filter decisions. Defaults to None.
-            debug_print (FilterDebugMode): Depending on the debug mode, print additional information
-                for each row passing the filter function. Defaults to FilterDebugMode.OFF.
         """
         self.runtime_infos: Dict[str, Callable[..., bool]] = {}
         if runtime_infos:
             self.runtime_infos = runtime_infos
         self.version = version_relation
         self.output = output
-        self.debug_print = debug_print
 
     def reason(self, msg: str):
         """Write the message to output if it is not None. This function is used

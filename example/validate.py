@@ -2,6 +2,7 @@
 
 import sys
 from typing import List
+import termcolor
 import bashi
 import bashiValidate
 from src.example_filter import ExampleFilter
@@ -47,9 +48,8 @@ def main(args: List[str], silent: bool) -> bool:
 
             if len(missing_parameter) > 0:
                 print(
-                    bashiValidate.utils.cs(
-                        f"Missing parameter: {', '.join(missing_parameter)}",
-                        bashiValidate.utils.Color.YELLOW,
+                    termcolor.colored(
+                        f"Missing parameter: {', '.join(missing_parameter)}", "yellow"
                     )
                 )
 

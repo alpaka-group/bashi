@@ -25,7 +25,8 @@ classifiers= [
 dependencies = [
     "covertable == 2.1.0",
     "typeguard",
-    "packaging"
+    "packaging",
+    "termcolor"
 ]
 
 [project.scripts]
