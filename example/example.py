@@ -15,6 +15,7 @@
 from typing import List, Tuple, Dict, Callable
 import os
 import sys
+import argparse
 import packaging.version as pkv
 from bashi.generator import generate_combination_list, get_runtime_infos
 from bashi.utils import (
@@ -44,6 +45,13 @@ from src.globals import (
     CMAKE_DEBUG_VER,
     get_version_aliases,
 )
+
+
+FILTER_MODE_ARGS = {
+    "off": FilterDebugMode.OFF,
+    "normal": FilterDebugMode.NORMAL,
+    "args": FilterDebugMode.VALIDATOR_ARGS,
+}
 
 
 # pylint: disable=too-many-branches
@@ -384,6 +392,23 @@ def setup_row_printer() -> None:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Calculates the combination-list for all support software version  and writes "
+        "sample GitLab CI jobs to the jobs.yaml file."
+    )
+    parser.add_argument(
+        "--debug-print",
+        type=str,
+        choices=FILTER_MODE_ARGS.keys(),
+        default="off",
+        help="Display Indicate which combinations passed through the filter chain and which did "
+        "not.Green text indicates that the combination passed through the filter chain; red text"
+        " indicates that it did not. Add the keyword `passed` if colored output is not available."
+        "Option `normal` is easy human readable output. If `args` is set, the output can be "
+        "directly passed to the validator",
+    )
+    args = parser.parse_args()
+
     setup_row_printer()
     param_matrix = get_parameter_value_matrix()
     # append project specific parameter-values
@@ -408,8 +433,7 @@ if __name__ == "__main__":
         runtime_infos=rt_infos,
         custom_filter=custom_filter,
         version_relation=version_relation,
-        # change me to display which combinations passed and did not pass the filter chain
-        debug_print=FilterDebugMode.OFF,
+        debug_print=FILTER_MODE_ARGS[args.debug_print],
     )
 
     create_yaml(comb_list)

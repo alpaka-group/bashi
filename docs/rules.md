@@ -50,8 +50,8 @@ host=gcc@13 bTBB=OFF cmake=3.24 ubuntu=20.4 boost=1.74.0 bOpenMP2block=OFF bThre
 In this case, `covertable` throws the error `covertable.exceptions.InvalidCondition: It will never meet the condition`. `covertable` has a bookkeeping algorithm which writes down whether valid `combinations` should still exist. If there are still valid `combinations` left and these cannot be reached, the `covertable.exceptions.InvalidCondition` error occurs.
 Unfortunately, the error message does not indicate which `combination` is not reachable. Also, there is no documentation about the bookkeeping algorithm and due to heavy optimizations in the source code of `covertable` it is also not clear how it works. After writing some filter rules, I found two general rules that avoid the `covertable.exceptions.InvalidCondition`:
 
-1. cancel a `parameter-value-tuple` early as possible.
-2. write only rules with two parameters.
+1. Cancel a `parameter-value-tuple` early as possible.
+2. Try to write only rules with two parameters.
 
 ## Cancel a Parameter-Value-Tuple early as possible
 
@@ -61,13 +61,12 @@ From the example, at the beginning we know this `parameter-value-tuple` was not 
 host=gcc@13 bTBB=OFF cmake=3.24 ubuntu=20.4 boost=1.74.0 bOpenMP2block=OFF bThreads=OFF c++=17 bOpenMP2thread=OFF bSeq=OFF bSYCL=OFF bHIP=OFF
 ```
 
-The reason is, because there is no `CUDA` version up to `CUDA` 12.3, which support `gcc` 13, the `CUDA` back-end needs to be disabled. This means we can only compile CPU back-ends with `gcc` 13. Another rules says, that at least one CPU back-end needs to be enabled, if we want to compile for the CPU back-end. So it means with the first `parameter-value` know that only valid `combinations` exist, where the GPU back-ends needs to be disabled and at least on CPU back-end needs to be enabled. So the `parameter-value-tuple` needs to be canceled after the last `parameter-value` of a disabled CPU back-end (`bSeq=OFF`) was added. Otherwise the book keeping algorithm thinks, there should be a valid `combination` with host compiler `gcc` 13 and all disabled CPU back-ends. Than it tries all following combinations of the last missing `parameter-values`, when all existing CPU back-ends was set and didn't find any valid combination. In this case, it throws the error `covertable.exceptions.InvalidCondition`.
-
 The reason for this is that there is no CUDA version up to CUDA 12.3 that supports `gcc` 13, so the CUDA back-end must be disabled. This means that we can only compile CPU back-ends with `gcc` 13. Another rule says that at least one CPU back-end must be enabled if we want to compile for the CPU back-end. So this means that with the first `parameter-value` there are only valid `combinations` where the GPU back-ends must be disabled and at least one CPU back-end must be enabled. So the `parameter-value-tuple` must be canceled after the last `parameter-value` of a deactivated CPU back-end (`bSeq=OFF`) has been added. Otherwise, the bookkeeping algorithm thinks that there should be a valid `combination` with the host compiler `gcc` 13 and all disabled CPU back-ends. It then tries all subsequent combinations of the last missing `parameter-values` when all existing CPU back-ends have been set and finds no valid combination. In this case, the error `covertable.exceptions.InvalidCondition` is thrown.
 
 ### Debugging Rules
 
-The interaction between the rules makes it difficult to understand why a `covertable.exceptions.InvalidCondition` exception was thrown for a particular `parameter-value-tuple` and where the `parameter-value-tuple` should already be aborted. `bashi` provides some tools to facilitate the analysis. First you should uncomment the function `print_row_nice()` at the beginning of the filter rule of `compiler_filter()`. Then you should add a `print("passed")` at the end of the function `software_dependency_filter()`. With both annotations, `bashi` shows what the last tested `parameter-value-tuple` was and whether it passed the filter:
+The interaction between the rules makes it difficult to understand why a `covertable.exceptions.InvalidCondition` exception was thrown for a particular `parameter-value-tuple` and where the `parameter-value-tuple` should already be aborted. `bashi` provides some tools to facilitate the analysis. 
+Run `example.py` with the parameter `--debug-print normal` to show what the last tested `parameter-value-tuple` was and whether it passed the filter [2]:
 
 ```bash
 host=clang@11 bCUDA=11.0 bTBB=OFF cmake=3.24 ubuntu=20.4 boost=1.74.0 bOpenMP2block=OFF bThreads=OFF c++=17 bOpenMP2thread=ON bSeq=OFF bSYCL=OFF bHIP=OFF device=hipcc@5.0
@@ -134,7 +133,7 @@ Traceback (most recent call last):
 covertable.exceptions.InvalidCondition: It will never meet the condition
 ```
 
-If you cannot directly recognize why a `parameter-value-tuple` was cancel early enough, you can use `bashi-validate` (installed with the `bashi` package) to check why a `parameter-value-tuple` does not pass the filter. Usually it is sufficient to test different `parameter-values` of the last `parameter` or the last missing `parameter`. You can set `print_row_nice(row, bashi_validate=True)` and run your code again. This time the row will be output slightly differently. You can pass the output directly as an argument to `bashi-validate`:
+If you cannot directly recognize why a `parameter-value-tuple` was cancel early enough, you can use `bashi-validate` (installed with the `bashi` package) to check why a `parameter-value-tuple` does not pass the filter. Usually it is sufficient to test different `parameter-values` of the last `parameter` or the last missing `parameter`. You can run the `example.py` with `--debug-print args` to get output, which you can pass directly as an argument to `bashi-validate`:
 
 ```bash
 # code executed again with print_row_nice(row, bashi_validate=True)
@@ -219,3 +218,5 @@ For the implementation, it can be reduced to 3 rules, as the order of the `param
 - `host`: means the `host-compiler`
 - `device`: means the `device-compiler`
 - `b<Something>`: all parameters that begin with a lowercase `b` followed by a term with a capital letter name a back-end
+
+[2] If you do not redirect the output to a file and your terminal supports colored output, the lines will appear red if the row didn't passed and green if it passed.
