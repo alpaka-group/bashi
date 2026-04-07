@@ -1,4 +1,4 @@
-# Remove unexpected parameter-values-pairs
+# Remove unexpected parameter-value-pairs
 
 The `get_expected_parameter_value_pairs()` function generates a list of all possible parameter-value-pairs. The functions `check_parameter_value_pair_in_combination_list()` and `check_unexpected_parameter_value_pair_in_combination_list` search for expected and unexpected parameter-value-pairs in a combination list. Unexpected parameter-value-pairs exist because the filter rules do not allow all possible combinations of parameter-values. The following functions help to remove unexpected parameter-value-pairs from a list of parameter-value-pairs.
 
