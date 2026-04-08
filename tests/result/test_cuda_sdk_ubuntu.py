@@ -5,7 +5,7 @@ from typing import Dict, Callable
 from packaging.version import Version
 from bashi.types import ParameterValuePair
 from utils_test import (
-    parse_expected_val_pairs2,
+    parse_expected_val_pairs,
     default_remove_test,
     parse_value_version,
 )
@@ -27,7 +27,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
     def test_remove_unsupported_nvcc_ubuntu_combinations(self):
         latest_support_ubuntu_version: Version = sorted(CUDA_MIN_UBUNTU)[-1].ubuntu
 
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
                 ((DEVICE_COMPILER, NVCC, 9.0), (UBUNTU, "18.04")),
@@ -45,7 +45,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
             ]
         )
 
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
                 ((DEVICE_COMPILER, NVCC, 10.0), (UBUNTU, "18.04")),
@@ -66,7 +66,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
     def test_remove_unsupported_cuda_backend_ubuntu_combinations(self):
         latest_support_ubuntu_version: Version = sorted(CUDA_MIN_UBUNTU)[-1].ubuntu
 
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
                 ((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF), (UBUNTU, "10.04")),
@@ -89,7 +89,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
             ]
         )
 
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
                 ((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF), (UBUNTU, "10.04")),
@@ -115,7 +115,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
     def test_remove_unsupported_clang_cuda_ubuntu_combinations(self):
         latest_support_ubuntu_version: Version = sorted(CUDA_MIN_UBUNTU)[-1].ubuntu
 
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
                 ((DEVICE_COMPILER, CLANG_CUDA, 7), (UBUNTU, "18.04")),
@@ -135,7 +135,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
             ]
         )
 
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
                 ((DEVICE_COMPILER, CLANG_CUDA, 7.0), (UBUNTU, "18.04")),
@@ -162,7 +162,7 @@ class TestCUDASDKUbuntuStaticInfo(unittest.TestCase):
 class TestCUDASDKUbuntuRuntimeInfo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.default_input: List[ParameterValuePair] = parse_expected_val_pairs2(
+        cls.default_input: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG, 23), (CMAKE, "3.30.2")),
                 ((HOST_COMPILER, CLANG_CUDA, 12), (UBUNTU, "4.08")),
@@ -203,7 +203,7 @@ class TestCUDASDKUbuntuRuntimeInfo(unittest.TestCase):
             parse_value_version(["20.04", "22.04"])
         )
 
-        expected_output = parse_expected_val_pairs2(
+        expected_output = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG, 23), (CMAKE, "3.30.2")),
                 ((HOST_COMPILER, CLANG_CUDA, 12), (UBUNTU, "4.08")),
@@ -245,7 +245,7 @@ class TestCUDASDKUbuntuRuntimeInfo(unittest.TestCase):
             parse_value_version(["18.04", "20.04"])
         )
 
-        expected_output = parse_expected_val_pairs2(
+        expected_output = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG, 23), (CMAKE, "3.30.2")),
                 ((HOST_COMPILER, CLANG_CUDA, 12), (UBUNTU, "18.04")),

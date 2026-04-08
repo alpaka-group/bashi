@@ -202,77 +202,77 @@ class TestExpectedValuePairs(unittest.TestCase):
 
         cls.expected_param_val_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (GCC, 11)}),
-                OD({HOST_COMPILER: (GCC, 10), CMAKE: (CMAKE, 3.22)}),
-                OD({HOST_COMPILER: (GCC, 10), CMAKE: (CMAKE, 3.23)}),
-                OD({HOST_COMPILER: (GCC, 10), BOOST: (BOOST, 1.81)}),
-                OD({HOST_COMPILER: (GCC, 10), BOOST: (BOOST, 1.82)}),
-                OD({HOST_COMPILER: (GCC, 10), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (GCC, 11)}),
-                OD({HOST_COMPILER: (GCC, 11), CMAKE: (CMAKE, 3.22)}),
-                OD({HOST_COMPILER: (GCC, 11), CMAKE: (CMAKE, 3.23)}),
-                OD({HOST_COMPILER: (GCC, 11), BOOST: (BOOST, 1.81)}),
-                OD({HOST_COMPILER: (GCC, 11), BOOST: (BOOST, 1.82)}),
-                OD({HOST_COMPILER: (GCC, 11), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (GCC, 12), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 12), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 12), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (GCC, 12), DEVICE_COMPILER: (GCC, 11)}),
-                OD({HOST_COMPILER: (GCC, 12), CMAKE: (CMAKE, 3.22)}),
-                OD({HOST_COMPILER: (GCC, 12), CMAKE: (CMAKE, 3.23)}),
-                OD({HOST_COMPILER: (GCC, 12), BOOST: (BOOST, 1.81)}),
-                OD({HOST_COMPILER: (GCC, 12), BOOST: (BOOST, 1.82)}),
-                OD({HOST_COMPILER: (GCC, 12), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (CLANG, 16), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 16), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG, 16), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (CLANG, 16), DEVICE_COMPILER: (GCC, 11)}),
-                OD({HOST_COMPILER: (CLANG, 16), CMAKE: (CMAKE, 3.22)}),
-                OD({HOST_COMPILER: (CLANG, 16), CMAKE: (CMAKE, 3.23)}),
-                OD({HOST_COMPILER: (CLANG, 16), BOOST: (BOOST, 1.81)}),
-                OD({HOST_COMPILER: (CLANG, 16), BOOST: (BOOST, 1.82)}),
-                OD({HOST_COMPILER: (CLANG, 16), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (GCC, 11)}),
-                OD({HOST_COMPILER: (CLANG, 17), CMAKE: (CMAKE, 3.22)}),
-                OD({HOST_COMPILER: (CLANG, 17), CMAKE: (CMAKE, 3.23)}),
-                OD({HOST_COMPILER: (CLANG, 17), BOOST: (BOOST, 1.81)}),
-                OD({HOST_COMPILER: (CLANG, 17), BOOST: (BOOST, 1.82)}),
-                OD({HOST_COMPILER: (CLANG, 17), BOOST: (BOOST, 1.83)}),
-                OD({DEVICE_COMPILER: (NVCC, 11.2), CMAKE: (CMAKE, 3.22)}),
-                OD({DEVICE_COMPILER: (NVCC, 11.2), CMAKE: (CMAKE, 3.23)}),
-                OD({DEVICE_COMPILER: (NVCC, 11.2), BOOST: (BOOST, 1.81)}),
-                OD({DEVICE_COMPILER: (NVCC, 11.2), BOOST: (BOOST, 1.82)}),
-                OD({DEVICE_COMPILER: (NVCC, 11.2), BOOST: (BOOST, 1.83)}),
-                OD({DEVICE_COMPILER: (NVCC, 12.0), CMAKE: (CMAKE, 3.22)}),
-                OD({DEVICE_COMPILER: (NVCC, 12.0), CMAKE: (CMAKE, 3.23)}),
-                OD({DEVICE_COMPILER: (NVCC, 12.0), BOOST: (BOOST, 1.81)}),
-                OD({DEVICE_COMPILER: (NVCC, 12.0), BOOST: (BOOST, 1.82)}),
-                OD({DEVICE_COMPILER: (NVCC, 12.0), BOOST: (BOOST, 1.83)}),
-                OD({DEVICE_COMPILER: (GCC, 10), CMAKE: (CMAKE, 3.22)}),
-                OD({DEVICE_COMPILER: (GCC, 10), CMAKE: (CMAKE, 3.23)}),
-                OD({DEVICE_COMPILER: (GCC, 10), BOOST: (BOOST, 1.81)}),
-                OD({DEVICE_COMPILER: (GCC, 10), BOOST: (BOOST, 1.82)}),
-                OD({DEVICE_COMPILER: (GCC, 10), BOOST: (BOOST, 1.83)}),
-                OD({DEVICE_COMPILER: (GCC, 11), CMAKE: (CMAKE, 3.22)}),
-                OD({DEVICE_COMPILER: (GCC, 11), CMAKE: (CMAKE, 3.23)}),
-                OD({DEVICE_COMPILER: (GCC, 11), BOOST: (BOOST, 1.81)}),
-                OD({DEVICE_COMPILER: (GCC, 11), BOOST: (BOOST, 1.82)}),
-                OD({DEVICE_COMPILER: (GCC, 11), BOOST: (BOOST, 1.83)}),
-                OD({CMAKE: (CMAKE, 3.22), BOOST: (BOOST, 1.81)}),
-                OD({CMAKE: (CMAKE, 3.22), BOOST: (BOOST, 1.82)}),
-                OD({CMAKE: (CMAKE, 3.22), BOOST: (BOOST, 1.83)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.81)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.82)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, GCC, 11)),
+                ((HOST_COMPILER, GCC, 10), (CMAKE, 3.22)),
+                ((HOST_COMPILER, GCC, 10), (CMAKE, 3.23)),
+                ((HOST_COMPILER, GCC, 10), (BOOST, 1.81)),
+                ((HOST_COMPILER, GCC, 10), (BOOST, 1.82)),
+                ((HOST_COMPILER, GCC, 10), (BOOST, 1.83)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, GCC, 11)),
+                ((HOST_COMPILER, GCC, 11), (CMAKE, 3.22)),
+                ((HOST_COMPILER, GCC, 11), (CMAKE, 3.23)),
+                ((HOST_COMPILER, GCC, 11), (BOOST, 1.81)),
+                ((HOST_COMPILER, GCC, 11), (BOOST, 1.82)),
+                ((HOST_COMPILER, GCC, 11), (BOOST, 1.83)),
+                ((HOST_COMPILER, GCC, 12), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 12), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 12), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, GCC, 12), (DEVICE_COMPILER, GCC, 11)),
+                ((HOST_COMPILER, GCC, 12), (CMAKE, 3.22)),
+                ((HOST_COMPILER, GCC, 12), (CMAKE, 3.23)),
+                ((HOST_COMPILER, GCC, 12), (BOOST, 1.81)),
+                ((HOST_COMPILER, GCC, 12), (BOOST, 1.82)),
+                ((HOST_COMPILER, GCC, 12), (BOOST, 1.83)),
+                ((HOST_COMPILER, CLANG, 16), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 16), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG, 16), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, CLANG, 16), (DEVICE_COMPILER, GCC, 11)),
+                ((HOST_COMPILER, CLANG, 16), (CMAKE, 3.22)),
+                ((HOST_COMPILER, CLANG, 16), (CMAKE, 3.23)),
+                ((HOST_COMPILER, CLANG, 16), (BOOST, 1.81)),
+                ((HOST_COMPILER, CLANG, 16), (BOOST, 1.82)),
+                ((HOST_COMPILER, CLANG, 16), (BOOST, 1.83)),
+                ((HOST_COMPILER, CLANG, 17), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 17), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG, 17), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, CLANG, 17), (DEVICE_COMPILER, GCC, 11)),
+                ((HOST_COMPILER, CLANG, 17), (CMAKE, 3.22)),
+                ((HOST_COMPILER, CLANG, 17), (CMAKE, 3.23)),
+                ((HOST_COMPILER, CLANG, 17), (BOOST, 1.81)),
+                ((HOST_COMPILER, CLANG, 17), (BOOST, 1.82)),
+                ((HOST_COMPILER, CLANG, 17), (BOOST, 1.83)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (CMAKE, 3.22)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (CMAKE, 3.23)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (BOOST, 1.81)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (BOOST, 1.82)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (BOOST, 1.83)),
+                ((DEVICE_COMPILER, NVCC, 12.0), (CMAKE, 3.22)),
+                ((DEVICE_COMPILER, NVCC, 12.0), (CMAKE, 3.23)),
+                ((DEVICE_COMPILER, NVCC, 12.0), (BOOST, 1.81)),
+                ((DEVICE_COMPILER, NVCC, 12.0), (BOOST, 1.82)),
+                ((DEVICE_COMPILER, NVCC, 12.0), (BOOST, 1.83)),
+                ((DEVICE_COMPILER, GCC, 10), (CMAKE, 3.22)),
+                ((DEVICE_COMPILER, GCC, 10), (CMAKE, 3.23)),
+                ((DEVICE_COMPILER, GCC, 10), (BOOST, 1.81)),
+                ((DEVICE_COMPILER, GCC, 10), (BOOST, 1.82)),
+                ((DEVICE_COMPILER, GCC, 10), (BOOST, 1.83)),
+                ((DEVICE_COMPILER, GCC, 11), (CMAKE, 3.22)),
+                ((DEVICE_COMPILER, GCC, 11), (CMAKE, 3.23)),
+                ((DEVICE_COMPILER, GCC, 11), (BOOST, 1.81)),
+                ((DEVICE_COMPILER, GCC, 11), (BOOST, 1.82)),
+                ((DEVICE_COMPILER, GCC, 11), (BOOST, 1.83)),
+                ((CMAKE, 3.22), (BOOST, 1.81)),
+                ((CMAKE, 3.22), (BOOST, 1.82)),
+                ((CMAKE, 3.22), (BOOST, 1.83)),
+                ((CMAKE, 3.23), (BOOST, 1.81)),
+                ((CMAKE, 3.23), (BOOST, 1.82)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -306,23 +306,23 @@ class TestExpectedValuePairs(unittest.TestCase):
 
         cls.handwritten_all_existing_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG, 16), DEVICE_COMPILER: (CLANG, 16)}),
-                OD({HOST_COMPILER: (GCC, 10), CMAKE: (CMAKE, 3.22)}),
-                OD({HOST_COMPILER: (CLANG, 16), CMAKE: (CMAKE, 3.23)}),
-                OD({HOST_COMPILER: (GCC, 10), BOOST: (BOOST, 1.81)}),
-                OD({HOST_COMPILER: (GCC, 10), BOOST: (BOOST, 1.82)}),
-                OD({HOST_COMPILER: (CLANG, 16), BOOST: (BOOST, 1.83)}),
-                OD({DEVICE_COMPILER: (NVCC, 11.2), CMAKE: (CMAKE, 3.22)}),
-                OD({DEVICE_COMPILER: (NVCC, 12.0), CMAKE: (CMAKE, 3.22)}),
-                OD({DEVICE_COMPILER: (CLANG, 16), CMAKE: (CMAKE, 3.23)}),
-                OD({DEVICE_COMPILER: (NVCC, 11.2), BOOST: (BOOST, 1.81)}),
-                OD({DEVICE_COMPILER: (NVCC, 12.0), BOOST: (BOOST, 1.82)}),
-                OD({DEVICE_COMPILER: (CLANG, 16), BOOST: (BOOST, 1.83)}),
-                OD({CMAKE: (CMAKE, 3.22), BOOST: (BOOST, 1.81)}),
-                OD({CMAKE: (CMAKE, 3.22), BOOST: (BOOST, 1.82)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG, 16), (DEVICE_COMPILER, CLANG, 16)),
+                ((HOST_COMPILER, GCC, 10), (CMAKE, 3.22)),
+                ((HOST_COMPILER, CLANG, 16), (CMAKE, 3.23)),
+                ((HOST_COMPILER, GCC, 10), (BOOST, 1.81)),
+                ((HOST_COMPILER, GCC, 10), (BOOST, 1.82)),
+                ((HOST_COMPILER, CLANG, 16), (BOOST, 1.83)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (CMAKE, 3.22)),
+                ((DEVICE_COMPILER, NVCC, 12.0), (CMAKE, 3.22)),
+                ((DEVICE_COMPILER, CLANG, 16), (CMAKE, 3.23)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (BOOST, 1.81)),
+                ((DEVICE_COMPILER, NVCC, 12.0), (BOOST, 1.82)),
+                ((DEVICE_COMPILER, CLANG, 16), (BOOST, 1.83)),
+                ((CMAKE, 3.22), (BOOST, 1.81)),
+                ((CMAKE, 3.22), (BOOST, 1.82)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -369,9 +369,9 @@ class TestExpectedValuePairs(unittest.TestCase):
                 self.handwritten_comb_list,
                 parse_expected_val_pairs(
                     [
-                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
-                        OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                        ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                        ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
+                        ((CMAKE, 3.23), (BOOST, 1.83)),
                     ]
                 ),
             )
@@ -388,7 +388,7 @@ class TestExpectedValuePairs(unittest.TestCase):
     def test_check_parameter_value_pair_in_combination_list_single_wrong_input(self):
         single_wrong_pair = parse_expected_val_pairs(
             [
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.2)),
             ]
         )
 
@@ -413,13 +413,11 @@ class TestExpectedValuePairs(unittest.TestCase):
         )
 
     def test_check_parameter_value_pair_in_combination_list_many_wrong_input(self):
-        many_wrong_pairs = parse_expected_val_pairs(
-            [
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({CMAKE: (CMAKE, 2.23), DEVICE_COMPILER: (BOOST, 1.83)}),
-                OD({DEVICE_COMPILER: (NVCC, 12.0), BOOST: (BOOST, 1.84)}),
-            ]
-        )
+        many_wrong_pairs = [
+            create_parameter_value_pair(HOST_COMPILER, GCC, 11, DEVICE_COMPILER, NVCC, 11.2),
+            create_parameter_value_pair(CMAKE, CMAKE, 2.23, DEVICE_COMPILER, BOOST, 1.83),
+            create_parameter_value_pair(DEVICE_COMPILER, NVCC, 12.0, BOOST, BOOST, 1.84),
+        ]
 
         expected_output_many_wrong_pairs_list: List[str] = []
         for pair in many_wrong_pairs:
@@ -448,13 +446,11 @@ class TestExpectedValuePairs(unittest.TestCase):
         self.assertEqual(output_wrong_many_pairs_list, expected_output_many_wrong_pairs_list)
 
     def test_check_parameter_value_pair_in_combination_list_complete_list_plus_wrong_input(self):
-        many_wrong_pairs = parse_expected_val_pairs(
-            [
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({CMAKE: (CMAKE, 2.23), DEVICE_COMPILER: (BOOST, 1.83)}),
-                OD({DEVICE_COMPILER: (NVCC, 12.0), BOOST: (BOOST, 1.84)}),
-            ]
-        )
+        many_wrong_pairs = [
+            create_parameter_value_pair(HOST_COMPILER, GCC, 11, DEVICE_COMPILER, NVCC, 11.2),
+            create_parameter_value_pair(CMAKE, CMAKE, 2.23, DEVICE_COMPILER, BOOST, 1.83),
+            create_parameter_value_pair(DEVICE_COMPILER, NVCC, 12.0, BOOST, BOOST, 1.84),
+        ]
 
         all_pairs_plus_wrong_input = self.handwritten_all_existing_pairs + many_wrong_pairs
 
@@ -498,10 +494,10 @@ class TestExpectedValuePairs(unittest.TestCase):
                 [],
                 parse_expected_val_pairs(
                     [
-                        OD({HOST_COMPILER: (GCC, 10), BOOST: (BOOST, 1.82)}),
-                        OD({DEVICE_COMPILER: (CLANG, 16), CMAKE: (CMAKE, 3.23)}),
-                        OD({DEVICE_COMPILER: (CLANG, 16), BOOST: (BOOST, 1.83)}),
-                        OD({HOST_COMPILER: (GCC, 10), CMAKE: (CMAKE, 3.22)}),
+                        ((HOST_COMPILER, GCC, 10), (BOOST, 1.82)),
+                        ((DEVICE_COMPILER, CLANG, 16), (CMAKE, 3.23)),
+                        ((DEVICE_COMPILER, CLANG, 16), (BOOST, 1.83)),
+                        ((HOST_COMPILER, GCC, 10), (CMAKE, 3.22)),
                     ]
                 ),
             )
@@ -521,9 +517,9 @@ class TestExpectedValuePairs(unittest.TestCase):
                 self.handwritten_comb_list,
                 parse_expected_val_pairs(
                     [
-                        OD({HOST_COMPILER: (NVCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                        OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (CLANG, 7)}),
-                        OD({HOST_COMPILER: (NVCC, 12.2), DEVICE_COMPILER: (CMAKE, 3.30)}),
+                        ((HOST_COMPILER, NVCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                        ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, CLANG, 7)),
+                        ((HOST_COMPILER, NVCC, 12.2), (DEVICE_COMPILER, HIPCC, 3.30)),
                     ]
                 ),
             )
@@ -533,10 +529,10 @@ class TestExpectedValuePairs(unittest.TestCase):
         # all of the pairs are in the combination list
         existing_parameter_value_pairs = parse_expected_val_pairs(
             [
-                OD({HOST_COMPILER: (GCC, 10), BOOST: (BOOST, 1.82)}),
-                OD({DEVICE_COMPILER: (CLANG, 16), CMAKE: (CMAKE, 3.23)}),
-                OD({DEVICE_COMPILER: (CLANG, 16), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (GCC, 10), CMAKE: (CMAKE, 3.22)}),
+                ((HOST_COMPILER, GCC, 10), (BOOST, 1.82)),
+                ((DEVICE_COMPILER, CLANG, 16), (CMAKE, 3.23)),
+                ((DEVICE_COMPILER, CLANG, 16), (BOOST, 1.83)),
+                ((HOST_COMPILER, GCC, 10), (CMAKE, 3.22)),
             ]
         )
 
@@ -559,24 +555,22 @@ class TestExpectedValuePairs(unittest.TestCase):
                 error_list,
             )
 
-    def test_check_unexpected_parameter_value_pair_in_combination_list_mixed_entries(self):
+    def test_check_unexpected_parameter_value_pair_in_combination_list_mixed_entries(self) -> None:
         # some of the pairs are in the combination list
         error_output = io.StringIO()
 
         existing_parameter_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
-                OD({HOST_COMPILER: (GCC, 10), BOOST: (BOOST, 1.82)}),
-                OD({HOST_COMPILER: (GCC, 10), CMAKE: (CMAKE, 3.22)}),
+                ((HOST_COMPILER, GCC, 10), (BOOST, 1.82)),
+                ((HOST_COMPILER, GCC, 10), (CMAKE, 3.22)),
             ]
         )
 
-        not_parameter_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
-            [
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 16), CMAKE: (CMAKE, 3.23)}),
-                OD({DEVICE_COMPILER: (CLANG, 16), BOOST: (UBUNTU, 22.04)}),
-                OD({DEVICE_COMPILER: (GCC, 7), BOOST: (UBUNTU, 22.04)}),
-            ]
-        )
+        not_parameter_value_pairs: List[ParameterValuePair] = [
+            create_parameter_value_pair(DEVICE_COMPILER, CLANG_CUDA, 16, CMAKE, CMAKE, 3.23),
+            create_parameter_value_pair(DEVICE_COMPILER, CLANG, 16, BOOST, UBUNTU, 22.04),
+            create_parameter_value_pair(DEVICE_COMPILER, GCC, 7, BOOST, UBUNTU, 22.04),
+        ]
 
         parameter_value_pairs: List[ParameterValuePair] = (
             existing_parameter_value_pairs + not_parameter_value_pairs

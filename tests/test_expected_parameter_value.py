@@ -1,9 +1,12 @@
 # pylint: disable=missing-docstring
 import unittest
-from collections import OrderedDict as OD
 import copy
 
-from utils_test import parse_expected_val_pairs, create_diff_parameter_value_pairs
+from utils_test import (
+    create_parameter_value_pair,
+    parse_expected_val_pairs,
+    create_diff_parameter_value_pairs,
+)
 from bashi.types import (
     ParameterValuePair,
 )
@@ -15,10 +18,10 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
     def test_remove_parameter_value_pair(self):
         test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
         original_length = len(test_param_value_pairs)
@@ -27,10 +30,10 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         t1_expected = sorted(
             parse_expected_val_pairs(
                 [
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
-                    OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
+                    ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 12.0)),
+                    ((CMAKE, 3.23), (BOOST, 1.83)),
                 ]
             )
         )
@@ -67,9 +70,9 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         t2_expected = sorted(
             parse_expected_val_pairs(
                 [
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 12.0)),
+                    ((CMAKE, 3.23), (BOOST, 1.83)),
                 ]
             )
         )
@@ -110,8 +113,8 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         t3_expected = sorted(
             parse_expected_val_pairs(
                 [
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 12.0)),
                 ]
             )
         )
@@ -151,10 +154,10 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
     def test_all_white_card(self):
         test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
         len_before = len(test_param_value_pairs)
@@ -179,14 +182,14 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
     def test_single_white_card(self):
         test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (CLANG, 17)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (GCC, 17)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (CLANG, 10), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, CLANG, 17)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, GCC, 17)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, CLANG, 10), (BOOST, 1.83)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 12.0)),
             ]
         )
         test_original_len = len(test_param_value_pairs)
@@ -195,12 +198,12 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         t1_expected = sorted(
             parse_expected_val_pairs(
                 [
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (CLANG, 17)}),
-                    OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (GCC, 17)}),
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                    OD({HOST_COMPILER: (CLANG, 10), BOOST: (BOOST, 1.83)}),
-                    OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, CLANG, 17)),
+                    ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, GCC, 17)),
+                    ((CMAKE, 3.23), (BOOST, 1.83)),
+                    ((HOST_COMPILER, CLANG, 10), (BOOST, 1.83)),
+                    ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 12.0)),
                 ]
             )
         )
@@ -240,12 +243,12 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         t2_expected = sorted(
             parse_expected_val_pairs(
                 [
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
-                    OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (CLANG, 17)}),
-                    OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (GCC, 17)}),
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                    OD({HOST_COMPILER: (CLANG, 10), BOOST: (BOOST, 1.83)}),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 12.0)),
+                    ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, CLANG, 17)),
+                    ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, GCC, 17)),
+                    ((CMAKE, 3.23), (BOOST, 1.83)),
+                    ((HOST_COMPILER, CLANG, 10), (BOOST, 1.83)),
                 ]
             )
         )
@@ -283,22 +286,21 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         )
 
     def test_white_card_multi_parameter(self):
-        t1_any_parameter_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
-            [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({BOOST: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (CLANG, 17)}),
-                OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (CLANG, 16)}),
-                OD({CMAKE: (GCC, 10), UBUNTU: (NVCC, 11.2)}),
-            ]
-        )
+        t1_any_parameter_param_value_pairs: List[ParameterValuePair] = [
+            create_parameter_value_pair(HOST_COMPILER, GCC, 10, DEVICE_COMPILER, NVCC, 11.2),
+            create_parameter_value_pair(BOOST, GCC, 10, DEVICE_COMPILER, NVCC, 11.2),
+            create_parameter_value_pair(HOST_COMPILER, GCC, 9, DEVICE_COMPILER, CLANG, 17),
+            create_parameter_value_pair(HOST_COMPILER, CLANG, 17, DEVICE_COMPILER, CLANG, 16),
+            create_parameter_value_pair(CMAKE, GCC, 10, UBUNTU, NVCC, 11.2),
+        ]
+
         test_original_len = len(t1_any_parameter_param_value_pairs)
 
         t1_expected = sorted(
             parse_expected_val_pairs(
                 [
-                    OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (CLANG, 17)}),
-                    OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (CLANG, 16)}),
+                    ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, CLANG, 17)),
+                    ((HOST_COMPILER, CLANG, 17), (DEVICE_COMPILER, CLANG, 16)),
                 ]
             )
         )
@@ -338,23 +340,23 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
     def test_remove_all_gcc_host(self):
         test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (CLANG, 17)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (GCC, 17)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (CLANG, 10), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, CLANG, 17)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, GCC, 17)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, CLANG, 10), (BOOST, 1.83)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 12.0)),
             ]
         )
         test_original_len = len(test_param_value_pairs)
         t_expected = sorted(
             parse_expected_val_pairs(
                 [
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                    OD({HOST_COMPILER: (CLANG, 10), BOOST: (BOOST, 1.83)}),
-                    OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
+                    ((CMAKE, 3.23), (BOOST, 1.83)),
+                    ((HOST_COMPILER, CLANG, 10), (BOOST, 1.83)),
+                    ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 12.0)),
                 ]
             )
         )
@@ -391,22 +393,22 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
     def test_symmetric(self):
         test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({DEVICE_COMPILER: (NVCC, 11.2), HOST_COMPILER: (GCC, 10)}),
-                OD({DEVICE_COMPILER: (NVCC, 12.0), HOST_COMPILER: (GCC, 10)}),
-                OD({BOOST: (BOOST, 1.83), CMAKE: (CMAKE, 3.23)}),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (HOST_COMPILER, GCC, 10)),
+                ((DEVICE_COMPILER, NVCC, 12.0), (HOST_COMPILER, GCC, 10)),
+                ((BOOST, 1.83), (CMAKE, 3.23)),
             ]
         )
         test_original_len = len(test_param_value_pairs)
         t1_expected = sorted(
             parse_expected_val_pairs(
                 [
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                    OD({DEVICE_COMPILER: (NVCC, 11.2), HOST_COMPILER: (GCC, 10)}),
-                    OD({BOOST: (BOOST, 1.83), CMAKE: (CMAKE, 3.23)}),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((CMAKE, 3.23), (BOOST, 1.83)),
+                    ((DEVICE_COMPILER, NVCC, 11.2), (HOST_COMPILER, GCC, 10)),
+                    ((BOOST, 1.83), (CMAKE, 3.23)),
                 ]
             )
         )
@@ -450,11 +452,11 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         t2_expected = sorted(
             parse_expected_val_pairs(
                 [
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                    OD({DEVICE_COMPILER: (NVCC, 11.2), HOST_COMPILER: (GCC, 10)}),
-                    OD({DEVICE_COMPILER: (NVCC, 12.0), HOST_COMPILER: (GCC, 10)}),
-                    OD({BOOST: (BOOST, 1.83), CMAKE: (CMAKE, 3.23)}),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((CMAKE, 3.23), (BOOST, 1.83)),
+                    ((DEVICE_COMPILER, NVCC, 11.2), (HOST_COMPILER, GCC, 10)),
+                    ((DEVICE_COMPILER, NVCC, 12.0), (HOST_COMPILER, GCC, 10)),
+                    ((BOOST, 1.83), (CMAKE, 3.23)),
                 ]
             )
         )
@@ -498,11 +500,11 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         t3_expected = sorted(
             parse_expected_val_pairs(
                 [
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                    OD({DEVICE_COMPILER: (NVCC, 11.2), HOST_COMPILER: (GCC, 10)}),
-                    OD({BOOST: (BOOST, 1.83), CMAKE: (CMAKE, 3.23)}),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
+                    ((CMAKE, 3.23), (BOOST, 1.83)),
+                    ((DEVICE_COMPILER, NVCC, 11.2), (HOST_COMPILER, GCC, 10)),
+                    ((BOOST, 1.83), (CMAKE, 3.23)),
                 ]
             )
         )
@@ -546,8 +548,8 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         t4_expected = sorted(
             parse_expected_val_pairs(
                 [
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                    OD({BOOST: (BOOST, 1.83), CMAKE: (CMAKE, 3.23)}),
+                    ((CMAKE, 3.23), (BOOST, 1.83)),
+                    ((BOOST, 1.83), (CMAKE, 3.23)),
                 ]
             )
         )
@@ -587,10 +589,10 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         t5_expected = sorted(
             parse_expected_val_pairs(
                 [
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 12.0)}),
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                    OD({BOOST: (BOOST, 1.83), CMAKE: (CMAKE, 3.23)}),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
+                    ((CMAKE, 3.23), (BOOST, 1.83)),
+                    ((BOOST, 1.83), (CMAKE, 3.23)),
                 ]
             )
         )

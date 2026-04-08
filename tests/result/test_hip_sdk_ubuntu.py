@@ -6,7 +6,7 @@ from typing import Dict, Callable
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.types import ParameterValuePair
 from utils_test import (
-    parse_expected_val_pairs2,
+    parse_expected_val_pairs,
     default_remove_test,
     parse_value_version,
 )
@@ -20,7 +20,7 @@ from bashi.version.relation import VersionRelation
 
 class TestHipSDKUbuntuStaticInfo(unittest.TestCase):
     def test_remove_unsupported_hipcc_ubuntu_combinations(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
                 # remove because Ubuntu 16.04 is not in the support list
@@ -42,7 +42,7 @@ class TestHipSDKUbuntuStaticInfo(unittest.TestCase):
             ]
         )
 
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
                 ((HOST_COMPILER, HIPCC, 5.0), (UBUNTU, "20.04")),
@@ -67,7 +67,7 @@ class TestHipSDKUbuntuStaticInfo(unittest.TestCase):
 class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.default_input: List[ParameterValuePair] = parse_expected_val_pairs2(
+        cls.default_input: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
                 ((HOST_COMPILER, HIPCC, 4.0), (UBUNTU, "16.04")),
@@ -99,7 +99,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
             parse_value_version(["20.04", "22.04"])
         )
 
-        expected_output = parse_expected_val_pairs2(
+        expected_output = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
                 ((HOST_COMPILER, HIPCC, 4.0), (UBUNTU, "16.04")),
@@ -124,7 +124,7 @@ class TestHipSDKUbuntuRuntimeInfo(unittest.TestCase):
             parse_value_version(["20.04", "22.04", "26.04"])
         )
 
-        expected_output = parse_expected_val_pairs2(
+        expected_output = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
                 ((HOST_COMPILER, HIPCC, 4.0), (UBUNTU, "16.04")),

@@ -48,46 +48,6 @@ def parse_param_vals(
     return parsed_list
 
 
-def parse_expected_val_pairs(
-    input_list: List[OrderedDict[Parameter, Tuple[ValueName, Union[str, int, float]]]],
-) -> List[ParameterValuePair]:
-    """Parse list of expected parameter-values to the correct type.
-
-    Note: please use parse_expected_val_pairs2, which has a better interface
-
-    Args:
-        input_list (List[OrderedDict[Parameter, Tuple[ValueName, Union[str, int, float]]]]):
-            List to parse
-
-    Returns:
-        List[ParameterValuePair]: Parsed parameter-type list
-    """
-    expected_val_pairs: List[ParameterValuePair] = []
-
-    for param_val_pair in input_list:
-        if len(param_val_pair) != 2:
-            raise RuntimeError(f"{param_val_pair}\ninput_list needs to have two entries")
-
-        it = iter(param_val_pair.items())
-        param1, param_val1 = next(it)
-        val_name1, val_version1 = param_val1
-        param2, param_val2 = next(it)
-        val_name2, val_version2 = param_val2
-
-        expected_val_pairs.append(
-            create_parameter_value_pair(
-                param1,
-                val_name1,
-                val_version1,
-                param2,
-                val_name2,
-                val_version2,
-            )
-        )
-
-    return expected_val_pairs
-
-
 RegularParsableParameterValue: TypeAlias = Tuple[str, str, Union[str, int, float]]
 CompilerParsableParameterValue: TypeAlias = Tuple[str, str, Union[str, int, float]]
 DefaultParsableParameterValue: TypeAlias = Tuple[str, Union[str, int, float]]
@@ -96,7 +56,7 @@ ParsableParameterValue: TypeAlias = Union[
 ]
 
 
-def parse_expected_val_pairs2(
+def parse_expected_val_pairs(
     input_list: List[Tuple[ParsableParameterValue, ParsableParameterValue]],
 ) -> List[ParameterValuePair]:
     """Parse list of expected parameter-values to the correct type.
@@ -104,7 +64,7 @@ def parse_expected_val_pairs2(
     Args:
         input_list (List[Tuple[ParsableParameterValue, ParsableParameterValue]]):
             e.g.:
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 12), (UBUNTU, 22.04)),
                 ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
