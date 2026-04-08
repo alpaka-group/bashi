@@ -14,6 +14,9 @@ from bashi.types import (
     ParameterValuePair,
     ParameterValueSingle,
     ValueName,
+    ParsableValueVersion,
+    ParsableParameterSingle,
+    Combination,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
@@ -517,3 +520,73 @@ def remove_parameter_value_pairs(  # pylint: disable=too-many-arguments
         value_max_version2_inclusive=True,
         symmetric=symmetric,
     )
+
+
+@typechecked
+def parse_value_version(version: ParsableValueVersion) -> ValueVersion:
+    """Parse the given object to a ValueVersion
+
+    Args:
+        version (ParsableValueVersion): version with other type
+
+    Returns:
+        ValueVersion: version with ValueVersion type
+    """
+    if isinstance(version, ValueVersion):
+        return version
+
+    return packaging.version.parse(str(version))
+
+
+@typechecked
+def parse_parameter_single(
+    parsable_parameter_single: ParsableParameterSingle,
+) -> ParameterValueSingle:
+    """Parse the given object to a ParameterValueSingle
+
+    Args:
+        parsable_parameter (ParsableParameterSingle): parameter-value-single with other type
+
+    Returns:
+        ParameterValueSingle: parsed parameter-value-single
+    """
+    # is RegularParsableParameter
+    if len(parsable_parameter_single) == 2:
+        return ParameterValueSingle(
+            parsable_parameter_single[0],
+            ParameterValue(
+                parsable_parameter_single[0], parse_value_version(parsable_parameter_single[1])
+            ),
+        )
+
+    # is CompilerParsableParameter
+    return ParameterValueSingle(
+        parsable_parameter_single[0],
+        ParameterValue(
+            parsable_parameter_single[1], parse_value_version(parsable_parameter_single[2])
+        ),
+    )
+
+
+@typechecked
+def parse_combination(parsable_parameter_singles: List[ParsableParameterSingle]) -> Combination:
+    """Parse list of parsable object to a combination
+
+    Args:
+        parsable_parameter_singles (List[ParsableParameterSingle]): list of parsable objects
+
+    Returns:
+        Combination: combination
+    """
+    comb = Combination()
+    for parsable_single in parsable_parameter_singles:
+        if len(parsable_single) == 2:
+            comb[parsable_single[0]] = ParameterValue(
+                parsable_single[0], parse_value_version(parsable_single[1])
+            )
+        else:
+            comb[parsable_single[0]] = ParameterValue(
+                parsable_single[1], parse_value_version(parsable_single[2])
+            )
+
+    return comb

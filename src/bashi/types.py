@@ -1,6 +1,6 @@
 """bashi data types"""
 
-from typing import TypeAlias, List, Callable, NamedTuple
+from typing import TypeAlias, List, Callable, NamedTuple, Tuple, Union
 from collections import OrderedDict
 from packaging.version import Version
 
@@ -23,3 +23,11 @@ CombinationList: TypeAlias = List[Combination]
 
 # function signature of a filter function
 FilterFunction: TypeAlias = Callable[[ParameterValueTuple], bool]
+
+ParsableValueVersion: TypeAlias = Union[str, int, float, Version]
+
+RegularParsableParameterSingle: TypeAlias = Tuple[str, ParsableValueVersion]
+CompilerParsableParameterSingle: TypeAlias = Tuple[str, str, ParsableValueVersion]
+ParsableParameterSingle: TypeAlias = Union[
+    RegularParsableParameterSingle, CompilerParsableParameterSingle
+]
