@@ -18,7 +18,7 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.version.relation import VersionRelation
 from bashi.version.dependencies.base_version_support import CompilerCxxSupport
 from utils_test import (
-    parse_expected_val_pairs2,
+    parse_expected_val_pairs,
     default_remove_test,
 )
 
@@ -29,7 +29,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             CompilerCxxSupport("8", "11"),
             CompilerCxxSupport("9", "14"),
         ]
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 8), (CXX_STANDARD, 11)),
                 ((HOST_COMPILER, GCC, 9), (CXX_STANDARD, 14)),
@@ -47,7 +47,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             )
 
     def test_remove_unsupported_cxx_versions_for_gcc(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 # not affected
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
@@ -95,7 +95,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             ]
         )
 
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 # not affected
                 ((HOST_COMPILER, GCC, 6), (CMAKE, "3.30.2")),
@@ -141,7 +141,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
         )
 
     def test_remove_unsupported_cxx_versions_for_clang(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 # corner cases
                 ((HOST_COMPILER, CLANG, 9), (CXX_STANDARD, 14)),
@@ -175,7 +175,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             ]
         )
 
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 # corner cases
                 ((HOST_COMPILER, CLANG, 9), (CXX_STANDARD, 14)),
@@ -209,7 +209,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
         )
 
     def test_remove_unsupported_cxx_versions_for_nvcc(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
                 ((DEVICE_COMPILER, NVCC, 10.1), (CXX_STANDARD, 17)),
@@ -226,7 +226,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             ]
         )
 
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
                 ((DEVICE_COMPILER, NVCC, 11.0), (CXX_STANDARD, 14)),
@@ -247,7 +247,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
         )
 
     def test_remove_unsupported_cxx_versions_for_clang_cuda(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
                 ((DEVICE_COMPILER, CLANG_CUDA, 8), (CXX_STANDARD, 14)),
@@ -271,7 +271,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             ]
         )
 
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
                 ((DEVICE_COMPILER, CLANG_CUDA, 8), (CXX_STANDARD, 14)),
@@ -303,7 +303,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
         lasts_supported_version = sorted(
             version_relation.get_max_cuda_sdk_cxx_support(), reverse=True
         )[0]
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG, 9), (CXX_STANDARD, 14)),
                 ((HOST_COMPILER, CLANG, 9), (CXX_STANDARD, 20)),
@@ -334,7 +334,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
                 ((ALPAKA_ACC_GPU_CUDA_ENABLE, 9999.1), (CXX_STANDARD, 99)),
             ]
         )
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG, 9), (CXX_STANDARD, 14)),
                 ((HOST_COMPILER, CLANG, 9), (CXX_STANDARD, 20)),
@@ -370,7 +370,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             raise (e)
 
     def test_remove_unsupported_cxx_versions_for_icpx(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
                 ((DEVICE_COMPILER, ICPX, "2025.0"), (CXX_STANDARD, 14)),
@@ -381,7 +381,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             ]
         )
 
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
                 ((DEVICE_COMPILER, ICPX, "2025.0"), (CXX_STANDARD, 14)),
@@ -400,7 +400,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
         )
 
     def test_remove_unsupported_cxx_versions_for_hipcc(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
                 ((DEVICE_COMPILER, HIPCC, 5.3), (CXX_STANDARD, 20)),
@@ -411,7 +411,7 @@ class TestCompilerCXXSupportResultFilter(unittest.TestCase):
             ]
         )
 
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, NVCC, 10.0), (CXX_STANDARD, 14)),
                 ((DEVICE_COMPILER, HIPCC, 5.3), (CXX_STANDARD, 20)),

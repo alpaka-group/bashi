@@ -56,7 +56,7 @@ ParsableParameterValue: TypeAlias = Union[
 ]
 
 
-def parse_expected_val_pairs2(
+def parse_expected_val_pairs(
     input_list: List[Tuple[ParsableParameterValue, ParsableParameterValue]],
 ) -> List[ParameterValuePair]:
     """Parse list of expected parameter-values to the correct type.
@@ -64,7 +64,7 @@ def parse_expected_val_pairs2(
     Args:
         input_list (List[Tuple[ParsableParameterValue, ParsableParameterValue]]):
             e.g.:
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 12), (UBUNTU, 22.04)),
                 ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),

@@ -12,7 +12,7 @@ from bashi.types import ParameterValuePair
 from bashi.utils import _create_version_range, remove_parameter_value_pairs_ranges
 
 from utils_test import (
-    parse_expected_val_pairs2,
+    parse_expected_val_pairs,
     create_diff_parameter_value_pairs,
 )
 
@@ -169,7 +169,7 @@ class TestCreateVersionRange(unittest.TestCase):
 class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.parameter_test_data: List[ParameterValuePair] = parse_expected_val_pairs2(
+        cls.parameter_test_data: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((UBUNTU, "20.04"), (CMAKE, "3.19")),
@@ -182,7 +182,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
         # reuse data for parameter-value-names
         cls.name_test_data = cls.parameter_test_data
 
-        cls.version_test_data: List[ParameterValuePair] = parse_expected_val_pairs2(
+        cls.version_test_data: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((UBUNTU, "20.04"), (CMAKE, "3.19")),
@@ -211,7 +211,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
         )
 
     def test_remove_parameter_value_pairs_ranges_all_any(self):
-        test_parameter_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_parameter_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((UBUNTU, "20.04"), (CMAKE, "3.19")),
@@ -236,7 +236,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_remove_first_parameter(self):
         symmetric_test_data = deepcopy(self.parameter_test_data)
         symmetric_expected_result = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((UBUNTU, "20.04"), (CMAKE, "3.19")),
                     ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
@@ -269,7 +269,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
 
         non_symmetric_test_data = deepcopy(self.parameter_test_data)
         non_symmetric_expected_result = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((UBUNTU, "20.04"), (CMAKE, "3.19")),
                     ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
@@ -306,7 +306,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_remove_second_parameter(self):
         symmetric_test_data = deepcopy(self.parameter_test_data)
         symmetric_expected_result = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((UBUNTU, "20.04"), (CMAKE, "3.19")),
                     ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, ON)),
@@ -339,7 +339,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
 
         non_symmetric_test_data = deepcopy(self.parameter_test_data)
         non_symmetric_expected_result = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((UBUNTU, "20.04"), (CMAKE, "3.19")),
                     ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, ON)),
@@ -379,7 +379,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_remove_both_parameter(self):
         test_data = deepcopy(self.parameter_test_data)
         expected_result = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((UBUNTU, "20.04"), (CMAKE, "3.19")),
                     ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, ON)),
@@ -412,7 +412,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_remove_single_name(self):
         test_data = deepcopy(self.name_test_data)
         expected_result = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((UBUNTU, "20.04"), (CMAKE, "3.19")),
                     ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
@@ -465,7 +465,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_remove_both_name(self):
         test_data = deepcopy(self.name_test_data)
         expected_result = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((UBUNTU, "20.04"), (CMAKE, "3.19")),
                     ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, ON)),
@@ -505,7 +505,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_single_version_min_open(self):
         for inclusive_max1 in (True, False):
             test_data = deepcopy(self.version_test_data)
-            expected_result = parse_expected_val_pairs2(
+            expected_result = parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                     ((UBUNTU, "20.04"), (CMAKE, "3.19")),
@@ -526,7 +526,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
             )
 
             if not inclusive_max1:
-                expected_result += parse_expected_val_pairs2(
+                expected_result += parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, GCC, 8), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
@@ -565,7 +565,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_single_version_max_open(self):
         for inclusive_min1 in (True, False):
             test_data = deepcopy(self.version_test_data)
-            expected_result = parse_expected_val_pairs2(
+            expected_result = parse_expected_val_pairs(
                 [
                     ((UBUNTU, "20.04"), (CMAKE, "3.19")),
                     ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
@@ -578,7 +578,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
             )
 
             if not inclusive_min1:
-                expected_result += parse_expected_val_pairs2(
+                expected_result += parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, GCC, 8), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
@@ -617,7 +617,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_single_version_in_range(self):
         for inclusive_min1, inclusive_max1 in bool_map(2):
             test_data = deepcopy(self.version_test_data)
-            expected_result = parse_expected_val_pairs2(
+            expected_result = parse_expected_val_pairs(
                 [
                     ((UBUNTU, "20.04"), (CMAKE, "3.19")),
                     ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
@@ -631,14 +631,14 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
             )
 
             if not inclusive_min1:
-                expected_result += parse_expected_val_pairs2(
+                expected_result += parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, GCC, 8), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
                 )
 
             if not inclusive_max1:
-                expected_result += parse_expected_val_pairs2(
+                expected_result += parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, GCC, 13), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
@@ -680,7 +680,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_both_version_open(self):
         for inclusive_min1, inclusive_max2 in bool_map(2):
             test_data = deepcopy(self.version_test_data)
-            expected_result = parse_expected_val_pairs2(
+            expected_result = parse_expected_val_pairs(
                 [
                     ((UBUNTU, "20.04"), (CMAKE, "3.19")),
                     ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
@@ -694,14 +694,14 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
             )
 
             if not inclusive_min1:
-                expected_result += parse_expected_val_pairs2(
+                expected_result += parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, GCC, 8), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
                 )
 
             if not inclusive_max2:
-                expected_result += parse_expected_val_pairs2(
+                expected_result += parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.7)),
                     ]
@@ -743,7 +743,7 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_both_version_in_range(self):
         for inclusive_min1, inclusive_max1, inclusive_min2, inclusive_max2 in bool_map(4):
             test_data = deepcopy(self.version_test_data)
-            expected_result = parse_expected_val_pairs2(
+            expected_result = parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                     ((UBUNTU, "20.04"), (CMAKE, "3.19")),
@@ -760,28 +760,28 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
             )
 
             if not inclusive_min1:
-                expected_result += parse_expected_val_pairs2(
+                expected_result += parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, GCC, 8), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
                 )
 
             if not inclusive_max1:
-                expected_result += parse_expected_val_pairs2(
+                expected_result += parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, GCC, 13), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
                 )
 
             if not inclusive_min2:
-                expected_result += parse_expected_val_pairs2(
+                expected_result += parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.3)),
                     ]
                 )
 
             if not inclusive_max2:
-                expected_result += parse_expected_val_pairs2(
+                expected_result += parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.7)),
                     ]

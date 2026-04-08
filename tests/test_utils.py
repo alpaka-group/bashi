@@ -2,7 +2,7 @@
 import unittest
 from typing import List
 from collections import OrderedDict as OD
-from utils_test import parse_expected_val_pairs2, create_diff_parameter_value_pairs
+from utils_test import parse_expected_val_pairs, create_diff_parameter_value_pairs
 
 from bashi.utils import bi_filter
 from bashi.types import ParameterValuePair
@@ -11,7 +11,7 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 
 class TestBiFilter(unittest.TestCase):
     def test_bi_filter(self):
-        input_list: List[ParameterValuePair] = parse_expected_val_pairs2(
+        input_list: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, NVCC, 11.2), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((HOST_COMPILER, NVCC, 9), (DEVICE_COMPILER, HIPCC, 11.7)),
@@ -26,7 +26,7 @@ class TestBiFilter(unittest.TestCase):
         )
 
         expected_result: List[ParameterValuePair] = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, NVCC, 11.2), (DEVICE_COMPILER, NVCC, 11.2)),
                     ((HOST_COMPILER, NVCC, 9), (DEVICE_COMPILER, HIPCC, 11.7)),
@@ -36,7 +36,7 @@ class TestBiFilter(unittest.TestCase):
             )
         )
         unexpected_result: List[ParameterValuePair] = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((CMAKE, 3.23), (BOOST, 1.83)),
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, GCC, 10)),

@@ -7,7 +7,7 @@ import packaging.version as pkv
 from utils_test import (
     create_diff_parameter_value_pairs,
     create_parameter_value_pair,
-    parse_expected_val_pairs2,
+    parse_expected_val_pairs,
     default_remove_test,
 )
 
@@ -60,7 +60,7 @@ from bashi.version.dependencies.nvcc import NvccHostSupport, NVCC_GCC_MAX_VERSIO
 
 class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
     def test_remove_nvcc_host_compiler(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, NVCC, 11.2), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((HOST_COMPILER, NVCC, 9), (DEVICE_COMPILER, HIPCC, 11.7)),
@@ -73,7 +73,7 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
                 ((HOST_COMPILER, NVCC, 10.1), (DEVICE_COMPILER, GCC, 11)),
             ]
         )
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((CMAKE, 3.23), (BOOST, 1.83)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, GCC, 10)),
@@ -91,7 +91,7 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
         )
 
     def test_remove_unsupported_clang_cuda_version(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 13), (DEVICE_COMPILER, CLANG_CUDA, 13)),
                 ((HOST_COMPILER, CLANG_CUDA, 14), (DEVICE_COMPILER, CLANG_CUDA, 14)),
@@ -105,7 +105,7 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
                 ((HOST_COMPILER, NVCC, 10.1), (DEVICE_COMPILER, GCC, 11)),
             ]
         )
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 14), (DEVICE_COMPILER, CLANG_CUDA, 14)),
                 ((HOST_COMPILER, CLANG_CUDA, 99), (DEVICE_COMPILER, CLANG_CUDA, 99)),
@@ -124,7 +124,7 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
         )
 
     def test_nvcc_host_compiler_names(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 11.0)),
@@ -140,7 +140,7 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
                 ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, ICPX, "2023.2.0")),
             ]
         )
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 11.0)),
@@ -161,7 +161,7 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
         )
 
     def test_remove_different_compiler_names(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
@@ -180,7 +180,7 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
                 ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, ICPX, "2023.2.0")),
             ]
         )
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
@@ -205,7 +205,7 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
         )
 
     def test_remove_different_compiler_versions(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
@@ -227,7 +227,7 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
                 ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, ICPX, "2023.2.0")),
             ]
         )
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
@@ -253,7 +253,7 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
         )
 
     def test_remove_specific_nvcc_clang_combinations(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.4)),
@@ -270,7 +270,7 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
                 ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.4)),
@@ -297,7 +297,7 @@ TEST_HOST_COMPILER: str = "test_host_compiler"
 class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.gcc_param_value_matrix: List[ParameterValuePair] = parse_expected_val_pairs2(
+        cls.gcc_param_value_matrix: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
                 ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.2)),
@@ -788,7 +788,7 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
 
         test_param_value_pairs = copy.deepcopy(self.gcc_param_value_matrix)
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
                 ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.2)),
@@ -826,7 +826,7 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
         # for the test, it is required that CUDA 99.0 is not supported
         self.assertFalse(pkv.parse("99.0") in supported_nvcc_versions)
 
-        test_param_value_pairs = parse_expected_val_pairs2(
+        test_param_value_pairs = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
                 ((HOST_COMPILER, CLANG, 9), (DEVICE_COMPILER, NVCC, 11.2)),
@@ -856,7 +856,7 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
                 ((HOST_COMPILER, CLANG, 9), (DEVICE_COMPILER, NVCC, 11.2)),
@@ -891,7 +891,7 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
 
 class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
     def test_remove_unsupported_compiler_for_hip_backend(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
@@ -903,7 +903,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, HIPCC, 5.1), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                 ((DEVICE_COMPILER, HIPCC, 6.0), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
@@ -919,7 +919,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
         )
 
     def test_remove_disabled_hip_backend_for_hipcc(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -930,7 +930,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
                 ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -948,7 +948,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_sycl_backend_for_hipcc(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
@@ -964,7 +964,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
@@ -984,7 +984,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_hip_and_sycl_backend_at_same_time(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                 ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (DEVICE_COMPILER, HIPCC, 4.3)),
@@ -998,7 +998,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                 ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (DEVICE_COMPILER, HIPCC, 4.3)),
@@ -1017,7 +1017,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_cuda_backend_for_hipcc(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -1031,7 +1031,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -1051,7 +1051,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_cuda_backend_for_enabled_hip_backend(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                 ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1061,7 +1061,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                 ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1079,7 +1079,7 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
 
 class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
     def test_remove_unsupported_compiler_for_sycl_backend(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)),
@@ -1091,7 +1091,7 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                 ((DEVICE_COMPILER, ICPX, "2024.2.0"), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
@@ -1107,7 +1107,7 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_hip_backend_for_icpx(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -1121,7 +1121,7 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -1142,7 +1142,7 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_cuda_backend_for_icpx(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -1156,7 +1156,7 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -1176,7 +1176,7 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_cuda_backend_for_enabled_sycl_backend(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                 ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1188,7 +1188,7 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                 ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1204,7 +1204,7 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
         )
 
     def test_remove_more_than_one_enabled_oneapi_backend(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                 ((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
@@ -1216,7 +1216,7 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
             ]
         )
 
-        expected_results: List[ParameterValuePair] = parse_expected_val_pairs2(
+        expected_results: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                 ((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
@@ -1235,7 +1235,7 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
 
 class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
     def test_remove_nvcc_and_cuda_version_not_same(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                 ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1245,7 +1245,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
                 ((DEVICE_COMPILER, NVCC, 12.1), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
@@ -1261,7 +1261,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_cuda_sdk_unsupported_gcc_versions(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
                 ((HOST_COMPILER, GCC, 12), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1271,7 +1271,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
                 ((HOST_COMPILER, ICPX, "2022.3"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
@@ -1289,7 +1289,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_cuda_sdk_unsupported_clang_versions(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
                 ((HOST_COMPILER, CLANG, 15), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1299,7 +1299,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
                 ((HOST_COMPILER, ICPX, "2022.3"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
@@ -1317,7 +1317,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_device_compiler_gcc_clang_enabled_cuda_backend(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
                 ((DEVICE_COMPILER, CLANG, 15), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1328,7 +1328,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                 ((DEVICE_COMPILER, ICPX, "2022.3"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
@@ -1349,7 +1349,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
             create_parameter_value_pair(
                 HOST_COMPILER, CLANG_CUDA, 16, ALPAKA_ACC_GPU_CUDA_ENABLE, CLANG_CUDA, 16
             )
-        ] + parse_expected_val_pairs2(
+        ] + parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
                 ((HOST_COMPILER, CLANG, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1376,7 +1376,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
             create_parameter_value_pair(
                 HOST_COMPILER, CLANG_CUDA, 16, ALPAKA_ACC_GPU_CUDA_ENABLE, CLANG_CUDA, 16
             )
-        ] + parse_expected_val_pairs2(
+        ] + parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
                 ((HOST_COMPILER, CLANG, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1419,7 +1419,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         self.assertIsInstance(unsupported_new_cuda_sdk_version, float)
         unsupported_new_cuda_sdk_version = float(unsupported_new_cuda_sdk_version) + 1.0
 
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, CLANG_CUDA, 14), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
                 ((DEVICE_COMPILER, CLANG_CUDA, 15), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1467,7 +1467,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
             ]
         )
 
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, CLANG_CUDA, 15), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
                 ((DEVICE_COMPILER, CLANG_CUDA, 15), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.5)),
@@ -1513,7 +1513,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_unsupported_gcc_versions_for_ubuntu2004_and_later(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((DEVICE_COMPILER, GCC, 6), (UBUNTU, "20.04")),
                 ((HOST_COMPILER, GCC, 6), (UBUNTU, "20.04")),
@@ -1536,7 +1536,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
                 ((HOST_COMPILER, GCC, 3), (DEVICE_COMPILER, NVCC, 12.2)),
             ]
         )
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 7), (UBUNTU, "20.04")),
                 ((HOST_COMPILER, GCC, 12), (UBUNTU, "22.04")),
@@ -1566,7 +1566,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_unsupported_cmake_versions_for_clangcuda(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
                 ((HOST_COMPILER, CLANG_CUDA, 13), (CMAKE, "3.20")),
@@ -1590,7 +1590,7 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
                 ((HOST_COMPILER, GCC, 12), (UBUNTU, "22.04")),
             ]
         )
-        expected_results = parse_expected_val_pairs2(
+        expected_results = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
                 ((DEVICE_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),

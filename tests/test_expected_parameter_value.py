@@ -4,7 +4,7 @@ import copy
 
 from utils_test import (
     create_parameter_value_pair,
-    parse_expected_val_pairs2,
+    parse_expected_val_pairs,
     create_diff_parameter_value_pairs,
 )
 from bashi.types import (
@@ -16,7 +16,7 @@ from bashi.utils import remove_parameter_value_pairs
 
 class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
     def test_remove_parameter_value_pair(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -28,7 +28,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
 
         t1_no_remove = copy.deepcopy(test_param_value_pairs)
         t1_expected = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -68,7 +68,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
 
         t2_remove_single_entry = copy.deepcopy(t1_no_remove)
         t2_expected = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                     ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -111,7 +111,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
 
         t3_remove_another_entry = copy.deepcopy(t2_remove_single_entry)
         t3_expected = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                     ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -152,7 +152,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         )
 
     def test_all_white_card(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -180,7 +180,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         self.assertEqual(len(unexpected_test_param_value_pairs), len_before)
 
     def test_single_white_card(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -196,7 +196,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
 
         t1_any_version1_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         t1_expected = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                     ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, CLANG, 17)),
@@ -241,7 +241,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
 
         t2_any_name1_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         t2_expected = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                     ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -297,7 +297,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         test_original_len = len(t1_any_parameter_param_value_pairs)
 
         t1_expected = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, CLANG, 17)),
                     ((HOST_COMPILER, CLANG, 17), (DEVICE_COMPILER, CLANG, 16)),
@@ -338,7 +338,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         )
 
     def test_remove_all_gcc_host(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -352,7 +352,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         )
         test_original_len = len(test_param_value_pairs)
         t_expected = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((CMAKE, 3.23), (BOOST, 1.83)),
                     ((HOST_COMPILER, CLANG, 10), (BOOST, 1.83)),
@@ -391,7 +391,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         )
 
     def test_symmetric(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -403,7 +403,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
         )
         test_original_len = len(test_param_value_pairs)
         t1_expected = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                     ((CMAKE, 3.23), (BOOST, 1.83)),
@@ -450,7 +450,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
 
         t2_single_hit_no_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         t2_expected = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                     ((CMAKE, 3.23), (BOOST, 1.83)),
@@ -498,7 +498,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
 
         t3_single_hit_no_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         t3_expected = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -546,7 +546,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
 
         t4_multi_hit_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         t4_expected = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((CMAKE, 3.23), (BOOST, 1.83)),
                     ((BOOST, 1.83), (CMAKE, 3.23)),
@@ -587,7 +587,7 @@ class TestRemoveExpectedParameterValuePairs(unittest.TestCase):
 
         t5_multi_hit_no_symmetric_param_value_pairs = copy.deepcopy(test_param_value_pairs)
         t5_expected = sorted(
-            parse_expected_val_pairs2(
+            parse_expected_val_pairs(
                 [
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                     ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),

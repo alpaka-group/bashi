@@ -9,7 +9,7 @@ import random
 from utils_test import (
     parse_param_val,
     parse_param_vals,
-    parse_expected_val_pairs2,
+    parse_expected_val_pairs,
 )
 from covertable import make
 from bashi.types import (
@@ -200,7 +200,7 @@ class TestExpectedValuePairs(unittest.TestCase):
             get_expected_parameter_value_pairs(cls.param_matrix)
         )
 
-        cls.expected_param_val_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        cls.expected_param_val_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -304,7 +304,7 @@ class TestExpectedValuePairs(unittest.TestCase):
             ),
         ]
 
-        cls.handwritten_all_existing_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        cls.handwritten_all_existing_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                 ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -367,7 +367,7 @@ class TestExpectedValuePairs(unittest.TestCase):
         self.assertTrue(
             check_parameter_value_pair_in_combination_list(
                 self.handwritten_comb_list,
-                parse_expected_val_pairs2(
+                parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                         ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 12.0)),
@@ -386,7 +386,7 @@ class TestExpectedValuePairs(unittest.TestCase):
         )
 
     def test_check_parameter_value_pair_in_combination_list_single_wrong_input(self):
-        single_wrong_pair = parse_expected_val_pairs2(
+        single_wrong_pair = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.2)),
             ]
@@ -492,7 +492,7 @@ class TestExpectedValuePairs(unittest.TestCase):
         self.assertTrue(
             check_unexpected_parameter_value_pair_in_combination_list(
                 [],
-                parse_expected_val_pairs2(
+                parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, GCC, 10), (BOOST, 1.82)),
                         ((DEVICE_COMPILER, CLANG, 16), (CMAKE, 3.23)),
@@ -515,7 +515,7 @@ class TestExpectedValuePairs(unittest.TestCase):
         self.assertTrue(
             check_unexpected_parameter_value_pair_in_combination_list(
                 self.handwritten_comb_list,
-                parse_expected_val_pairs2(
+                parse_expected_val_pairs(
                     [
                         ((HOST_COMPILER, NVCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
                         ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, CLANG, 7)),
@@ -527,7 +527,7 @@ class TestExpectedValuePairs(unittest.TestCase):
 
     def test_check_unexpected_parameter_value_pair_in_combination_list_existing_entries(self):
         # all of the pairs are in the combination list
-        existing_parameter_value_pairs = parse_expected_val_pairs2(
+        existing_parameter_value_pairs = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (BOOST, 1.82)),
                 ((DEVICE_COMPILER, CLANG, 16), (CMAKE, 3.23)),
@@ -559,7 +559,7 @@ class TestExpectedValuePairs(unittest.TestCase):
         # some of the pairs are in the combination list
         error_output = io.StringIO()
 
-        existing_parameter_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
+        existing_parameter_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
             [
                 ((HOST_COMPILER, GCC, 10), (BOOST, 1.82)),
                 ((HOST_COMPILER, GCC, 10), (CMAKE, 3.22)),
