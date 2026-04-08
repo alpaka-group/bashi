@@ -3,11 +3,10 @@
 import unittest
 import copy
 from typing import List
-from collections import OrderedDict as OD
 import packaging.version as pkv
 from utils_test import (
-    parse_expected_val_pairs,
     create_diff_parameter_value_pairs,
+    create_parameter_value_pair,
     parse_expected_val_pairs2,
     default_remove_test,
 )
@@ -61,39 +60,26 @@ from bashi.version.dependencies.nvcc import NvccHostSupport, NVCC_GCC_MAX_VERSIO
 
 class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
     def test_remove_nvcc_host_compiler(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (NVCC, 11.2), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (NVCC, 9), DEVICE_COMPILER: (HIPCC, 11.7)}),
-                OD({HOST_COMPILER: (NVCC, 11.1), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
-                OD({HOST_COMPILER: (NVCC, 10.1), DEVICE_COMPILER: (GCC, 11)}),
+                ((HOST_COMPILER, NVCC, 11.2), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, NVCC, 9), (DEVICE_COMPILER, HIPCC, 11.7)),
+                ((HOST_COMPILER, NVCC, 11.1), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, GCC, 11)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
+                ((HOST_COMPILER, NVCC, 10.1), (DEVICE_COMPILER, GCC, 11)),
             ]
         )
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, GCC, 11)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
             ]
         )
 
@@ -105,28 +91,28 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
         )
 
     def test_remove_unsupported_clang_cuda_version(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 13), DEVICE_COMPILER: (CLANG_CUDA, 13)}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 14), DEVICE_COMPILER: (CLANG_CUDA, 14)}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 99), DEVICE_COMPILER: (CLANG_CUDA, 99)}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 7), DEVICE_COMPILER: (CLANG_CUDA, 7)}),
-                OD({HOST_COMPILER: (NVCC, 11.1), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 8), DEVICE_COMPILER: (GCC, 7)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (CLANG, 7), DEVICE_COMPILER: (CLANG_CUDA, 14)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (CLANG_CUDA, 11)}),
-                OD({HOST_COMPILER: (NVCC, 10.1), DEVICE_COMPILER: (GCC, 11)}),
+                ((HOST_COMPILER, CLANG_CUDA, 13), (DEVICE_COMPILER, CLANG_CUDA, 13)),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (DEVICE_COMPILER, CLANG_CUDA, 14)),
+                ((HOST_COMPILER, CLANG_CUDA, 99), (DEVICE_COMPILER, CLANG_CUDA, 99)),
+                ((HOST_COMPILER, CLANG_CUDA, 7), (DEVICE_COMPILER, CLANG_CUDA, 7)),
+                ((HOST_COMPILER, NVCC, 11.1), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG_CUDA, 8), (DEVICE_COMPILER, GCC, 7)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, CLANG, 7), (DEVICE_COMPILER, CLANG_CUDA, 14)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, CLANG_CUDA, 11)),
+                ((HOST_COMPILER, NVCC, 10.1), (DEVICE_COMPILER, GCC, 11)),
             ]
         )
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 14), DEVICE_COMPILER: (CLANG_CUDA, 14)}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 99), DEVICE_COMPILER: (CLANG_CUDA, 99)}),
-                OD({HOST_COMPILER: (NVCC, 11.1), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (CLANG, 7), DEVICE_COMPILER: (CLANG_CUDA, 14)}),
-                OD({HOST_COMPILER: (NVCC, 10.1), DEVICE_COMPILER: (GCC, 11)}),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (DEVICE_COMPILER, CLANG_CUDA, 14)),
+                ((HOST_COMPILER, CLANG_CUDA, 99), (DEVICE_COMPILER, CLANG_CUDA, 99)),
+                ((HOST_COMPILER, NVCC, 11.1), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, CLANG, 7), (DEVICE_COMPILER, CLANG_CUDA, 14)),
+                ((HOST_COMPILER, NVCC, 10.1), (DEVICE_COMPILER, GCC, 11)),
             ]
         )
 
@@ -138,45 +124,32 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
         )
 
     def test_nvcc_host_compiler_names(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.0)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                OD({HOST_COMPILER: (HIPCC, 5.1), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (HIPCC, 6.0), DEVICE_COMPILER: (NVCC, 11.3)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (ICPX, "2023.2.0")}),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 11.0)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.7)),
+                ((HOST_COMPILER, HIPCC, 5.1), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, HIPCC, 6.0), (DEVICE_COMPILER, NVCC, 11.3)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, GCC, 11)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, ICPX, "2023.2.0")),
             ]
         )
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.0)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
-                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (ICPX, "2023.2.0")}),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 11.0)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.7)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, GCC, 11)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
+                ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, ICPX, "2023.2.0")),
             ]
         )
 
@@ -188,55 +161,39 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
         )
 
     def test_remove_different_compiler_names(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (CLANG_CUDA, 10)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (CLANG, 7)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                OD({HOST_COMPILER: (HIPCC, 5.1), DEVICE_COMPILER: (ICPX, "2024.2.1")}),
-                OD({HOST_COMPILER: (HIPCC, 6.0), DEVICE_COMPILER: (NVCC, 11.3)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (HIPCC, 4.3), DEVICE_COMPILER: (HIPCC, 5.7)}),
-                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (ICPX, "2023.2.0")}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, CLANG_CUDA, 10)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, CLANG, 7)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.7)),
+                ((HOST_COMPILER, HIPCC, 5.1), (DEVICE_COMPILER, ICPX, "2024.2.1")),
+                ((HOST_COMPILER, HIPCC, 6.0), (DEVICE_COMPILER, NVCC, 11.3)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, GCC, 11)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, HIPCC, 4.3), (DEVICE_COMPILER, HIPCC, 5.7)),
+                ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, ICPX, "2023.2.0")),
             ]
         )
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (CLANG, 7)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                OD({HOST_COMPILER: (HIPCC, 6.0), DEVICE_COMPILER: (NVCC, 11.3)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (HIPCC, 4.3), DEVICE_COMPILER: (HIPCC, 5.7)}),
-                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (ICPX, "2023.2.0")}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, CLANG, 7)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.7)),
+                ((HOST_COMPILER, HIPCC, 6.0), (DEVICE_COMPILER, NVCC, 11.3)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, HIPCC, 4.3), (DEVICE_COMPILER, HIPCC, 5.7)),
+                ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, ICPX, "2023.2.0")),
             ]
         )
 
@@ -248,59 +205,43 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
         )
 
     def test_remove_different_compiler_versions(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (CLANG_CUDA, 10)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (CLANG, 7)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                OD({HOST_COMPILER: (HIPCC, 5.3), DEVICE_COMPILER: (HIPCC, 5.3)}),
-                OD({HOST_COMPILER: (HIPCC, 5.1), DEVICE_COMPILER: (ICPX, "2024.2.1")}),
-                OD({HOST_COMPILER: (HIPCC, 6.0), DEVICE_COMPILER: (NVCC, 11.3)}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 6), DEVICE_COMPILER: (CLANG_CUDA, 5)}),
-                OD({HOST_COMPILER: (GCC, 7), DEVICE_COMPILER: (GCC, 10)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (ICPX, "2022.0.0")}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (HIPCC, 4.3), DEVICE_COMPILER: (HIPCC, 5.7)}),
-                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (ICPX, "2023.2.0")}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, CLANG_CUDA, 10)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, CLANG, 7)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.7)),
+                ((HOST_COMPILER, HIPCC, 5.3), (DEVICE_COMPILER, HIPCC, 5.3)),
+                ((HOST_COMPILER, HIPCC, 5.1), (DEVICE_COMPILER, ICPX, "2024.2.1")),
+                ((HOST_COMPILER, HIPCC, 6.0), (DEVICE_COMPILER, NVCC, 11.3)),
+                ((HOST_COMPILER, CLANG_CUDA, 6), (DEVICE_COMPILER, CLANG_CUDA, 5)),
+                ((HOST_COMPILER, GCC, 7), (DEVICE_COMPILER, GCC, 10)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, ICPX, "2022.0.0")),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, GCC, 11)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, HIPCC, 4.3), (DEVICE_COMPILER, HIPCC, 5.7)),
+                ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, ICPX, "2023.2.0")),
             ]
         )
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (CLANG_CUDA, 10)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                OD({HOST_COMPILER: (HIPCC, 5.3), DEVICE_COMPILER: (HIPCC, 5.3)}),
-                OD({HOST_COMPILER: (HIPCC, 5.1), DEVICE_COMPILER: (ICPX, "2024.2.1")}),
-                OD({HOST_COMPILER: (HIPCC, 6.0), DEVICE_COMPILER: (NVCC, 11.3)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (ICPX, "2023.2.0"), DEVICE_COMPILER: (ICPX, "2023.2.0")}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, CLANG_CUDA, 10)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.7)),
+                ((HOST_COMPILER, HIPCC, 5.3), (DEVICE_COMPILER, HIPCC, 5.3)),
+                ((HOST_COMPILER, HIPCC, 5.1), (DEVICE_COMPILER, ICPX, "2024.2.1")),
+                ((HOST_COMPILER, HIPCC, 6.0), (DEVICE_COMPILER, NVCC, 11.3)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, GCC, 11)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, ICPX, "2023.2.0"), (DEVICE_COMPILER, ICPX, "2023.2.0")),
             ]
         )
 
@@ -312,49 +253,33 @@ class TestExpectedBashiParameterValuesPairs(unittest.TestCase):
         )
 
     def test_remove_specific_nvcc_clang_combinations(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.4)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.3)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.4)}),
-                OD({HOST_COMPILER: (CLANG, 11), DEVICE_COMPILER: (NVCC, 11.4)}),
-                OD({HOST_COMPILER: (CLANG, 18), DEVICE_COMPILER: (NVCC, 11.4)}),
-                OD({HOST_COMPILER: (CLANG, 14), DEVICE_COMPILER: (NVCC, 11.5)}),
-                OD({HOST_COMPILER: (CLANG, 13), DEVICE_COMPILER: (NVCC, 11.6)}),
-                OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (NVCC, 10.1)}),
-                OD({HOST_COMPILER: (CLANG, 7), DEVICE_COMPILER: (NVCC, 12.3)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.4)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 11.3)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 11.4)),
+                ((HOST_COMPILER, CLANG, 11), (DEVICE_COMPILER, NVCC, 11.4)),
+                ((HOST_COMPILER, CLANG, 18), (DEVICE_COMPILER, NVCC, 11.4)),
+                ((HOST_COMPILER, CLANG, 14), (DEVICE_COMPILER, NVCC, 11.5)),
+                ((HOST_COMPILER, CLANG, 13), (DEVICE_COMPILER, NVCC, 11.6)),
+                ((HOST_COMPILER, CLANG, 17), (DEVICE_COMPILER, NVCC, 10.1)),
+                ((HOST_COMPILER, CLANG, 7), (DEVICE_COMPILER, NVCC, 12.3)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.4)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 13), DEVICE_COMPILER: (NVCC, 11.6)}),
-                OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (NVCC, 10.1)}),
-                OD({HOST_COMPILER: (CLANG, 7), DEVICE_COMPILER: (NVCC, 12.3)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.4)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 13), (DEVICE_COMPILER, NVCC, 11.6)),
+                ((HOST_COMPILER, CLANG, 17), (DEVICE_COMPILER, NVCC, 10.1)),
+                ((HOST_COMPILER, CLANG, 7), (DEVICE_COMPILER, NVCC, 12.3)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -372,38 +297,30 @@ TEST_HOST_COMPILER: str = "test_host_compiler"
 class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.gcc_param_value_matrix: List[ParameterValuePair] = parse_expected_val_pairs(
+        cls.gcc_param_value_matrix: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 12), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 17), DEVICE_COMPILER: (NVCC, 99.0)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 12), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 13), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.8)}),
-                OD({HOST_COMPILER: (GCC, 12), DEVICE_COMPILER: (NVCC, 11.8)}),
-                OD({HOST_COMPILER: (GCC, 12), DEVICE_COMPILER: (NVCC, 12.3)}),
-                OD({HOST_COMPILER: (GCC, 13), DEVICE_COMPILER: (NVCC, 12.3)}),
-                OD({HOST_COMPILER: (GCC, 7), DEVICE_COMPILER: (NVCC, 10.1)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 10.1)}),
-                OD({HOST_COMPILER: (HIPCC, 5.3), DEVICE_COMPILER: (HIPCC, 5.3)}),
-                OD({HOST_COMPILER: (GCC, 7), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 12), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 17), (DEVICE_COMPILER, NVCC, 99.0)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.7)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 12), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 13), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.8)),
+                ((HOST_COMPILER, GCC, 12), (DEVICE_COMPILER, NVCC, 11.8)),
+                ((HOST_COMPILER, GCC, 12), (DEVICE_COMPILER, NVCC, 12.3)),
+                ((HOST_COMPILER, GCC, 13), (DEVICE_COMPILER, NVCC, 12.3)),
+                ((HOST_COMPILER, GCC, 7), (DEVICE_COMPILER, NVCC, 10.1)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 10.1)),
+                ((HOST_COMPILER, HIPCC, 5.3), (DEVICE_COMPILER, HIPCC, 5.3)),
+                ((HOST_COMPILER, GCC, 7), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, GCC, 11)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
             ]
         )
 
@@ -424,27 +341,59 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
             else:
                 cls.test_host_compiler_param_value_pairs.append(copy.deepcopy(param_value_pair))
 
-        cls.test_host_compiler_param_value_pairs += parse_expected_val_pairs(
-            [
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.5)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 13), DEVICE_COMPILER: (NVCC, 12.5)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 14), DEVICE_COMPILER: (NVCC, 12.5)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.8)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 13), DEVICE_COMPILER: (NVCC, 12.8)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 14), DEVICE_COMPILER: (NVCC, 12.8)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 15), DEVICE_COMPILER: (NVCC, 12.8)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 16), DEVICE_COMPILER: (NVCC, 12.8)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.9)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 13), DEVICE_COMPILER: (NVCC, 12.9)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 14), DEVICE_COMPILER: (NVCC, 12.9)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 15), DEVICE_COMPILER: (NVCC, 12.9)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 16), DEVICE_COMPILER: (NVCC, 12.9)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 5), DEVICE_COMPILER: (NVCC, 10.0)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 6), DEVICE_COMPILER: (NVCC, 10.0)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 7), DEVICE_COMPILER: (NVCC, 10.0)}),
-                OD({HOST_COMPILER: (TEST_HOST_COMPILER, 52), DEVICE_COMPILER: (NVCC, 9.2)}),
-            ]
-        )
+        cls.test_host_compiler_param_value_pairs += [
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.5
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 13, DEVICE_COMPILER, NVCC, 12.5
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 14, DEVICE_COMPILER, NVCC, 12.5
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.8
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 13, DEVICE_COMPILER, NVCC, 12.8
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 14, DEVICE_COMPILER, NVCC, 12.8
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 15, DEVICE_COMPILER, NVCC, 12.8
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 16, DEVICE_COMPILER, NVCC, 12.8
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.9
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 13, DEVICE_COMPILER, NVCC, 12.9
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 14, DEVICE_COMPILER, NVCC, 12.9
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 15, DEVICE_COMPILER, NVCC, 12.9
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 16, DEVICE_COMPILER, NVCC, 12.9
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 5, DEVICE_COMPILER, NVCC, 10.0
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 6, DEVICE_COMPILER, NVCC, 10.0
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 7, DEVICE_COMPILER, NVCC, 10.0
+            ),
+            create_parameter_value_pair(
+                HOST_COMPILER, TEST_HOST_COMPILER, 52, DEVICE_COMPILER, NVCC, 9.2
+            ),
+        ]
 
         cls.test_host_compiler_support_list: List[NvccHostSupport] = [
             NvccHostSupport("12.0", "12"),
@@ -465,45 +414,86 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
         test_support_list.append(NvccHostSupport("12.8", "13"))
 
         expected_results = sorted(
-            parse_expected_val_pairs(
-                [
-                    OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 9), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 17), DEVICE_COMPILER: (NVCC, 99.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 11), DEVICE_COMPILER: (NVCC, 12.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 11), DEVICE_COMPILER: (NVCC, 11.8)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.3)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 52), DEVICE_COMPILER: (NVCC, 9.2)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 5), DEVICE_COMPILER: (NVCC, 10.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 6), DEVICE_COMPILER: (NVCC, 10.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 7), DEVICE_COMPILER: (NVCC, 10.1)}),
-                    OD({HOST_COMPILER: (HIPCC, 5.3), DEVICE_COMPILER: (HIPCC, 5.3)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 7), DEVICE_COMPILER: (GCC, 10)}),
-                    OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                    OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                    OD(
-                        {
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                                ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                                ON,
-                            ),
-                            ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                        }
-                    ),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.5)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.8)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 13), DEVICE_COMPILER: (NVCC, 12.8)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.9)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 13), DEVICE_COMPILER: (NVCC, 12.9)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 14), DEVICE_COMPILER: (NVCC, 12.9)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 15), DEVICE_COMPILER: (NVCC, 12.9)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 16), DEVICE_COMPILER: (NVCC, 12.9)}),
-                ]
-            )
+            [
+                create_parameter_value_pair(
+                    HOST_COMPILER, CLANG_CUDA, 16, DEVICE_COMPILER, CLANG_CUDA, 16
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 9, DEVICE_COMPILER, NVCC, 11.2
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 10, DEVICE_COMPILER, NVCC, 11.2
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 17, DEVICE_COMPILER, NVCC, 99.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 9, DEVICE_COMPILER, NVCC, 11.7
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 11, DEVICE_COMPILER, NVCC, 12.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 11, DEVICE_COMPILER, NVCC, 11.8
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.3
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 52, DEVICE_COMPILER, NVCC, 9.2
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 5, DEVICE_COMPILER, NVCC, 10.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 6, DEVICE_COMPILER, NVCC, 10.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 7, DEVICE_COMPILER, NVCC, 10.1
+                ),
+                create_parameter_value_pair(HOST_COMPILER, HIPCC, 5.3, DEVICE_COMPILER, HIPCC, 5.3),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 7, DEVICE_COMPILER, GCC, 10
+                ),
+                create_parameter_value_pair(HOST_COMPILER, CLANG, 10, DEVICE_COMPILER, NVCC, 11.2),
+                create_parameter_value_pair(CMAKE, CMAKE, 3.23, BOOST, BOOST, 1.83),
+                create_parameter_value_pair(HOST_COMPILER, CLANG, 10, DEVICE_COMPILER, GCC, 11),
+                create_parameter_value_pair(
+                    ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
+                    ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
+                    ON,
+                    ALPAKA_ACC_GPU_CUDA_ENABLE,
+                    ALPAKA_ACC_GPU_CUDA_ENABLE,
+                    12.2,
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.5
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.8
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 13, DEVICE_COMPILER, NVCC, 12.8
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.9
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 13, DEVICE_COMPILER, NVCC, 12.9
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 14, DEVICE_COMPILER, NVCC, 12.9
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 15, DEVICE_COMPILER, NVCC, 12.9
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 16, DEVICE_COMPILER, NVCC, 12.9
+                ),
+            ]
         )
 
         unexpected_results: List[ParameterValuePair] = sorted(
@@ -545,46 +535,89 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
         test_support_list.append(NvccHostSupport("12.8", "14"))
 
         expected_results = sorted(
-            parse_expected_val_pairs(
-                [
-                    OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 9), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 17), DEVICE_COMPILER: (NVCC, 99.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 11), DEVICE_COMPILER: (NVCC, 12.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 11), DEVICE_COMPILER: (NVCC, 11.8)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.3)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 7), DEVICE_COMPILER: (NVCC, 10.1)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 5), DEVICE_COMPILER: (NVCC, 10.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 6), DEVICE_COMPILER: (NVCC, 10.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 52), DEVICE_COMPILER: (NVCC, 9.2)}),
-                    OD({HOST_COMPILER: (HIPCC, 5.3), DEVICE_COMPILER: (HIPCC, 5.3)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 7), DEVICE_COMPILER: (GCC, 10)}),
-                    OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                    OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                    OD(
-                        {
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                                ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                                ON,
-                            ),
-                            ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                        }
-                    ),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.5)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.8)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 13), DEVICE_COMPILER: (NVCC, 12.8)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 14), DEVICE_COMPILER: (NVCC, 12.8)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.9)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 13), DEVICE_COMPILER: (NVCC, 12.9)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 14), DEVICE_COMPILER: (NVCC, 12.9)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 15), DEVICE_COMPILER: (NVCC, 12.9)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 16), DEVICE_COMPILER: (NVCC, 12.9)}),
-                ]
-            )
+            [
+                create_parameter_value_pair(
+                    HOST_COMPILER, CLANG_CUDA, 16, DEVICE_COMPILER, CLANG_CUDA, 16
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 9, DEVICE_COMPILER, NVCC, 11.2
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 10, DEVICE_COMPILER, NVCC, 11.2
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 17, DEVICE_COMPILER, NVCC, 99.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 9, DEVICE_COMPILER, NVCC, 11.7
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 11, DEVICE_COMPILER, NVCC, 12.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 11, DEVICE_COMPILER, NVCC, 11.8
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.3
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 7, DEVICE_COMPILER, NVCC, 10.1
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 5, DEVICE_COMPILER, NVCC, 10.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 6, DEVICE_COMPILER, NVCC, 10.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 52, DEVICE_COMPILER, NVCC, 9.2
+                ),
+                create_parameter_value_pair(HOST_COMPILER, HIPCC, 5.3, DEVICE_COMPILER, HIPCC, 5.3),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 7, DEVICE_COMPILER, GCC, 10
+                ),
+                create_parameter_value_pair(HOST_COMPILER, CLANG, 10, DEVICE_COMPILER, NVCC, 11.2),
+                create_parameter_value_pair(CMAKE, CMAKE, 3.23, BOOST, BOOST, 1.83),
+                create_parameter_value_pair(HOST_COMPILER, CLANG, 10, DEVICE_COMPILER, GCC, 11),
+                create_parameter_value_pair(
+                    ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
+                    ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
+                    ON,
+                    ALPAKA_ACC_GPU_CUDA_ENABLE,
+                    ALPAKA_ACC_GPU_CUDA_ENABLE,
+                    12.2,
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.5
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.8
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 13, DEVICE_COMPILER, NVCC, 12.8
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 14, DEVICE_COMPILER, NVCC, 12.8
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.9
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 13, DEVICE_COMPILER, NVCC, 12.9
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 14, DEVICE_COMPILER, NVCC, 12.9
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 15, DEVICE_COMPILER, NVCC, 12.9
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 16, DEVICE_COMPILER, NVCC, 12.9
+                ),
+            ]
         )
 
         unexpected_results: List[ParameterValuePair] = sorted(
@@ -626,47 +659,92 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
         test_support_list.append(NvccHostSupport("12.8", "15"))
 
         expected_results = sorted(
-            parse_expected_val_pairs(
-                [
-                    OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 9), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 17), DEVICE_COMPILER: (NVCC, 99.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 11), DEVICE_COMPILER: (NVCC, 12.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 11), DEVICE_COMPILER: (NVCC, 11.8)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.3)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 7), DEVICE_COMPILER: (NVCC, 10.1)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 5), DEVICE_COMPILER: (NVCC, 10.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 6), DEVICE_COMPILER: (NVCC, 10.0)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 52), DEVICE_COMPILER: (NVCC, 9.2)}),
-                    OD({HOST_COMPILER: (HIPCC, 5.3), DEVICE_COMPILER: (HIPCC, 5.3)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 7), DEVICE_COMPILER: (GCC, 10)}),
-                    OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                    OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                    OD(
-                        {
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                                ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                                ON,
-                            ),
-                            ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                        }
-                    ),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.5)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.8)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 13), DEVICE_COMPILER: (NVCC, 12.8)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 14), DEVICE_COMPILER: (NVCC, 12.8)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 15), DEVICE_COMPILER: (NVCC, 12.8)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 12), DEVICE_COMPILER: (NVCC, 12.9)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 13), DEVICE_COMPILER: (NVCC, 12.9)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 14), DEVICE_COMPILER: (NVCC, 12.9)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 15), DEVICE_COMPILER: (NVCC, 12.9)}),
-                    OD({HOST_COMPILER: (TEST_HOST_COMPILER, 16), DEVICE_COMPILER: (NVCC, 12.9)}),
-                ]
-            )
+            [
+                create_parameter_value_pair(
+                    HOST_COMPILER, CLANG_CUDA, 16, DEVICE_COMPILER, CLANG_CUDA, 16
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 9, DEVICE_COMPILER, NVCC, 11.2
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 10, DEVICE_COMPILER, NVCC, 11.2
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 17, DEVICE_COMPILER, NVCC, 99.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 9, DEVICE_COMPILER, NVCC, 11.7
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 11, DEVICE_COMPILER, NVCC, 12.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 11, DEVICE_COMPILER, NVCC, 11.8
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.3
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 7, DEVICE_COMPILER, NVCC, 10.1
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 5, DEVICE_COMPILER, NVCC, 10.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 6, DEVICE_COMPILER, NVCC, 10.0
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 52, DEVICE_COMPILER, NVCC, 9.2
+                ),
+                create_parameter_value_pair(HOST_COMPILER, HIPCC, 5.3, DEVICE_COMPILER, HIPCC, 5.3),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 7, DEVICE_COMPILER, GCC, 10
+                ),
+                create_parameter_value_pair(HOST_COMPILER, CLANG, 10, DEVICE_COMPILER, NVCC, 11.2),
+                create_parameter_value_pair(CMAKE, CMAKE, 3.23, BOOST, BOOST, 1.83),
+                create_parameter_value_pair(HOST_COMPILER, CLANG, 10, DEVICE_COMPILER, GCC, 11),
+                create_parameter_value_pair(
+                    ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
+                    ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
+                    ON,
+                    ALPAKA_ACC_GPU_CUDA_ENABLE,
+                    ALPAKA_ACC_GPU_CUDA_ENABLE,
+                    12.2,
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.5
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.8
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 13, DEVICE_COMPILER, NVCC, 12.8
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 14, DEVICE_COMPILER, NVCC, 12.8
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 15, DEVICE_COMPILER, NVCC, 12.8
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 12, DEVICE_COMPILER, NVCC, 12.9
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 13, DEVICE_COMPILER, NVCC, 12.9
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 14, DEVICE_COMPILER, NVCC, 12.9
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 15, DEVICE_COMPILER, NVCC, 12.9
+                ),
+                create_parameter_value_pair(
+                    HOST_COMPILER, TEST_HOST_COMPILER, 16, DEVICE_COMPILER, NVCC, 12.9
+                ),
+            ]
         )
 
         unexpected_results: List[ParameterValuePair] = sorted(
@@ -710,32 +788,24 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
 
         test_param_value_pairs = copy.deepcopy(self.gcc_param_value_matrix)
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 17), DEVICE_COMPILER: (NVCC, 99.0)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 12), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.8)}),
-                OD({HOST_COMPILER: (GCC, 12), DEVICE_COMPILER: (NVCC, 12.3)}),
-                OD({HOST_COMPILER: (GCC, 7), DEVICE_COMPILER: (NVCC, 10.1)}),
-                OD({HOST_COMPILER: (HIPCC, 5.3), DEVICE_COMPILER: (HIPCC, 5.3)}),
-                OD({HOST_COMPILER: (GCC, 7), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 17), (DEVICE_COMPILER, NVCC, 99.0)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.7)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 12), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.8)),
+                ((HOST_COMPILER, GCC, 12), (DEVICE_COMPILER, NVCC, 12.3)),
+                ((HOST_COMPILER, GCC, 7), (DEVICE_COMPILER, NVCC, 10.1)),
+                ((HOST_COMPILER, HIPCC, 5.3), (DEVICE_COMPILER, HIPCC, 5.3)),
+                ((HOST_COMPILER, GCC, 7), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, GCC, 11)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
             ]
         )
 
@@ -756,73 +826,57 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
         # for the test, it is required that CUDA 99.0 is not supported
         self.assertFalse(pkv.parse("99.0") in supported_nvcc_versions)
 
-        test_param_value_pairs = parse_expected_val_pairs(
+        test_param_value_pairs = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                OD({HOST_COMPILER: (CLANG, 9), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 12), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (NVCC, 99.0)}),
-                OD({HOST_COMPILER: (CLANG, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                OD({HOST_COMPILER: (CLANG, 11), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG, 14), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG, 12), DEVICE_COMPILER: (NVCC, 11.8)}),
-                OD({HOST_COMPILER: (CLANG, 14), DEVICE_COMPILER: (NVCC, 11.8)}),
-                OD({HOST_COMPILER: (CLANG, 15), DEVICE_COMPILER: (NVCC, 12.3)}),
-                OD({HOST_COMPILER: (CLANG, 16), DEVICE_COMPILER: (NVCC, 12.3)}),
-                OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (NVCC, 12.3)}),
-                OD({HOST_COMPILER: (CLANG, 7), DEVICE_COMPILER: (NVCC, 10.1)}),
-                OD({HOST_COMPILER: (CLANG, 6), DEVICE_COMPILER: (NVCC, 10.0)}),
-                OD({HOST_COMPILER: (CLANG, 7), DEVICE_COMPILER: (NVCC, 10.0)}),
-                OD({HOST_COMPILER: (CLANG, 9), DEVICE_COMPILER: (NVCC, 10.1)}),
-                OD({HOST_COMPILER: (HIPCC, 5.3), DEVICE_COMPILER: (HIPCC, 5.3)}),
-                OD({HOST_COMPILER: (GCC, 7), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
+                ((HOST_COMPILER, CLANG, 9), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 11), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 12), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 17), (DEVICE_COMPILER, NVCC, 99.0)),
+                ((HOST_COMPILER, CLANG, 9), (DEVICE_COMPILER, NVCC, 11.7)),
+                ((HOST_COMPILER, CLANG, 11), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG, 14), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG, 17), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG, 12), (DEVICE_COMPILER, NVCC, 11.8)),
+                ((HOST_COMPILER, CLANG, 14), (DEVICE_COMPILER, NVCC, 11.8)),
+                ((HOST_COMPILER, CLANG, 15), (DEVICE_COMPILER, NVCC, 12.3)),
+                ((HOST_COMPILER, CLANG, 16), (DEVICE_COMPILER, NVCC, 12.3)),
+                ((HOST_COMPILER, CLANG, 17), (DEVICE_COMPILER, NVCC, 12.3)),
+                ((HOST_COMPILER, CLANG, 7), (DEVICE_COMPILER, NVCC, 10.1)),
+                ((HOST_COMPILER, CLANG, 6), (DEVICE_COMPILER, NVCC, 10.0)),
+                ((HOST_COMPILER, CLANG, 7), (DEVICE_COMPILER, NVCC, 10.0)),
+                ((HOST_COMPILER, CLANG, 9), (DEVICE_COMPILER, NVCC, 10.1)),
+                ((HOST_COMPILER, HIPCC, 5.3), (DEVICE_COMPILER, HIPCC, 5.3)),
+                ((HOST_COMPILER, GCC, 7), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, GCC, 11)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), DEVICE_COMPILER: (CLANG_CUDA, 16)}),
-                OD({HOST_COMPILER: (CLANG, 9), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (CLANG, 17), DEVICE_COMPILER: (NVCC, 99.0)}),
-                OD({HOST_COMPILER: (CLANG, 9), DEVICE_COMPILER: (NVCC, 11.7)}),
-                OD({HOST_COMPILER: (CLANG, 11), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG, 14), DEVICE_COMPILER: (NVCC, 12.0)}),
-                OD({HOST_COMPILER: (CLANG, 12), DEVICE_COMPILER: (NVCC, 11.8)}),
-                OD({HOST_COMPILER: (CLANG, 15), DEVICE_COMPILER: (NVCC, 12.3)}),
-                OD({HOST_COMPILER: (CLANG, 16), DEVICE_COMPILER: (NVCC, 12.3)}),
-                OD({HOST_COMPILER: (CLANG, 7), DEVICE_COMPILER: (NVCC, 10.1)}),
-                OD({HOST_COMPILER: (CLANG, 6), DEVICE_COMPILER: (NVCC, 10.0)}),
-                OD({HOST_COMPILER: (HIPCC, 5.3), DEVICE_COMPILER: (HIPCC, 5.3)}),
-                OD({HOST_COMPILER: (GCC, 7), DEVICE_COMPILER: (GCC, 10)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD({HOST_COMPILER: (CLANG, 10), DEVICE_COMPILER: (GCC, 11)}),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (DEVICE_COMPILER, CLANG_CUDA, 16)),
+                ((HOST_COMPILER, CLANG, 9), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 11), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, CLANG, 17), (DEVICE_COMPILER, NVCC, 99.0)),
+                ((HOST_COMPILER, CLANG, 9), (DEVICE_COMPILER, NVCC, 11.7)),
+                ((HOST_COMPILER, CLANG, 11), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG, 14), (DEVICE_COMPILER, NVCC, 12.0)),
+                ((HOST_COMPILER, CLANG, 12), (DEVICE_COMPILER, NVCC, 11.8)),
+                ((HOST_COMPILER, CLANG, 15), (DEVICE_COMPILER, NVCC, 12.3)),
+                ((HOST_COMPILER, CLANG, 16), (DEVICE_COMPILER, NVCC, 12.3)),
+                ((HOST_COMPILER, CLANG, 7), (DEVICE_COMPILER, NVCC, 10.1)),
+                ((HOST_COMPILER, CLANG, 6), (DEVICE_COMPILER, NVCC, 10.0)),
+                ((HOST_COMPILER, HIPCC, 5.3), (DEVICE_COMPILER, HIPCC, 5.3)),
+                ((HOST_COMPILER, GCC, 7), (DEVICE_COMPILER, GCC, 10)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((HOST_COMPILER, CLANG, 10), (DEVICE_COMPILER, GCC, 11)),
+                ((ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
             ]
         )
 
@@ -837,63 +891,23 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
 
 class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
     def test_remove_unsupported_compiler_for_hip_backend(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 6.0),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((HOST_COMPILER, HIPCC, 5.1), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((DEVICE_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((DEVICE_COMPILER, HIPCC, 6.0), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 6.0),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, HIPCC, 5.1), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((DEVICE_COMPILER, HIPCC, 6.0), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -905,74 +919,24 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
         )
 
     def test_remove_disabled_hip_backend_for_hipcc(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 6.0),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((HOST_COMPILER, HIPCC, 5.1), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((DEVICE_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((DEVICE_COMPILER, HIPCC, 6.0), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((DEVICE_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -984,111 +948,31 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_sycl_backend_for_hipcc(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 4.2),
-                        ALPAKA_ACC_ONEAPI_CPU_ENABLE: (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 4.3),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 4.4),
-                        ALPAKA_ACC_ONEAPI_FPGA_ENABLE: (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 6.0),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 5.7),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((DEVICE_COMPILER, HIPCC, 4.2), (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)),
+                ((DEVICE_COMPILER, HIPCC, 4.3), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((DEVICE_COMPILER, HIPCC, 4.4), (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
+                ((HOST_COMPILER, HIPCC, 5.1), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((DEVICE_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((DEVICE_COMPILER, HIPCC, 6.0), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((DEVICE_COMPILER, HIPCC, 5.7), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 6.0),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((HOST_COMPILER, HIPCC, 5.1), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((DEVICE_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((DEVICE_COMPILER, HIPCC, 6.0), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -1100,93 +984,28 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_hip_and_sycl_backend_at_same_time(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        DEVICE_COMPILER: (HIPCC, 4.3),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        ALPAKA_ACC_ONEAPI_CPU_ENABLE: (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        ALPAKA_ACC_ONEAPI_FPGA_ENABLE: (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (DEVICE_COMPILER, HIPCC, 4.3)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        DEVICE_COMPILER: (HIPCC, 4.3),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (DEVICE_COMPILER, HIPCC, 4.3)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -1198,99 +1017,29 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_cuda_backend_for_hipcc(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, 5.3),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 6.0),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 6.1),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((HOST_COMPILER, HIPCC, 5.1), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((HOST_COMPILER, HIPCC, 5.3), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((DEVICE_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, HIPCC, 6.0), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, HIPCC, 6.1), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 6.0),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((HOST_COMPILER, HIPCC, 5.1), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, HIPCC, 6.0), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -1302,51 +1051,21 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_cuda_backend_for_enabled_hip_backend(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((ALPAKA_ACC_GPU_HIP_ENABLE, OFF), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -1360,63 +1079,23 @@ class TestExpectedBashiParameterValuesPairsHIPBackend(unittest.TestCase):
 
 class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
     def test_remove_unsupported_compiler_for_sycl_backend(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_ONEAPI_CPU_ENABLE: (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2024.2.0"),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_ONEAPI_FPGA_ENABLE: (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)),
+                ((HOST_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((DEVICE_COMPILER, HIPCC, 5.1), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((DEVICE_COMPILER, ICPX, "2024.2.0"), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2024.2.0"),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((DEVICE_COMPILER, ICPX, "2024.2.0"), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -1428,105 +1107,30 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_hip_backend_for_icpx(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (ICPX, "2024.2.0"),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2024.2.1"),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 5.7),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((DEVICE_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((HOST_COMPILER, ICPX, "2024.2.0"), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((DEVICE_COMPILER, HIPCC, 5.1), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((DEVICE_COMPILER, ICPX, "2024.2.1"), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((DEVICE_COMPILER, HIPCC, 5.7), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (ICPX, "2024.2.0"),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 5.1),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, OFF),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 5.7),
-                        ALPAKA_ACC_GPU_HIP_ENABLE: (ALPAKA_ACC_GPU_HIP_ENABLE, ON),
-                    }
-                ),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((DEVICE_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((HOST_COMPILER, ICPX, "2024.2.0"), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((DEVICE_COMPILER, HIPCC, 5.1), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
+                ((DEVICE_COMPILER, HIPCC, 5.7), (ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
             ]
         )
 
@@ -1538,99 +1142,29 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_cuda_backend_for_icpx(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (ICPX, "2024.2.0"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 4.5),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2024.2.1"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2024.8.3"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((HOST_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((HOST_COMPILER, ICPX, "2024.2.0"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((DEVICE_COMPILER, HIPCC, 4.5), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, ICPX, "2024.2.1"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, ICPX, "2024.8.3"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (ICPX, "2023.1.0"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (HIPCC, 4.5),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2024.2.1"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((HOST_COMPILER, ICPX, "2023.1.0"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, HIPCC, 4.5), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, ICPX, "2024.2.1"), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -1642,63 +1176,23 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
         )
 
     def test_remove_enabled_cuda_backend_for_enabled_sycl_backend(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_ONEAPI_CPU_ENABLE: (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_ONEAPI_FPGA_ENABLE: (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 13.2),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2)),
+                ((ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, 13.2)),
+                ((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2), (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
+                ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_ONEAPI_GPU_ENABLE: (ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -1741,51 +1235,21 @@ class TestExpectedBashiParameterValuesPairsSYCLBackend(unittest.TestCase):
 
 class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
     def test_remove_nvcc_and_cuda_version_not_same(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 12.1),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 12.1),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((DEVICE_COMPILER, NVCC, 12.1), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
+                ((DEVICE_COMPILER, NVCC, 12.1), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 11.2),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (NVCC, 12.1),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((DEVICE_COMPILER, NVCC, 11.2), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((DEVICE_COMPILER, NVCC, 12.1), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -1797,57 +1261,22 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_cuda_sdk_unsupported_gcc_versions(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 12),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (ICPX, "2022.3"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 12),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
+                ((HOST_COMPILER, GCC, 12), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((HOST_COMPILER, ICPX, "2022.3"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
+                ((HOST_COMPILER, GCC, 12), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (ICPX, "2022.3"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 12),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
+                ((HOST_COMPILER, ICPX, "2022.3"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
+                ((HOST_COMPILER, GCC, 12), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -1860,57 +1289,22 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_cuda_sdk_unsupported_clang_versions(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 15),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (ICPX, "2022.3"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 12),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
+                ((HOST_COMPILER, CLANG, 15), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((HOST_COMPILER, ICPX, "2022.3"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
+                ((HOST_COMPILER, CLANG, 12), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (ICPX, "2022.3"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 12),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((HOST_COMPILER, CLANG, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
+                ((HOST_COMPILER, ICPX, "2022.3"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
+                ((HOST_COMPILER, CLANG, 12), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -1923,63 +1317,23 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_device_compiler_gcc_clang_enabled_cuda_backend(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        DEVICE_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG, 15),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2022.3"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG, 12),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((DEVICE_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
+                ((DEVICE_COMPILER, CLANG, 15), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((DEVICE_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, ICPX, "2022.3"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
+                ((DEVICE_COMPILER, CLANG, 12), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        DEVICE_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2022.3"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG, 12),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((DEVICE_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, ICPX, "2022.3"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
+                ((DEVICE_COMPILER, CLANG, 12), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -1991,130 +1345,52 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_specific_cuda_clang_combinations(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = [
+            create_parameter_value_pair(
+                HOST_COMPILER, CLANG_CUDA, 16, ALPAKA_ACC_GPU_CUDA_ENABLE, CLANG_CUDA, 16
+            )
+        ] + parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 16), ALPAKA_ACC_GPU_CUDA_ENABLE: (CLANG_CUDA, 16)}),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4),
-                    }
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
+                ((HOST_COMPILER, CLANG, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((HOST_COMPILER, CLANG, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
+                ((HOST_COMPILER, CLANG, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
+                ((HOST_COMPILER, CLANG, 11), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
+                ((HOST_COMPILER, CLANG, 18), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
+                ((HOST_COMPILER, CLANG, 14), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.5)),
+                ((HOST_COMPILER, CLANG, 13), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.6)),
+                ((HOST_COMPILER, CLANG, 17), (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
+                ((HOST_COMPILER, CLANG, 7), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.3)),
+                (
+                    (
+                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
+                        ON,
+                    ),
+                    (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
                 ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 11),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 18),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 14),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.5),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 13),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.6),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 17),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 7),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.3),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = [
+            create_parameter_value_pair(
+                HOST_COMPILER, CLANG_CUDA, 16, ALPAKA_ACC_GPU_CUDA_ENABLE, CLANG_CUDA, 16
+            )
+        ] + parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (CLANG_CUDA, 16),
-                    }
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
+                ((HOST_COMPILER, CLANG, 10), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((HOST_COMPILER, CLANG, 13), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.6)),
+                ((HOST_COMPILER, CLANG, 17), (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
+                ((HOST_COMPILER, CLANG, 7), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.3)),
+                (
+                    (
+                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
+                        ON,
+                    ),
+                    (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
                 ),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 10),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 13),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.6),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 17),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG, 7),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.3),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.2),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -2143,193 +1419,88 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         self.assertIsInstance(unsupported_new_cuda_sdk_version, float)
         unsupported_new_cuda_sdk_version = float(unsupported_new_cuda_sdk_version) + 1.0
 
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, 14),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, 15),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, 15),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.5),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 15),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                    }
-                ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0),
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2022.3"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, 12),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, 17),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, 17),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.3),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((DEVICE_COMPILER, CLANG_CUDA, 14), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 15), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 15), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.5)),
+                ((HOST_COMPILER, CLANG_CUDA, 15), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
+                ((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8), (HOST_COMPILER, CLANG_CUDA, 16)),
+                ((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0), (HOST_COMPILER, CLANG_CUDA, 16)),
+                ((DEVICE_COMPILER, ICPX, "2022.3"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 12), (ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 17), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 17), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.3)),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
                 # clang-cuda 6 is not supported but clang-cuda 7 supports up to CUDA 9.2
                 # therefore there is a chance that clang-cuda 6 also supports CUDA 9.2
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_old_clang_cuda_version),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 9.2),
-                    }
+                (
+                    (DEVICE_COMPILER, CLANG_CUDA, unsupported_old_clang_cuda_version),
+                    (ALPAKA_ACC_GPU_CUDA_ENABLE, 9.2),
                 ),
                 # clang-cuda 6 is not supported but clang-cuda 7 supports up to CUDA 9.2
                 # therefore there is no chance, that clang-cuda 6 supports CUDA 10.0
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_old_clang_cuda_version),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.0),
-                    }
+                (
+                    (DEVICE_COMPILER, CLANG_CUDA, unsupported_old_clang_cuda_version),
+                    (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.0),
                 ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_new_clang_cuda_version),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.0),
-                    }
+                (
+                    (DEVICE_COMPILER, CLANG_CUDA, unsupported_new_clang_cuda_version),
+                    (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.0),
                 ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_new_clang_cuda_version),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (
-                            ALPAKA_ACC_GPU_CUDA_ENABLE,
-                            sorted(VERSIONS[NVCC])[-1],
-                        ),
-                    }
+                (
+                    (DEVICE_COMPILER, CLANG_CUDA, unsupported_new_clang_cuda_version),
+                    (
+                        ALPAKA_ACC_GPU_CUDA_ENABLE,
+                        sorted(VERSIONS[NVCC])[-1],
+                    ),
                 ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_new_clang_cuda_version),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (
-                            ALPAKA_ACC_GPU_CUDA_ENABLE,
-                            unsupported_new_cuda_sdk_version,
-                        ),
-                    }
+                (
+                    (DEVICE_COMPILER, CLANG_CUDA, unsupported_new_clang_cuda_version),
+                    (
+                        ALPAKA_ACC_GPU_CUDA_ENABLE,
+                        unsupported_new_cuda_sdk_version,
+                    ),
                 ),
             ]
         )
 
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, 15),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2),
-                    }
+                ((DEVICE_COMPILER, CLANG_CUDA, 15), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 15), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.5)),
+                ((HOST_COMPILER, CLANG_CUDA, 16), (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
+                (
+                    (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
+                    (HOST_COMPILER, CLANG_CUDA, 16),
                 ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, 15),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.5),
-                    }
+                ((DEVICE_COMPILER, ICPX, "2022.3"), (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3)),
+                ((DEVICE_COMPILER, CLANG_CUDA, 17), (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
+                (
+                    (DEVICE_COMPILER, CLANG_CUDA, unsupported_old_clang_cuda_version),
+                    (ALPAKA_ACC_GPU_CUDA_ENABLE, 9.2),
                 ),
-                OD(
-                    {
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1),
-                    }
+                (
+                    (DEVICE_COMPILER, CLANG_CUDA, unsupported_new_clang_cuda_version),
+                    (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.0),
                 ),
-                OD(
-                    {
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8),
-                        HOST_COMPILER: (CLANG_CUDA, 16),
-                    }
+                (
+                    (DEVICE_COMPILER, CLANG_CUDA, unsupported_new_clang_cuda_version),
+                    (
+                        ALPAKA_ACC_GPU_CUDA_ENABLE,
+                        sorted(VERSIONS[NVCC])[-1],
+                    ),
                 ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (ICPX, "2022.3"),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 11.3),
-                    }
+                (
+                    (DEVICE_COMPILER, CLANG_CUDA, unsupported_new_clang_cuda_version),
+                    (
+                        ALPAKA_ACC_GPU_CUDA_ENABLE,
+                        unsupported_new_cuda_sdk_version,
+                    ),
                 ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, 17),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_old_clang_cuda_version),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 9.2),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_new_clang_cuda_version),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (ALPAKA_ACC_GPU_CUDA_ENABLE, 10.0),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_new_clang_cuda_version),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (
-                            ALPAKA_ACC_GPU_CUDA_ENABLE,
-                            sorted(VERSIONS[NVCC])[-1],
-                        ),
-                    }
-                ),
-                OD(
-                    {
-                        DEVICE_COMPILER: (CLANG_CUDA, unsupported_new_clang_cuda_version),
-                        ALPAKA_ACC_GPU_CUDA_ENABLE: (
-                            ALPAKA_ACC_GPU_CUDA_ENABLE,
-                            unsupported_new_cuda_sdk_version,
-                        ),
-                    }
-                ),
-                OD({CMAKE: (CMAKE, 3.23), BOOST: (BOOST, 1.83)}),
+                ((CMAKE, 3.23), (BOOST, 1.83)),
             ]
         )
 
@@ -2342,44 +1513,44 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_unsupported_gcc_versions_for_ubuntu2004_and_later(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({DEVICE_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "20.04")}),
-                OD({HOST_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "20.04")}),
-                OD({DEVICE_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "22.04")}),
-                OD({HOST_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "22.04")}),
-                OD({HOST_COMPILER: (GCC, 3), UBUNTU: (UBUNTU, "22.04")}),
-                OD({HOST_COMPILER: (GCC, 12), UBUNTU: (UBUNTU, "22.04")}),
-                OD({HOST_COMPILER: (GCC, 7), UBUNTU: (UBUNTU, "20.04")}),
-                OD({HOST_COMPILER: (GCC, 3), UBUNTU: (UBUNTU, "20.04")}),
-                OD({HOST_COMPILER: (GCC, 13), UBUNTU: (UBUNTU, "20.04")}),
-                OD({HOST_COMPILER: (GCC, 99), UBUNTU: (UBUNTU, "20.04")}),
-                OD({DEVICE_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "18.04")}),
-                OD({DEVICE_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "18.04")}),
-                OD({HOST_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "18.04")}),
-                OD({HOST_COMPILER: (GCC, 7), UBUNTU: (UBUNTU, "18.04")}),
-                OD({HOST_COMPILER: (GCC, 3), UBUNTU: (UBUNTU, "18.04")}),
-                OD({HOST_COMPILER: (GCC, 6), DEVICE_COMPILER: (GCC, 6)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 6), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 3), DEVICE_COMPILER: (NVCC, 12.2)}),
+                ((DEVICE_COMPILER, GCC, 6), (UBUNTU, "20.04")),
+                ((HOST_COMPILER, GCC, 6), (UBUNTU, "20.04")),
+                ((DEVICE_COMPILER, GCC, 6), (UBUNTU, "22.04")),
+                ((HOST_COMPILER, GCC, 6), (UBUNTU, "22.04")),
+                ((HOST_COMPILER, GCC, 3), (UBUNTU, "22.04")),
+                ((HOST_COMPILER, GCC, 12), (UBUNTU, "22.04")),
+                ((HOST_COMPILER, GCC, 7), (UBUNTU, "20.04")),
+                ((HOST_COMPILER, GCC, 3), (UBUNTU, "20.04")),
+                ((HOST_COMPILER, GCC, 13), (UBUNTU, "20.04")),
+                ((HOST_COMPILER, GCC, 99), (UBUNTU, "20.04")),
+                ((DEVICE_COMPILER, GCC, 6), (UBUNTU, "18.04")),
+                ((DEVICE_COMPILER, GCC, 6), (UBUNTU, "18.04")),
+                ((HOST_COMPILER, GCC, 6), (UBUNTU, "18.04")),
+                ((HOST_COMPILER, GCC, 7), (UBUNTU, "18.04")),
+                ((HOST_COMPILER, GCC, 3), (UBUNTU, "18.04")),
+                ((HOST_COMPILER, GCC, 6), (DEVICE_COMPILER, GCC, 6)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 6), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 3), (DEVICE_COMPILER, NVCC, 12.2)),
             ]
         )
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (GCC, 7), UBUNTU: (UBUNTU, "20.04")}),
-                OD({HOST_COMPILER: (GCC, 12), UBUNTU: (UBUNTU, "22.04")}),
-                OD({HOST_COMPILER: (GCC, 13), UBUNTU: (UBUNTU, "20.04")}),
-                OD({HOST_COMPILER: (GCC, 99), UBUNTU: (UBUNTU, "20.04")}),
-                OD({DEVICE_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "18.04")}),
-                OD({HOST_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "18.04")}),
-                OD({DEVICE_COMPILER: (GCC, 6), UBUNTU: (UBUNTU, "18.04")}),
-                OD({HOST_COMPILER: (GCC, 7), UBUNTU: (UBUNTU, "18.04")}),
-                OD({HOST_COMPILER: (GCC, 3), UBUNTU: (UBUNTU, "18.04")}),
-                OD({HOST_COMPILER: (GCC, 6), DEVICE_COMPILER: (GCC, 6)}),
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 6), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({HOST_COMPILER: (GCC, 3), DEVICE_COMPILER: (NVCC, 12.2)}),
+                ((HOST_COMPILER, GCC, 7), (UBUNTU, "20.04")),
+                ((HOST_COMPILER, GCC, 12), (UBUNTU, "22.04")),
+                ((HOST_COMPILER, GCC, 13), (UBUNTU, "20.04")),
+                ((HOST_COMPILER, GCC, 99), (UBUNTU, "20.04")),
+                ((DEVICE_COMPILER, GCC, 6), (UBUNTU, "18.04")),
+                ((HOST_COMPILER, GCC, 6), (UBUNTU, "18.04")),
+                ((DEVICE_COMPILER, GCC, 6), (UBUNTU, "18.04")),
+                ((HOST_COMPILER, GCC, 7), (UBUNTU, "18.04")),
+                ((HOST_COMPILER, GCC, 3), (UBUNTU, "18.04")),
+                ((HOST_COMPILER, GCC, 6), (DEVICE_COMPILER, GCC, 6)),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 6), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((HOST_COMPILER, GCC, 3), (DEVICE_COMPILER, NVCC, 12.2)),
             ]
         )
         default_remove_test(
@@ -2395,44 +1566,44 @@ class TestExpectedBashiParameterValuesPairsNvccCudaBackend(unittest.TestCase):
         )
 
     def test_remove_unsupported_cmake_versions_for_clangcuda(self):
-        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_param_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.19")}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.20")}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 15), CMAKE: (CMAKE, "3.18")}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.21")}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.26")}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 12), CMAKE: (CMAKE, "3.18")}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.46")}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 12), CMAKE: (CMAKE, "3.1")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 12), CMAKE: (CMAKE, "3.18")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.19")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 15), CMAKE: (CMAKE, "3.20")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.14")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.12")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.9")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 17), CMAKE: (CMAKE, "3.19")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.17")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.26")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.30")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 16), CMAKE: (CMAKE, "3.40")}),
-                OD({HOST_COMPILER: (GCC, 12), UBUNTU: (UBUNTU, "22.04")}),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
+                ((HOST_COMPILER, CLANG_CUDA, 13), (CMAKE, "3.20")),
+                ((HOST_COMPILER, CLANG_CUDA, 15), (CMAKE, "3.18")),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.21")),
+                ((HOST_COMPILER, CLANG_CUDA, 13), (CMAKE, "3.26")),
+                ((HOST_COMPILER, CLANG_CUDA, 12), (CMAKE, "3.18")),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.46")),
+                ((HOST_COMPILER, CLANG_CUDA, 12), (CMAKE, "3.1")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 12), (CMAKE, "3.18")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 15), (CMAKE, "3.20")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 13), (CMAKE, "3.14")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 13), (CMAKE, "3.12")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.9")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 17), (CMAKE, "3.19")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.17")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 13), (CMAKE, "3.26")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 13), (CMAKE, "3.30")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 16), (CMAKE, "3.40")),
+                ((HOST_COMPILER, GCC, 12), (UBUNTU, "22.04")),
             ]
         )
-        expected_results = parse_expected_val_pairs(
+        expected_results = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.19")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.19")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 17), CMAKE: (CMAKE, "3.19")}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.20")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.30")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 16), CMAKE: (CMAKE, "3.40")}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.21")}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.26")}),
-                OD({HOST_COMPILER: (CLANG_CUDA, 14), CMAKE: (CMAKE, "3.46")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 15), CMAKE: (CMAKE, "3.20")}),
-                OD({DEVICE_COMPILER: (CLANG_CUDA, 13), CMAKE: (CMAKE, "3.26")}),
-                OD({HOST_COMPILER: (GCC, 12), UBUNTU: (UBUNTU, 22.04)}),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.19")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 17), (CMAKE, "3.19")),
+                ((HOST_COMPILER, CLANG_CUDA, 13), (CMAKE, "3.20")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 13), (CMAKE, "3.30")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 16), (CMAKE, "3.40")),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.21")),
+                ((HOST_COMPILER, CLANG_CUDA, 13), (CMAKE, "3.26")),
+                ((HOST_COMPILER, CLANG_CUDA, 14), (CMAKE, "3.46")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 15), (CMAKE, "3.20")),
+                ((DEVICE_COMPILER, CLANG_CUDA, 13), (CMAKE, "3.26")),
+                ((HOST_COMPILER, GCC, 12), (UBUNTU, 22.04)),
             ]
         )
         default_remove_test(

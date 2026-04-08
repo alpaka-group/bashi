@@ -1,7 +1,6 @@
 # pylint: disable=missing-docstring
 import unittest
 from typing import List, Union, Tuple
-from collections import OrderedDict as OD
 from packaging.specifiers import SpecifierSet
 import packaging.version as pkv
 from copy import deepcopy
@@ -12,7 +11,10 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.types import ParameterValuePair
 from bashi.utils import _create_version_range, remove_parameter_value_pairs_ranges
 
-from utils_test import parse_expected_val_pairs, create_diff_parameter_value_pairs
+from utils_test import (
+    parse_expected_val_pairs2,
+    create_diff_parameter_value_pairs,
+)
 
 
 def bool_map(length: int):
@@ -167,71 +169,55 @@ class TestCreateVersionRange(unittest.TestCase):
 class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.parameter_test_data: List[ParameterValuePair] = parse_expected_val_pairs(
+        cls.parameter_test_data: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                    }
-                ),
-                OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
-                OD({DEVICE_COMPILER: (HIPCC, 6.2), HOST_COMPILER: (HIPCC, 6.2)}),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, ON)),
+                ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                ((CMAKE, "3.19"), (UBUNTU, 3.19)),
+                ((DEVICE_COMPILER, HIPCC, 6.2), (HOST_COMPILER, HIPCC, 6.2)),
             ]
         )
         # reuse data for parameter-value-names
         cls.name_test_data = cls.parameter_test_data
 
-        cls.version_test_data: List[ParameterValuePair] = parse_expected_val_pairs(
+        cls.version_test_data: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
-                OD({DEVICE_COMPILER: (HIPCC, 6.2), HOST_COMPILER: (HIPCC, 6.2)}),
-                OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.5)}),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                ((CMAKE, "3.19"), (UBUNTU, 3.19)),
+                ((DEVICE_COMPILER, HIPCC, 6.2), (HOST_COMPILER, HIPCC, 6.2)),
+                ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.5)),
                 # corner case GCC min version
-                OD({HOST_COMPILER: (GCC, 8), DEVICE_COMPILER: (NVCC, 11.5)}),
-                OD({HOST_COMPILER: (GCC, 7), DEVICE_COMPILER: (NVCC, 11.5)}),
-                OD({HOST_COMPILER: (GCC, 12), DEVICE_COMPILER: (NVCC, 11.5)}),
+                ((HOST_COMPILER, GCC, 8), (DEVICE_COMPILER, NVCC, 11.5)),
+                ((HOST_COMPILER, GCC, 7), (DEVICE_COMPILER, NVCC, 11.5)),
+                ((HOST_COMPILER, GCC, 12), (DEVICE_COMPILER, NVCC, 11.5)),
                 # corner case GCC max version
-                OD({HOST_COMPILER: (GCC, 13), DEVICE_COMPILER: (NVCC, 11.5)}),
-                OD({HOST_COMPILER: (GCC, 14), DEVICE_COMPILER: (NVCC, 11.5)}),
-                OD({HOST_COMPILER: (GCC, 4), DEVICE_COMPILER: (NVCC, 11.5)}),
-                OD({HOST_COMPILER: (GCC, 4), DEVICE_COMPILER: (NVCC, 10.2)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
+                ((HOST_COMPILER, GCC, 13), (DEVICE_COMPILER, NVCC, 11.5)),
+                ((HOST_COMPILER, GCC, 14), (DEVICE_COMPILER, NVCC, 11.5)),
+                ((HOST_COMPILER, GCC, 4), (DEVICE_COMPILER, NVCC, 11.5)),
+                ((HOST_COMPILER, GCC, 4), (DEVICE_COMPILER, NVCC, 10.2)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.2)),
                 # corner case NVCC min version
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.3)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.4)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.6)}),
-                # corner case NVCC max version
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.7)}),
-                OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.8)}),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.3)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.4)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.6)),
+                # # corner case NVCC max version
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.7)),
+                ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.8)),
             ]
         )
 
     def test_remove_parameter_value_pairs_ranges_all_any(self):
-        test_parameter_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs(
+        test_parameter_value_pairs: List[ParameterValuePair] = parse_expected_val_pairs2(
             [
-                OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                OD(
-                    {
-                        HOST_COMPILER: (GCC, 10),
-                        ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE: (
-                            ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE,
-                            ON,
-                        ),
-                    }
-                ),
-                OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
+                ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, ON)),
+                ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                ((CMAKE, "3.19"), (UBUNTU, 3.19)),
             ]
         )
 
@@ -250,11 +236,11 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_remove_first_parameter(self):
         symmetric_test_data = deepcopy(self.parameter_test_data)
         symmetric_expected_result = sorted(
-            parse_expected_val_pairs(
+            parse_expected_val_pairs2(
                 [
-                    OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                    OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                    OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
+                    ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                    ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                    ((CMAKE, "3.19"), (UBUNTU, 3.19)),
                 ]
             )
         )
@@ -283,12 +269,12 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
 
         non_symmetric_test_data = deepcopy(self.parameter_test_data)
         non_symmetric_expected_result = sorted(
-            parse_expected_val_pairs(
+            parse_expected_val_pairs2(
                 [
-                    OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                    OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                    OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
-                    OD({DEVICE_COMPILER: (HIPCC, 6.2), HOST_COMPILER: (HIPCC, 6.2)}),
+                    ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                    ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                    ((CMAKE, "3.19"), (UBUNTU, 3.19)),
+                    ((DEVICE_COMPILER, HIPCC, 6.2), (HOST_COMPILER, HIPCC, 6.2)),
                 ]
             )
         )
@@ -320,19 +306,11 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_remove_second_parameter(self):
         symmetric_test_data = deepcopy(self.parameter_test_data)
         symmetric_expected_result = sorted(
-            parse_expected_val_pairs(
+            parse_expected_val_pairs2(
                 [
-                    OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                    OD(
-                        {
-                            HOST_COMPILER: (GCC, 10),
-                            ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE: (
-                                ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE,
-                                ON,
-                            ),
-                        }
-                    ),
-                    OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
+                    ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                    ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, ON)),
+                    ((CMAKE, "3.19"), (UBUNTU, 3.19)),
                 ]
             )
         )
@@ -361,20 +339,12 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
 
         non_symmetric_test_data = deepcopy(self.parameter_test_data)
         non_symmetric_expected_result = sorted(
-            parse_expected_val_pairs(
+            parse_expected_val_pairs2(
                 [
-                    OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                    OD(
-                        {
-                            HOST_COMPILER: (GCC, 10),
-                            ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE: (
-                                ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE,
-                                ON,
-                            ),
-                        }
-                    ),
-                    OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
-                    OD({DEVICE_COMPILER: (HIPCC, 6.2), HOST_COMPILER: (HIPCC, 6.2)}),
+                    ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                    ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, ON)),
+                    ((CMAKE, "3.19"), (UBUNTU, 3.19)),
+                    ((DEVICE_COMPILER, HIPCC, 6.2), (HOST_COMPILER, HIPCC, 6.2)),
                 ]
             )
         )
@@ -409,20 +379,12 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_remove_both_parameter(self):
         test_data = deepcopy(self.parameter_test_data)
         expected_result = sorted(
-            parse_expected_val_pairs(
+            parse_expected_val_pairs2(
                 [
-                    OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                    OD(
-                        {
-                            HOST_COMPILER: (GCC, 10),
-                            ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE: (
-                                ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE,
-                                ON,
-                            ),
-                        }
-                    ),
-                    OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                    OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
+                    ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                    ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, ON)),
+                    ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                    ((CMAKE, "3.19"), (UBUNTU, 3.19)),
                 ]
             )
         )
@@ -450,12 +412,12 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_remove_single_name(self):
         test_data = deepcopy(self.name_test_data)
         expected_result = sorted(
-            parse_expected_val_pairs(
+            parse_expected_val_pairs2(
                 [
-                    OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                    OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                    OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
-                    OD({DEVICE_COMPILER: (HIPCC, 6.2), HOST_COMPILER: (HIPCC, 6.2)}),
+                    ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                    ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                    ((CMAKE, "3.19"), (UBUNTU, 3.19)),
+                    ((DEVICE_COMPILER, HIPCC, 6.2), (HOST_COMPILER, HIPCC, 6.2)),
                 ]
             )
         )
@@ -503,21 +465,13 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_remove_both_name(self):
         test_data = deepcopy(self.name_test_data)
         expected_result = sorted(
-            parse_expected_val_pairs(
+            parse_expected_val_pairs2(
                 [
-                    OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                    OD(
-                        {
-                            HOST_COMPILER: (GCC, 10),
-                            ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE: (
-                                ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE,
-                                ON,
-                            ),
-                        }
-                    ),
-                    OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                    OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
-                    OD({DEVICE_COMPILER: (HIPCC, 6.2), HOST_COMPILER: (HIPCC, 6.2)}),
+                    ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                    ((HOST_COMPILER, GCC, 10), (ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE, ON)),
+                    ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                    ((CMAKE, "3.19"), (UBUNTU, 3.19)),
+                    ((DEVICE_COMPILER, HIPCC, 6.2), (HOST_COMPILER, HIPCC, 6.2)),
                 ]
             )
         )
@@ -551,30 +505,30 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_single_version_min_open(self):
         for inclusive_max1 in (True, False):
             test_data = deepcopy(self.version_test_data)
-            expected_result = parse_expected_val_pairs(
+            expected_result = parse_expected_val_pairs2(
                 [
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                    OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                    OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
-                    OD({DEVICE_COMPILER: (HIPCC, 6.2), HOST_COMPILER: (HIPCC, 6.2)}),
-                    OD({HOST_COMPILER: (GCC, 9), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 12), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 13), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 14), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.3)}),
-                    OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.4)}),
-                    OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.6)}),
-                    OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.7)}),
-                    OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.8)}),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                    ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                    ((CMAKE, "3.19"), (UBUNTU, 3.19)),
+                    ((DEVICE_COMPILER, HIPCC, 6.2), (HOST_COMPILER, HIPCC, 6.2)),
+                    ((HOST_COMPILER, GCC, 9), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 12), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 13), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 14), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.3)),
+                    ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.4)),
+                    ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.6)),
+                    ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.7)),
+                    ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.8)),
                 ]
             )
 
             if not inclusive_max1:
-                expected_result += parse_expected_val_pairs(
+                expected_result += parse_expected_val_pairs2(
                     [
-                        OD({HOST_COMPILER: (GCC, 8), DEVICE_COMPILER: (NVCC, 11.5)}),
+                        ((HOST_COMPILER, GCC, 8), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
                 )
 
@@ -611,22 +565,22 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_single_version_max_open(self):
         for inclusive_min1 in (True, False):
             test_data = deepcopy(self.version_test_data)
-            expected_result = parse_expected_val_pairs(
+            expected_result = parse_expected_val_pairs2(
                 [
-                    OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                    OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                    OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
-                    OD({DEVICE_COMPILER: (HIPCC, 6.2), HOST_COMPILER: (HIPCC, 6.2)}),
-                    OD({HOST_COMPILER: (GCC, 7), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 4), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 4), DEVICE_COMPILER: (NVCC, 10.2)}),
+                    ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                    ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                    ((CMAKE, "3.19"), (UBUNTU, 3.19)),
+                    ((DEVICE_COMPILER, HIPCC, 6.2), (HOST_COMPILER, HIPCC, 6.2)),
+                    ((HOST_COMPILER, GCC, 7), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 4), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 4), (DEVICE_COMPILER, NVCC, 10.2)),
                 ]
             )
 
             if not inclusive_min1:
-                expected_result += parse_expected_val_pairs(
+                expected_result += parse_expected_val_pairs2(
                     [
-                        OD({HOST_COMPILER: (GCC, 8), DEVICE_COMPILER: (NVCC, 11.5)}),
+                        ((HOST_COMPILER, GCC, 8), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
                 )
 
@@ -663,30 +617,30 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_single_version_in_range(self):
         for inclusive_min1, inclusive_max1 in bool_map(2):
             test_data = deepcopy(self.version_test_data)
-            expected_result = parse_expected_val_pairs(
+            expected_result = parse_expected_val_pairs2(
                 [
-                    OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                    OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                    OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
-                    OD({DEVICE_COMPILER: (HIPCC, 6.2), HOST_COMPILER: (HIPCC, 6.2)}),
-                    OD({HOST_COMPILER: (GCC, 7), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 14), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 4), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 4), DEVICE_COMPILER: (NVCC, 10.2)}),
+                    ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                    ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                    ((CMAKE, "3.19"), (UBUNTU, 3.19)),
+                    ((DEVICE_COMPILER, HIPCC, 6.2), (HOST_COMPILER, HIPCC, 6.2)),
+                    ((HOST_COMPILER, GCC, 7), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 14), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 4), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 4), (DEVICE_COMPILER, NVCC, 10.2)),
                 ]
             )
 
             if not inclusive_min1:
-                expected_result += parse_expected_val_pairs(
+                expected_result += parse_expected_val_pairs2(
                     [
-                        OD({HOST_COMPILER: (GCC, 8), DEVICE_COMPILER: (NVCC, 11.5)}),
+                        ((HOST_COMPILER, GCC, 8), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
                 )
 
             if not inclusive_max1:
-                expected_result += parse_expected_val_pairs(
+                expected_result += parse_expected_val_pairs2(
                     [
-                        OD({HOST_COMPILER: (GCC, 13), DEVICE_COMPILER: (NVCC, 11.5)}),
+                        ((HOST_COMPILER, GCC, 13), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
                 )
 
@@ -726,30 +680,30 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_both_version_open(self):
         for inclusive_min1, inclusive_max2 in bool_map(2):
             test_data = deepcopy(self.version_test_data)
-            expected_result = parse_expected_val_pairs(
+            expected_result = parse_expected_val_pairs2(
                 [
-                    OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                    OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                    OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
-                    OD({DEVICE_COMPILER: (HIPCC, 6.2), HOST_COMPILER: (HIPCC, 6.2)}),
-                    OD({HOST_COMPILER: (GCC, 7), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 4), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 4), DEVICE_COMPILER: (NVCC, 10.2)}),
-                    OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.8)}),
+                    ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                    ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                    ((CMAKE, "3.19"), (UBUNTU, 3.19)),
+                    ((DEVICE_COMPILER, HIPCC, 6.2), (HOST_COMPILER, HIPCC, 6.2)),
+                    ((HOST_COMPILER, GCC, 7), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 4), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 4), (DEVICE_COMPILER, NVCC, 10.2)),
+                    ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.8)),
                 ]
             )
 
             if not inclusive_min1:
-                expected_result += parse_expected_val_pairs(
+                expected_result += parse_expected_val_pairs2(
                     [
-                        OD({HOST_COMPILER: (GCC, 8), DEVICE_COMPILER: (NVCC, 11.5)}),
+                        ((HOST_COMPILER, GCC, 8), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
                 )
 
             if not inclusive_max2:
-                expected_result += parse_expected_val_pairs(
+                expected_result += parse_expected_val_pairs2(
                     [
-                        OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.7)}),
+                        ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.7)),
                     ]
                 )
 
@@ -789,47 +743,47 @@ class TestRemoveParameterValuePairsRanges(unittest.TestCase):
     def test_remove_parameter_value_pairs_ranges_both_version_in_range(self):
         for inclusive_min1, inclusive_max1, inclusive_min2, inclusive_max2 in bool_map(4):
             test_data = deepcopy(self.version_test_data)
-            expected_result = parse_expected_val_pairs(
+            expected_result = parse_expected_val_pairs2(
                 [
-                    OD({HOST_COMPILER: (GCC, 10), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({UBUNTU: (UBUNTU, "20.04"), CMAKE: (CMAKE, "3.19")}),
-                    OD({BOOST: (BOOST, "1.81.1"), DEVICE_COMPILER: (GCC, 11)}),
-                    OD({CMAKE: (CMAKE, "3.19"), UBUNTU: (UBUNTU, 3.19)}),
-                    OD({DEVICE_COMPILER: (HIPCC, 6.2), HOST_COMPILER: (HIPCC, 6.2)}),
-                    OD({HOST_COMPILER: (GCC, 7), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 14), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 4), DEVICE_COMPILER: (NVCC, 11.5)}),
-                    OD({HOST_COMPILER: (GCC, 4), DEVICE_COMPILER: (NVCC, 10.2)}),
-                    OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.2)}),
-                    OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.8)}),
+                    ((HOST_COMPILER, GCC, 10), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((UBUNTU, "20.04"), (CMAKE, "3.19")),
+                    ((BOOST, "1.81.1"), (DEVICE_COMPILER, GCC, 11)),
+                    ((CMAKE, "3.19"), (UBUNTU, 3.19)),
+                    ((DEVICE_COMPILER, HIPCC, 6.2), (HOST_COMPILER, HIPCC, 6.2)),
+                    ((HOST_COMPILER, GCC, 7), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 14), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 4), (DEVICE_COMPILER, NVCC, 11.5)),
+                    ((HOST_COMPILER, GCC, 4), (DEVICE_COMPILER, NVCC, 10.2)),
+                    ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.2)),
+                    ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.8)),
                 ]
             )
 
             if not inclusive_min1:
-                expected_result += parse_expected_val_pairs(
+                expected_result += parse_expected_val_pairs2(
                     [
-                        OD({HOST_COMPILER: (GCC, 8), DEVICE_COMPILER: (NVCC, 11.5)}),
+                        ((HOST_COMPILER, GCC, 8), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
                 )
 
             if not inclusive_max1:
-                expected_result += parse_expected_val_pairs(
+                expected_result += parse_expected_val_pairs2(
                     [
-                        OD({HOST_COMPILER: (GCC, 13), DEVICE_COMPILER: (NVCC, 11.5)}),
+                        ((HOST_COMPILER, GCC, 13), (DEVICE_COMPILER, NVCC, 11.5)),
                     ]
                 )
 
             if not inclusive_min2:
-                expected_result += parse_expected_val_pairs(
+                expected_result += parse_expected_val_pairs2(
                     [
-                        OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.3)}),
+                        ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.3)),
                     ]
                 )
 
             if not inclusive_max2:
-                expected_result += parse_expected_val_pairs(
+                expected_result += parse_expected_val_pairs2(
                     [
-                        OD({HOST_COMPILER: (GCC, 11), DEVICE_COMPILER: (NVCC, 11.7)}),
+                        ((HOST_COMPILER, GCC, 11), (DEVICE_COMPILER, NVCC, 11.7)),
                     ]
                 )
 
