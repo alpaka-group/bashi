@@ -1,11 +1,10 @@
 # pylint: disable=missing-docstring
 import unittest
 from typing import List
-from collections import OrderedDict as OD
 from utils_test import parse_expected_val_pairs, create_diff_parameter_value_pairs
 
-from bashi.utils import bi_filter
-from bashi.types import ParameterValuePair
+from bashi.utils import bi_filter, parse_value_version, parse_parameter_single, parse_combination
+from bashi.types import ParameterValue, ParameterValueSingle, ParameterValuePair, Combination
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
@@ -70,3 +69,67 @@ class TestBiFilter(unittest.TestCase):
             unexpected_result,
             create_diff_parameter_value_pairs(removed_elements, unexpected_result),
         )
+
+
+class TestParameterParser(unittest.TestCase):
+    def test_value_version_str(self):
+        self.assertEqual(parse_value_version("3.14"), packaging.version.parse("3.14"))
+
+    def test_value_version_int(self):
+        self.assertEqual(parse_value_version(7), packaging.version.parse("7"))
+
+    def test_value_version_float(self):
+        self.assertEqual(parse_value_version(8.09), packaging.version.parse("8.09"))
+
+    def test_value_version_version(self):
+        self.assertEqual(
+            parse_value_version(packaging.version.parse("45.34")), packaging.version.parse("45.34")
+        )
+
+    def test_parse_parameter_single_two_values(self):
+        self.assertEqual(
+            parse_parameter_single((CMAKE, 3.14)),
+            ParameterValueSingle(CMAKE, ParameterValue(CMAKE, packaging.version.parse("3.14"))),
+        )
+
+        self.assertEqual(
+            parse_parameter_single((UBUNTU, "22.04")),
+            ParameterValueSingle(UBUNTU, ParameterValue(UBUNTU, packaging.version.parse("22.04"))),
+        )
+
+    def test_parse_parameter_single_three_values(self):
+        self.assertEqual(
+            parse_parameter_single((HOST_COMPILER, GCC, 7)),
+            ParameterValueSingle(HOST_COMPILER, ParameterValue(GCC, packaging.version.parse("7"))),
+        )
+
+        clang_version = packaging.version.parse("17")
+        self.assertEqual(
+            parse_parameter_single((DEVICE_COMPILER, CLANG, clang_version)),
+            ParameterValueSingle(DEVICE_COMPILER, ParameterValue(CLANG, clang_version)),
+        )
+
+    def test_parse_combination(self):
+        self.assertEqual(len(parse_combination([])), 0)
+
+        comb = parse_combination(
+            [
+                (HOST_COMPILER, GCC, 7),
+                (CMAKE, 3.14),
+                (UBUNTU, "22.04"),
+                (DEVICE_COMPILER, CLANG, packaging.version.parse("17")),
+            ]
+        )
+
+        self.assertEqual(len(comb), 4)
+
+        expected_comb = Combination(
+            {
+                HOST_COMPILER: ParameterValue(GCC, packaging.version.parse(str(7))),
+                CMAKE: ParameterValue(CMAKE, packaging.version.parse(str(3.14))),
+                UBUNTU: ParameterValue(UBUNTU, packaging.version.parse("22.04")),
+                DEVICE_COMPILER: ParameterValue(CLANG, packaging.version.parse("17")),
+            }
+        )
+
+        self.assertEqual(comb, expected_comb)
