@@ -2,11 +2,10 @@
 
 from typing import Dict, Callable, IO
 import packaging.version as pkv
-from bashi.types import ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter import FilterBase
 from bashi.version.dependencies.nvcc import NvccHostSupport
-from bashi import VersionRelation
+from bashi import VersionRelation, BashiRow
 
 from .globals import BUILD_TYPE, CMAKE_RELEASE_VER
 
@@ -28,12 +27,12 @@ class ExampleFilter(FilterBase):
     # pylint: disable=too-many-locals
     def __call__(
         self,
-        row: ParameterValueTuple,
+        row: BashiRow,
     ) -> bool:
         """Check if given parameter-value-tuple is valid
 
         Args:
-            row (ParameterValueTuple): parameter-value-tuple to verify.
+            row (BashiRow): parameter-value-tuple to verify.
 
         Returns:
             bool: True, if parameter-value-tuple is valid.

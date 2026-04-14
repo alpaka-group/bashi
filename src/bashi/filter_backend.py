@@ -11,9 +11,9 @@ from typing import Dict, Optional, IO, Callable
 import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.types import ParameterValueTuple
 from bashi.version.relation import VersionRelation
 from bashi.filter import FilterBase
+from bashi.row import BashiRow
 
 
 # pylint: disable=too-many-branches
@@ -33,12 +33,12 @@ class BackendFilter(FilterBase):
 
     def __call__(
         self,
-        row: ParameterValueTuple,
+        row: BashiRow,
     ) -> bool:
         """Check if given parameter-value-tuple is valid
 
         Args:
-            row (ParameterValueTuple): parameter-value-tuple to verify.
+            row (BashiRow): parameter-value-tuple to verify.
 
         Returns:
             bool: True, if parameter-value-tuple is valid.
@@ -237,7 +237,7 @@ class BackendFilter(FilterBase):
 
 @typechecked
 def backend_filter_typechecked(
-    row: ParameterValueTuple,
+    row: BashiRow,
     version_relation: VersionRelation,
     output: Optional[IO[str]] = None,
 ) -> bool:

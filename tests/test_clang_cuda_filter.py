@@ -2,11 +2,11 @@
 import unittest
 import io
 
-from collections import OrderedDict as OD
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter_compiler import compiler_filter_typechecked
 from bashi.version.relation import VersionRelation
+from bashi.row import BashiRow
 
 
 class TestClangCudaOldVersions(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestClangCudaOldVersions(unittest.TestCase):
         for clang_cuda_version in [14, 16, 18, 78]:
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((CLANG_CUDA, clang_cuda_version)),
                             DEVICE_COMPILER: ppv((CLANG_CUDA, clang_cuda_version)),
@@ -31,7 +31,7 @@ class TestClangCudaOldVersions(unittest.TestCase):
         for clang_cuda_version in [14, 16, 18, 78]:
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((CLANG_CUDA, clang_cuda_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -48,7 +48,7 @@ class TestClangCudaOldVersions(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((CLANG_CUDA, clang_cuda_version)),
                             DEVICE_COMPILER: ppv((CLANG_CUDA, clang_cuda_version)),
@@ -68,7 +68,7 @@ class TestClangCudaOldVersions(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((CLANG_CUDA, clang_cuda_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),

@@ -7,19 +7,20 @@ These identifiers are used in the test names, for example, to make it clear whic
 which rule.
 """
 
-from typing import Dict, Optional, IO, List, Callable
+from typing import Dict, Optional, IO, List, Callable, cast
 import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.types import ParameterValueTuple, Parameter, ValueName
+from bashi.types import Parameter, ValueName
 from bashi.version.dependencies.base_version_support import CompilerCxxSupport
 from bashi.version.relation import VersionRelation
 from bashi.filter import FilterBase
 from bashi.utils import reason
+from bashi.row import BashiRow
 
 
 def _remove_unsupported_compiler_cxx_combination(
-    row: ParameterValueTuple,
+    row: BashiRow,
     compiler_name: ValueName,
     compiler_type: Parameter,
     compiler_cxx_list: List[CompilerCxxSupport],
@@ -30,7 +31,7 @@ def _remove_unsupported_compiler_cxx_combination(
     Attention: Because of performance reasons, does not check if CXX_STANDARD is in the row.
 
     Args:
-        row (ParameterValueTuple): current row with parameter value
+        row (BashiRow): current row with parameter value
         compiler_name (ValueName): name of the compiler
         compiler_type (Parameter): HOST_COMPILER or DEVICE_COMPILER
         compiler_cxx_list (List[CompilerCxxSupport]): list containing which compiler version added
@@ -158,12 +159,12 @@ class CompilerFilter(FilterBase):
 
     def __call__(
         self,
-        row: ParameterValueTuple,
+        row: BashiRow,
     ) -> bool:
         """Check if given parameter-value-tuple is valid
 
         Args:
-            row (ParameterValueTuple): parameter-value-tuple to verify.
+            row (BashiRow): parameter-value-tuple to verify.
 
         Returns:
             bool: True, if parameter-value-tuple is valid.
@@ -477,7 +478,7 @@ class CompilerFilter(FilterBase):
                     # C++ standard with the given CUDA SDK, we can return false before the host or
                     # device compiler was added to the row.
                     if row[CXX_STANDARD].version > _get_max_supported_cxx_version_for_cuda_sdk(
-                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
+                        cast(ValueVersion, row[ALPAKA_ACC_GPU_CUDA_ENABLE].version),
                         self.version.get_nvcc_cxx_support_version(),
                         self.version.get_max_cuda_sdk_cxx_support(),
                     ):
@@ -500,12 +501,12 @@ class CompilerFilter(FilterBase):
                     if row[
                         CXX_STANDARD
                     ].version > _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(
-                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
+                        cast(ValueVersion, row[ALPAKA_ACC_GPU_CUDA_ENABLE].version),
                         self.version.get_nvcc_cxx_support_version(),
                     ) and row[
                         CXX_STANDARD
                     ].version <= _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
-                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
+                        cast(ValueVersion, row[ALPAKA_ACC_GPU_CUDA_ENABLE].version),
                         self.version.get_max_cuda_sdk_cxx_support(),
                     ):
                         if (
@@ -544,7 +545,7 @@ class CompilerFilter(FilterBase):
 
 @typechecked
 def compiler_filter_typechecked(
-    row: ParameterValueTuple,
+    row: BashiRow,
     version_relation: VersionRelation,
     output: Optional[IO[str]] = None,
 ) -> bool:

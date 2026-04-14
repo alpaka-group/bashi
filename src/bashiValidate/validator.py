@@ -4,10 +4,9 @@ import io
 import sys
 from typing import Dict, List, Callable
 import termcolor
-from collections import OrderedDict
 import packaging.version
 from typeguard import typechecked
-from bashi.types import ParameterValue, ParameterValueTuple
+from bashi.types import ParameterValue
 from bashi.version.utils import is_supported_version
 from bashi.filter import FilterBase
 from bashi.filter_compiler import CompilerFilter
@@ -18,6 +17,7 @@ from bashi.version import VERSIONS
 from bashi.version.utils import get_parameter_value_matrix
 from bashi.version.relation import VersionRelation
 from bashi.generator import get_runtime_infos
+from bashi.row import BashiRow
 from .arguments import get_validator_args, ArgumentAlias, VersionCheck, AliasParser
 
 
@@ -162,14 +162,14 @@ class Validator:
     def _check_single_filter(
         self,
         filter_func: FilterBase,
-        row: ParameterValueTuple,
+        row: BashiRow,
     ) -> bool:
         """Check if row passes a filter function.
 
         Args:
-            filter_func (Callable[[ParameterValueTuple, Optional[IO[str]]], bool]): The filter
+            filter_func (Callable[[BashiRow, Optional[IO[str]]], bool]): The filter
                 function
-            row (ParameterValueTuple): row with parameter-value-tuples
+            row (BashiRow): row with parameter-value-tuples
             required_parameter (List[str]): list of parameters, which will be used in the filter
                 rule
 
@@ -191,11 +191,11 @@ class Validator:
         return False
 
     @typechecked
-    def _check_filter_chain(self, row: ParameterValueTuple) -> bool:
+    def _check_filter_chain(self, row: BashiRow) -> bool:
         """Test a row with the bashi default filter chain.
 
         Args:
-            row (ParameterValueTuple): row to test
+            row (BashiRow): row to test
 
         Returns:
             bool: True if row passes all filters
@@ -211,11 +211,11 @@ class Validator:
 
         return all_true == len(self.filter_stages)
 
-    def get_row(self) -> ParameterValueTuple:
+    def get_row(self) -> BashiRow:
         """Generate parameter-value-tuple from the application arguments.
 
         Returns:
-            ParameterValueTuple: parameter-value-tuple
+            BashiRow: parameter-value-tuple
         """
         args = self.parser.parse_args(args=self.args)
 
@@ -234,7 +234,7 @@ class Validator:
         for filter_stage in self.filter_stages:
             filter_stage.runtime_infos = self.runtime_infos
 
-        row: ParameterValueTuple = OrderedDict()
+        row = BashiRow({})
 
         # Add parameter-values in the order in which they are passed via arguments
         for param_arg in self.param_order:

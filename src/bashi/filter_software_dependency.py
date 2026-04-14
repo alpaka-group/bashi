@@ -7,14 +7,14 @@ These identifiers are used in the test names, for example, to make it clear whic
 which rule.
 """
 
-from typing import Dict, Optional, IO, Callable
+from typing import Dict, Optional, IO, Callable, cast
 import packaging.version as pkv
 from typeguard import typechecked
-from bashi.types import ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter import FilterBase
 from bashi.version.relation import VersionRelation
 from bashi.printer import ubuntu_version_to_string
+from bashi.row import BashiRow
 
 
 def _pretty_name_compiler(constant: str) -> str:
@@ -47,12 +47,12 @@ class SoftwareDependencyFilter(FilterBase):
 
     def __call__(
         self,
-        row: ParameterValueTuple,
+        row: BashiRow,
     ) -> bool:
         """Check if given parameter-value-tuple is valid.
 
         Args:
-            row (ParameterValueTuple): parameter-value-tuple to verify.
+            row (BashiRow): parameter-value-tuple to verify.
 
         Returns:
             bool: True, if parameter-value-tuple is valid.
@@ -95,7 +95,8 @@ class SoftwareDependencyFilter(FilterBase):
                 if compiler_type in row and row[compiler_type].name == HIPCC:
                     for ubuntu_hip_range in self.version.get_ubuntu_hip_version_range():
                         if (
-                            row[compiler_type].version in ubuntu_hip_range.sdk_range
+                            cast(ValueVersion, row[compiler_type].version)
+                            in ubuntu_hip_range.sdk_range
                             and row[UBUNTU].version != ubuntu_hip_range.ubuntu
                         ):
                             self.reason(
@@ -123,7 +124,8 @@ class SoftwareDependencyFilter(FilterBase):
             if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
                 for ubuntu_cuda_range in self.version.get_ubuntu_cuda_version_range():
                     if (
-                        row[DEVICE_COMPILER].version in ubuntu_cuda_range.sdk_range
+                        cast(ValueVersion, row[DEVICE_COMPILER].version)
+                        in ubuntu_cuda_range.sdk_range
                         and row[UBUNTU].version != ubuntu_cuda_range.ubuntu
                     ):
                         self.reason(
@@ -140,7 +142,8 @@ class SoftwareDependencyFilter(FilterBase):
             ):
                 for ubuntu_cuda_range in self.version.get_ubuntu_cuda_version_range():
                     if (
-                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version in ubuntu_cuda_range.sdk_range
+                        cast(ValueVersion, row[ALPAKA_ACC_GPU_CUDA_ENABLE].version)
+                        in ubuntu_cuda_range.sdk_range
                         and row[UBUNTU].version != ubuntu_cuda_range.ubuntu
                     ):
                         self.reason(
@@ -161,8 +164,10 @@ class SoftwareDependencyFilter(FilterBase):
                         return False
 
                     if (
-                        row[compiler_type].version
-                        not in self.version.get_ubuntu_clang_cuda_sdk_support()[row[UBUNTU].version]
+                        cast(ValueVersion, row[compiler_type].version)
+                        not in self.version.get_ubuntu_clang_cuda_sdk_support()[
+                            cast(ValueVersion, row[UBUNTU].version)
+                        ]
                     ):
                         self.reason(
                             "There is no compatible CUDA SDK for Clang-CUDA "
@@ -213,7 +218,7 @@ class SoftwareDependencyFilter(FilterBase):
 
 @typechecked
 def software_dependency_filter_typechecked(
-    row: ParameterValueTuple,
+    row: BashiRow,
     version_relation: VersionRelation,
     output: Optional[IO[str]] = None,
 ) -> bool:

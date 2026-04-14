@@ -20,11 +20,11 @@ from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.types import (
     ParameterValue,
     ParameterValuePair,
-    ParameterValueTuple,
     ParameterValueMatrix,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter import FilterBase
+from bashi.row import BashiRow
 
 
 class TestGeneratorTestData(unittest.TestCase):
@@ -78,7 +78,7 @@ class TestGeneratorTestData(unittest.TestCase):
             ):
                 super().__init__(runtime_infos, VersionRelation(), output)
 
-            def __call__(self, row: ParameterValueTuple):
+            def __call__(self, row: BashiRow):
                 if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
                     return False
 
@@ -94,35 +94,33 @@ class TestGeneratorTestData(unittest.TestCase):
 
         custom_filter = CustomFilter()
 
-        OD = OrderedDict
-
         for row in [
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ParameterValue(GCC, pkv.parse("10")),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ParameterValue(GCC, pkv.parse("10")),
                     DEVICE_COMPILER: ParameterValue(GCC, pkv.parse("10")),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ParameterValue(GCC, pkv.parse("10")),
                     DEVICE_COMPILER: ParameterValue(GCC, pkv.parse("10")),
                     CMAKE: ParameterValue(CMAKE, pkv.parse("3.23")),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ParameterValue(GCC, pkv.parse("10")),
                     DEVICE_COMPILER: ParameterValue(GCC, pkv.parse("10")),
                     BOOST: ParameterValue(BOOST, pkv.parse("1.82")),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ParameterValue(GCC, pkv.parse("10")),
                     DEVICE_COMPILER: ParameterValue(GCC, pkv.parse("10")),
@@ -130,7 +128,7 @@ class TestGeneratorTestData(unittest.TestCase):
                     BOOST: ParameterValue(BOOST, pkv.parse("1.81")),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ParameterValue(GCC, pkv.parse("10")),
                     DEVICE_COMPILER: ParameterValue(GCC, pkv.parse("10")),
@@ -138,7 +136,7 @@ class TestGeneratorTestData(unittest.TestCase):
                     BOOST: ParameterValue(BOOST, pkv.parse("1.81")),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ParameterValue(GCC, pkv.parse("10")),
                     DEVICE_COMPILER: ParameterValue(GCC, pkv.parse("10")),
@@ -151,7 +149,7 @@ class TestGeneratorTestData(unittest.TestCase):
 
         self.assertFalse(
             custom_filter(
-                OrderedDict(
+                BashiRow(
                     {
                         HOST_COMPILER: ParameterValue(GCC, pkv.parse("10")),
                         DEVICE_COMPILER: ParameterValue(GCC, pkv.parse("10")),
@@ -280,7 +278,7 @@ class TestGeneratorRealData(unittest.TestCase):
             ):
                 super().__init__(runtime_infos, VersionRelation(), output)
 
-            def __call__(self, row: ParameterValueTuple):
+            def __call__(self, row: BashiRow):
                 if (
                     CMAKE in row
                     and row[CMAKE].version == pkv.parse("3.23")

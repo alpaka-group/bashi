@@ -82,7 +82,7 @@ def generate_combination_list(
         version_relation (VersionRelation): Provides information about the relationships between
                 the versions of various parameter-values. For example, which GCC version supports
                 which C++ standard.
-        custom_filter (FilterFunction, optional): Custom filter function to extend bashi
+        custom_filter (FilterBase, optional): Custom filter function to extend bashi
             filters. Defaults is lambda _: True.
         debug_print (FilterDebugMode): Depending on the debug mode, print additional information
             for each row passing the filter function. Defaults to FilterDebugMode.OFF.

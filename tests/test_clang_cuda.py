@@ -3,7 +3,6 @@ import unittest
 import io
 
 from typing import List, Tuple
-from collections import OrderedDict as OD
 import packaging.version as pkv
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -12,6 +11,7 @@ from bashi.version.relation import VersionRelation
 from bashi.version.dependencies.clang_cuda import CLANG_CUDA_MAX_CUDA_VERSION
 from bashi.filter_compiler import compiler_filter_typechecked
 from bashi.filter_backend import backend_filter_typechecked
+from bashi.row import BashiRow
 
 
 class TestClangCUDACompilerFilter(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
         for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             compiler_type: ppv((CLANG_CUDA, 15)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -35,7 +35,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
             reason_msg1 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             compiler_type: ppv((CLANG_CUDA, 15)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -79,7 +79,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
 
                 self.assertEqual(
                     compiler_filter_typechecked(
-                        OD(
+                        BashiRow(
                             {
                                 compiler_type: ppv((CLANG_CUDA, clang_cuda_version)),
                                 ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -116,7 +116,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
         for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             compiler_type: ppv((CLANG_CUDA, unsupported_new_clang_cuda_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 9.0)),
@@ -129,7 +129,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             compiler_type: ppv((CLANG_CUDA, unsupported_new_clang_cuda_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -145,7 +145,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             compiler_type: ppv((CLANG_CUDA, unsupported_new_clang_cuda_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -163,7 +163,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
         for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             compiler_type: ppv((CLANG_CUDA, 15)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -176,7 +176,7 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
             reason_msg1 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             compiler_type: ppv((CLANG_CUDA, 15)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
@@ -190,9 +190,11 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
 
     def test_valid_clang_cuda_does_not_support_the_sycl_backend_c18(self):
         for row in [
-            OD({HOST_COMPILER: ppv((CLANG_CUDA, 15))}),
-            OD({DEVICE_COMPILER: ppv((CLANG_CUDA, 14))}),
-            OD({HOST_COMPILER: ppv((CLANG_CUDA, 17)), DEVICE_COMPILER: ppv((CLANG_CUDA, 17))}),
+            BashiRow({HOST_COMPILER: ppv((CLANG_CUDA, 15))}),
+            BashiRow({DEVICE_COMPILER: ppv((CLANG_CUDA, 14))}),
+            BashiRow(
+                {HOST_COMPILER: ppv((CLANG_CUDA, 17)), DEVICE_COMPILER: ppv((CLANG_CUDA, 17))}
+            ),
         ]:
             for comb in [
                 [ALPAKA_ACC_ONEAPI_CPU_ENABLE],
@@ -213,9 +215,11 @@ class TestClangCUDACompilerFilter(unittest.TestCase):
 
     def test_invalid_clang_cuda_does_not_support_the_sycl_backend_c18(self):
         for row in [
-            OD({HOST_COMPILER: ppv((CLANG_CUDA, 15))}),
-            OD({DEVICE_COMPILER: ppv((CLANG_CUDA, 14))}),
-            OD({HOST_COMPILER: ppv((CLANG_CUDA, 17)), DEVICE_COMPILER: ppv((CLANG_CUDA, 17))}),
+            BashiRow({HOST_COMPILER: ppv((CLANG_CUDA, 15))}),
+            BashiRow({DEVICE_COMPILER: ppv((CLANG_CUDA, 14))}),
+            BashiRow(
+                {HOST_COMPILER: ppv((CLANG_CUDA, 17)), DEVICE_COMPILER: ppv((CLANG_CUDA, 17))}
+            ),
         ]:
             for comb in [
                 [(ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)],
@@ -292,7 +296,7 @@ class TestClangCUDABackendFilter(unittest.TestCase):
                 reason_msg1 = io.StringIO()
                 self.assertEqual(
                     backend_filter_typechecked(
-                        OD(
+                        BashiRow(
                             {
                                 compiler_type: ppv((CLANG_CUDA, clang_cuda_version)),
                                 ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -329,7 +333,7 @@ class TestClangCUDABackendFilter(unittest.TestCase):
         for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             compiler_type: ppv((CLANG_CUDA, unsupported_new_clang_cuda_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 9.0)),
@@ -342,7 +346,7 @@ class TestClangCUDABackendFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             compiler_type: ppv((CLANG_CUDA, unsupported_new_clang_cuda_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -358,7 +362,7 @@ class TestClangCUDABackendFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             compiler_type: ppv((CLANG_CUDA, unsupported_new_clang_cuda_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(

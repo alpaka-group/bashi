@@ -1,13 +1,12 @@
 # pylint: disable=missing-docstring
 import unittest
 import io
-from collections import OrderedDict as OD
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter_compiler import compiler_filter_typechecked
 from bashi.filter_backend import backend_filter_typechecked
-from bashi.types import ParameterValueTuple
 from bashi.version.relation import VersionRelation
+from bashi.row import BashiRow
 
 
 class TestIcpxCompilerFilter(unittest.TestCase):
@@ -67,7 +66,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                     (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON),
                 ],
             ]:
-                row: ParameterValueTuple = OD()
+                row = BashiRow({})
                 for name, value in comb:
                     if name in (HOST_COMPILER, DEVICE_COMPILER):
                         row[name] = ppv((ICPX, value))
@@ -78,7 +77,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             CMAKE: ppv((CMAKE, 3.18)),
                             HOST_COMPILER: ppv((ICPX, icpx_version)),
@@ -114,7 +113,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                     (ALPAKA_ACC_ONEAPI_FPGA_ENABLE, OFF),
                 ],
             ]:
-                row: ParameterValueTuple = OD()
+                row: BashiRow = BashiRow({})
                 for name, value in comb:
                     if name in (HOST_COMPILER, DEVICE_COMPILER):
                         row[name] = ppv((ICPX, value))
@@ -132,7 +131,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
         for compiler_name in set(COMPILERS) - set([NVCC, ICPX]):
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF)),
@@ -145,7 +144,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
@@ -158,7 +157,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((compiler_name, 9999)),
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
@@ -174,7 +173,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             CMAKE: ppv((CMAKE, 3.18)),
                             HOST_COMPILER: ppv((compiler_name, 9999)),
@@ -190,7 +189,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF)),
@@ -205,7 +204,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF)),
@@ -223,7 +222,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         DEVICE_COMPILER: ppv((NVCC, 9999)),
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
@@ -237,7 +236,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
         for host_compiler in (GCC, CLANG):
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((host_compiler, 9999)),
                             DEVICE_COMPILER: ppv((NVCC, 9999)),
@@ -251,7 +250,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             CMAKE: ppv((CMAKE, 3.18)),
                             HOST_COMPILER: ppv((host_compiler, 9999)),
@@ -270,7 +269,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg1 = io.StringIO()
             self.assertFalse(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
@@ -288,7 +287,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg2 = io.StringIO()
             self.assertFalse(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)),
@@ -306,7 +305,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg3 = io.StringIO()
             self.assertFalse(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((compiler_name, 9999)),
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
@@ -325,7 +324,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg4 = io.StringIO()
             self.assertFalse(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             CMAKE: ppv((CMAKE, 3.18)),
                             HOST_COMPILER: ppv((compiler_name, 9999)),
@@ -346,7 +345,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
         reason_msg5 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         DEVICE_COMPILER: ppv((NVCC, 9999)),
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
@@ -365,7 +364,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg6 = io.StringIO()
             self.assertFalse(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((host_compiler, 9999)),
                             DEVICE_COMPILER: ppv((NVCC, 9999)),
@@ -382,7 +381,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg7 = io.StringIO()
             self.assertFalse(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             CMAKE: ppv((CMAKE, 3.18)),
                             HOST_COMPILER: ppv((host_compiler, 9999)),
@@ -401,7 +400,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
         reason_msg8 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((GCC, 11)),
                         ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF)),
@@ -420,7 +419,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
         reason_msg9 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((GCC, 11)),
                         ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF)),
@@ -441,7 +440,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
         for version in ("2023.3.0", "2024.2.1", "2024.3.0"):
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -453,7 +452,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -465,7 +464,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((ICPX, version)),
                             DEVICE_COMPILER: ppv((ICPX, version)),
@@ -478,7 +477,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
                             HOST_COMPILER: ppv((ICPX, version)),
@@ -491,7 +490,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             CMAKE: ppv((CMAKE, 3.18)),
                             HOST_COMPILER: ppv((ICPX, version)),
@@ -509,7 +508,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg1 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
@@ -524,7 +523,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg2 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
@@ -539,7 +538,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg3 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((ICPX, version)),
                             DEVICE_COMPILER: ppv((ICPX, version)),
@@ -555,7 +554,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg4 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                             HOST_COMPILER: ppv((ICPX, version)),
@@ -571,7 +570,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg5 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             CMAKE: ppv((CMAKE, 3.18)),
                             HOST_COMPILER: ppv((ICPX, version)),
@@ -589,7 +588,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
     def test_sycl_and_hip_backend_cannot_be_active_at_the_same_time_b5(self):
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -601,7 +600,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -613,7 +612,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_ONEAPI_FPGA_ENABLE: ppv((ALPAKA_ACC_ONEAPI_FPGA_ENABLE, OFF)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
@@ -626,7 +625,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
         reason_msg1 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
@@ -642,7 +641,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         CMAKE: ppv((CMAKE, 3.18)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -657,7 +656,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
         reason_msg2 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         CMAKE: ppv((CMAKE, 3.18)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
@@ -678,7 +677,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
         for version in ("2023.3.0", "2024.2.1", "2024.3.0"):
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -690,7 +689,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -702,7 +701,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((ICPX, version)),
                             DEVICE_COMPILER: ppv((ICPX, version)),
@@ -715,7 +714,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                             HOST_COMPILER: ppv((ICPX, version)),
@@ -728,7 +727,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             CMAKE: ppv((CMAKE, 3.18)),
                             HOST_COMPILER: ppv((ICPX, version)),
@@ -746,7 +745,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg1 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
@@ -761,7 +760,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg2 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((ICPX, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
@@ -776,7 +775,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg3 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((ICPX, version)),
                             DEVICE_COMPILER: ppv((ICPX, version)),
@@ -792,7 +791,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg4 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
                             HOST_COMPILER: ppv((ICPX, version)),
@@ -808,7 +807,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
             reason_msg5 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             CMAKE: ppv((CMAKE, 3.18)),
                             HOST_COMPILER: ppv((ICPX, version)),
@@ -826,7 +825,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
     def test_sycl_and_cuda_backend_cannot_be_active_at_the_same_time_b6(self):
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -838,7 +837,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -850,7 +849,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_ONEAPI_FPGA_ENABLE: ppv((ALPAKA_ACC_ONEAPI_FPGA_ENABLE, OFF)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
@@ -863,7 +862,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
         reason_msg1 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, ON)),
@@ -879,7 +878,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         CMAKE: ppv((CMAKE, 3.18)),
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
@@ -894,7 +893,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
         reason_msg2 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         CMAKE: ppv((CMAKE, 3.18)),
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
@@ -931,7 +930,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                 (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
             ],
         ]:
-            row: ParameterValueTuple = OD()
+            row = BashiRow({})
             for name, value in comb:
                 row[name] = ppv((name, value))
             self.assertTrue(backend_filter_typechecked(row, self.version_relation), f"{row}")
@@ -956,7 +955,7 @@ class TestIcpxCompilerFilter(unittest.TestCase):
                 (ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON),
             ],
         ]:
-            row: ParameterValueTuple = OD()
+            row = BashiRow({})
             for name, value in comb:
                 row[name] = ppv((name, value))
 

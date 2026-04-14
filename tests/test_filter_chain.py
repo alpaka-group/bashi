@@ -1,18 +1,18 @@
 # pylint: disable=missing-docstring
 import unittest
 from typing import IO, Dict, List, Callable
-from collections import OrderedDict
 import packaging.version as pkv
-from bashi.types import ParameterValue, ParameterValueTuple, FilterFunction
+from bashi.types import ParameterValue
 from bashi.filter import FilterBase
 from bashi.filter_chain import get_default_filter_chain
 from bashi.version.relation import VersionRelation
+from bashi.row import BashiRow
 
 
 class TestFilterChain(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.param_val_tuple: ParameterValueTuple = OrderedDict()
+        cls.param_val_tuple = BashiRow({})
         cls.param_val_tuple["param1"] = ParameterValue("param-val-name1", pkv.parse("1"))
         cls.param_val_tuple["param2"] = ParameterValue("param-val-name2", pkv.parse("2"))
         cls.param_val_tuple["param3"] = ParameterValue("param-val-name3", pkv.parse("3"))
@@ -42,14 +42,14 @@ class TestFilterChain(unittest.TestCase):
             ):
                 super().__init__(runtime_infos, output)
 
-            def __call__(self, row: ParameterValueTuple):
+            def __call__(self, row: BashiRow):
                 if "paramNotExist" in row:
                     return False
                 return True
 
         custom_filter = CustomFilter()
 
-        filter_chain: FilterFunction = get_default_filter_chain(
+        filter_chain = get_default_filter_chain(
             version_relation=VersionRelation(), custom_filter=custom_filter
         )
         self.assertTrue(
@@ -68,14 +68,14 @@ class TestFilterChain(unittest.TestCase):
             ):
                 super().__init__(runtime_infos, output)
 
-            def __call__(self, row: ParameterValueTuple):
+            def __call__(self, row: BashiRow):
                 if "param2" in row:
                     return False
                 return True
 
         custom_filter = CustomFilter()
 
-        filter_chain: FilterFunction = get_default_filter_chain(
+        filter_chain = get_default_filter_chain(
             version_relation=VersionRelation(), custom_filter=custom_filter
         )
         self.assertFalse(
