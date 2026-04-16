@@ -4,7 +4,8 @@
 
 ```python
 # filters all parameter-value-tuples where the host and device compiler do not have the same name
-def example_filter(row : ParameterValueTuple) -> bool:
+# bashiRow implements the parameter-value-tuple
+def example_filter(row : BashiRow) -> bool:
     if (HOST_COMPILER and row
         and DEVICE_COMPILER in row
         and row[HOST_COMPILER].name != row[DEVICE].name):

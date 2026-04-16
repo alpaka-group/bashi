@@ -2,8 +2,8 @@
 
 from typing import Callable, Dict
 from typeguard import typechecked
+import covertable  # type: ignore
 import termcolor
-from bashi.types import ParameterValueTuple
 from bashi.globals import FilterDebugMode
 
 from bashi.filter import FilterBase
@@ -12,6 +12,7 @@ from bashi.filter_backend import BackendFilter
 from bashi.filter_software_dependency import SoftwareDependencyFilter
 from bashi.version.relation import VersionRelation
 from bashi.printer import get_str_row_nice
+from bashi.row import BashiRow
 
 
 # pylint: disable=too-few-public-methods
@@ -57,12 +58,14 @@ class FilterChain:
             self.custom_filter.runtime_infos = runtime_infos
         self.debug_print = debug_print
 
-    def __call__(self, row: ParameterValueTuple) -> bool:
+    def __call__(self, row: covertable.main.Row) -> bool:
+        bashi_row = BashiRow(row)
+
         result = (
-            self.compiler_filter(row)
-            and self.backend_filter(row)
-            and self.software_dependency_filter(row)
-            and self.custom_filter(row)
+            self.compiler_filter(bashi_row)
+            and self.backend_filter(bashi_row)
+            and self.software_dependency_filter(bashi_row)
+            and self.custom_filter(bashi_row)
         )
 
         if self.debug_print != FilterDebugMode.OFF:
@@ -100,12 +103,12 @@ def get_default_filter_chain(
                 constructed depending on the input parameter-value-matrix. The functions are named
                 by a string, takes an arbitrary number of arguments and return if the combination of
                 the given parameter-values are valid. Defaults to None.
-        custom_filter_function (FilterFunction): This functor is added as the last filter level and
+        custom_filter_function (FilterChain): This functor is added as the last filter level and
                 allows the user to add custom filter rules without having to create the entire
                 filter chain from scratch. Defaults to FilterBase().
 
     Returns:
-        FilterFunction: The filter function chain, which can be directly used in bashi.FilterAdapter
+        FilterChain: The filter function chain, which can be directly used in bashi.FilterAdapter
     """
 
     return FilterChain(

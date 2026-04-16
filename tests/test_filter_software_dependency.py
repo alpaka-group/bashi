@@ -3,7 +3,6 @@ import unittest
 import io
 
 from typing import Dict, Callable
-from collections import OrderedDict as OD
 from utils_test import parse_param_val as ppv
 from utils_test import parse_value_version
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -14,6 +13,7 @@ from bashi.filter_software_dependency import (
 from bashi.runtime_info import ValidUbuntuSDK
 from bashi.version.dependencies.ubuntu import CUDA_MIN_UBUNTU
 from bashi.version.relation import VersionRelation
+from bashi.row import BashiRow
 
 
 class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
@@ -24,14 +24,16 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
         for gcc_version in [7, 13, 99]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD({HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "22.04"))}),
+                    BashiRow(
+                        {HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "22.04"))}
+                    ),
                     self.version_relation,
                 )
             )
 
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((GCC, gcc_version)),
                             UBUNTU: ppv((UBUNTU, "22.04")),
@@ -43,14 +45,16 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
         for gcc_version in [7, 13, 99]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD({HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "20.04"))}),
+                    BashiRow(
+                        {HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "20.04"))}
+                    ),
                     self.version_relation,
                 )
             )
 
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((GCC, gcc_version)),
                             UBUNTU: ppv((UBUNTU, "20.04")),
@@ -62,21 +66,25 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
         for gcc_version in [1, 3, 6, 7, 13, 99]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD({HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "18.04"))}),
+                    BashiRow(
+                        {HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "18.04"))}
+                    ),
                     self.version_relation,
                 )
             )
         for gcc_version in [1, 3, 6, 7, 13, 99]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD({DEVICE_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "18.04"))}),
+                    BashiRow(
+                        {DEVICE_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "18.04"))}
+                    ),
                     self.version_relation,
                 )
             )
         for gcc_version in [1, 3, 6, 7, 13, 99]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((GCC, gcc_version)),
                             UBUNTU: ppv((UBUNTU, "18.04")),
@@ -88,7 +96,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
         for gcc_version in [1, 3, 6, 7, 13, 99]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((GCC, gcc_version)),
                             UBUNTU: ppv((UBUNTU, "18.04")),
@@ -103,7 +111,9 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertFalse(
                 software_dependency_filter_typechecked(
-                    OD({HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "20.04"))}),
+                    BashiRow(
+                        {HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "20.04"))}
+                    ),
                     self.version_relation,
                     reason_msg,
                 ),
@@ -117,7 +127,9 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertFalse(
                 software_dependency_filter_typechecked(
-                    OD({HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "22.04"))}),
+                    BashiRow(
+                        {HOST_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "22.04"))}
+                    ),
                     self.version_relation,
                     reason_msg,
                 ),
@@ -132,7 +144,9 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertFalse(
                 software_dependency_filter_typechecked(
-                    OD({DEVICE_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "20.04"))}),
+                    BashiRow(
+                        {DEVICE_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "20.04"))}
+                    ),
                     self.version_relation,
                     reason_msg,
                 ),
@@ -146,7 +160,9 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertFalse(
                 software_dependency_filter_typechecked(
-                    OD({DEVICE_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "22.04"))}),
+                    BashiRow(
+                        {DEVICE_COMPILER: ppv((GCC, gcc_version)), UBUNTU: ppv((UBUNTU, "22.04"))}
+                    ),
                     self.version_relation,
                     reason_msg,
                 ),
@@ -161,7 +177,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
         for cmake_version in ["3.19", "3.26", "3.20", "3.49"]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((CLANG_CUDA, 14)),
                             CMAKE: ppv((CMAKE, cmake_version)),
@@ -174,7 +190,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
         for cmake_version in ["3.19", "3.26", "3.20", "3.49"]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((CLANG_CUDA, 15)),
                             CMAKE: ppv((CMAKE, cmake_version)),
@@ -189,7 +205,9 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertFalse(
                 software_dependency_filter_typechecked(
-                    OD({HOST_COMPILER: ppv((CLANG_CUDA, 14)), CMAKE: ppv((CMAKE, cmake_version))}),
+                    BashiRow(
+                        {HOST_COMPILER: ppv((CLANG_CUDA, 14)), CMAKE: ppv((CMAKE, cmake_version))}
+                    ),
                     self.version_relation,
                     reason_msg,
                 ),
@@ -204,7 +222,7 @@ class TestOldGCCVersionInUbuntu2004(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertFalse(
                 software_dependency_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {DEVICE_COMPILER: ppv((CLANG_CUDA, 15)), CMAKE: ppv((CMAKE, cmake_version))}
                     ),
                     self.version_relation,
@@ -234,7 +252,7 @@ class TestHIPUbuntu(unittest.TestCase):
             for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
                 self.assertTrue(
                     software_dependency_filter_typechecked(
-                        OD(
+                        BashiRow(
                             {
                                 compiler_type: ppv((HIPCC, hipcc_ver)),
                                 UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -258,7 +276,7 @@ class TestHIPUbuntu(unittest.TestCase):
                 reason_msg = io.StringIO()
                 self.assertFalse(
                     software_dependency_filter_typechecked(
-                        OD(
+                        BashiRow(
                             {
                                 compiler_type: ppv((HIPCC, hipcc_ver)),
                                 UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -286,7 +304,7 @@ class TestHIPUbuntu(unittest.TestCase):
         ]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -312,7 +330,7 @@ class TestHIPUbuntu(unittest.TestCase):
         ]:
             self.assertTrue(
                 sw_dep_filter(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -341,7 +359,7 @@ class TestHIPUbuntu(unittest.TestCase):
 
             self.assertFalse(
                 sw_dep_filter(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -376,7 +394,7 @@ class TestCUDAUbuntu(unittest.TestCase):
         ]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((NVCC, nvcc_ver)),
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -397,7 +415,7 @@ class TestCUDAUbuntu(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertFalse(
                 software_dependency_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((NVCC, nvcc_ver)),
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -434,7 +452,7 @@ class TestCUDAUbuntu(unittest.TestCase):
         ]:
             self.assertTrue(
                 software_dependency_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, cuda_ver)),
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -455,7 +473,7 @@ class TestCUDAUbuntu(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertFalse(
                 software_dependency_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, cuda_ver)),
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -490,7 +508,7 @@ class TestCUDAUbuntu(unittest.TestCase):
             for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
                 self.assertTrue(
                     software_dependency_filter_typechecked(
-                        OD(
+                        BashiRow(
                             {
                                 compiler_type: ppv((CLANG_CUDA, clang_cuda_ver)),
                                 UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -509,7 +527,7 @@ class TestCUDAUbuntu(unittest.TestCase):
                 reason_msg = io.StringIO()
                 self.assertFalse(
                     software_dependency_filter_typechecked(
-                        OD(
+                        BashiRow(
                             {
                                 compiler_type: ppv((CLANG_CUDA, clang_cuda_ver)),
                                 UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -539,7 +557,7 @@ class TestCUDAUbuntu(unittest.TestCase):
                 reason_msg = io.StringIO()
                 self.assertFalse(
                     software_dependency_filter_typechecked(
-                        OD(
+                        BashiRow(
                             {
                                 compiler_type: ppv((CLANG_CUDA, clang_cuda_ver)),
                                 UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -575,7 +593,7 @@ class TestCUDAUbuntu(unittest.TestCase):
             for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
                 self.assertTrue(
                     sw_dep_filter(
-                        OD(
+                        BashiRow(
                             {
                                 compiler_type: ppv((CLANG_CUDA, clang_cuda_ver)),
                                 UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -606,7 +624,7 @@ class TestCUDAUbuntu(unittest.TestCase):
 
                 self.assertFalse(
                     sw_dep_filter(
-                        OD(
+                        BashiRow(
                             {
                                 compiler_type: ppv((CLANG_CUDA, clang_cuda_ver)),
                                 UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -638,7 +656,7 @@ class TestCUDAUbuntu(unittest.TestCase):
         ]:
             self.assertTrue(
                 sw_dep_filter(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, cuda_ver)),
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -668,7 +686,7 @@ class TestCUDAUbuntu(unittest.TestCase):
 
             self.assertFalse(
                 sw_dep_filter(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, cuda_ver)),
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -699,7 +717,7 @@ class TestCUDAUbuntu(unittest.TestCase):
         ]:
             self.assertTrue(
                 sw_dep_filter(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((NVCC, cuda_ver)),
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),
@@ -729,7 +747,7 @@ class TestCUDAUbuntu(unittest.TestCase):
 
             self.assertFalse(
                 sw_dep_filter(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((NVCC, nvcc_ver)),
                             UBUNTU: ppv((UBUNTU, ubuntu_ver)),

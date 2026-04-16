@@ -24,3 +24,4 @@ from bashi.printer import (
 )
 from bashi.filter import FilterBase
 from bashi.results import get_expected_bashi_parameter_value_pairs
+from bashi.row import BashiRow

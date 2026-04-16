@@ -2,16 +2,15 @@
 import unittest
 import io
 
-from collections import OrderedDict as OD
 import packaging.version as pkv
 from utils_test import parse_param_val as ppv
+from bashi.row import BashiRow
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.version import VERSIONS
 from bashi.version.relation import VersionRelation
 from bashi.version.dependencies.nvcc import NvccHostSupport
 from bashi.filter_compiler import compiler_filter_typechecked
 from bashi.filter_backend import backend_filter_typechecked
-from bashi.types import ParameterValueTuple
 
 
 class TestNoNvccHostCompiler(unittest.TestCase):
@@ -21,7 +20,7 @@ class TestNoNvccHostCompiler(unittest.TestCase):
     def test_valid_combination_rule_c1(self):
         self.assertTrue(
             compiler_filter_typechecked(
-                OD({HOST_COMPILER: ppv((GCC, 10)), DEVICE_COMPILER: ppv((NVCC, 11.2))}),
+                BashiRow({HOST_COMPILER: ppv((GCC, 10)), DEVICE_COMPILER: ppv((NVCC, 11.2))}),
                 self.version_relation,
             )
         )
@@ -29,14 +28,14 @@ class TestNoNvccHostCompiler(unittest.TestCase):
         # version should not matter
         self.assertTrue(
             compiler_filter_typechecked(
-                OD({HOST_COMPILER: ppv((CLANG, 0)), DEVICE_COMPILER: ppv((NVCC, 0))}),
+                BashiRow({HOST_COMPILER: ppv((CLANG, 0)), DEVICE_COMPILER: ppv((NVCC, 0))}),
                 self.version_relation,
             )
         )
 
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((CLANG, 0)),
                         DEVICE_COMPILER: ppv((NVCC, 0)),
@@ -52,7 +51,7 @@ class TestNoNvccHostCompiler(unittest.TestCase):
         # added at the next round
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         DEVICE_COMPILER: ppv((NVCC, 0)),
                         CMAKE: ppv((CMAKE, "3.23")),
@@ -67,7 +66,7 @@ class TestNoNvccHostCompiler(unittest.TestCase):
         reason_msg1 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((NVCC, 11.2))}),
+                BashiRow({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((NVCC, 11.2))}),
                 self.version_relation,
                 reason_msg1,
             )
@@ -77,7 +76,7 @@ class TestNoNvccHostCompiler(unittest.TestCase):
         reason_msg2 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((GCC, 11))}),
+                BashiRow({HOST_COMPILER: ppv((NVCC, 11.2)), DEVICE_COMPILER: ppv((GCC, 11))}),
                 self.version_relation,
                 reason_msg2,
             )
@@ -87,7 +86,7 @@ class TestNoNvccHostCompiler(unittest.TestCase):
         reason_msg3 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD({HOST_COMPILER: ppv((NVCC, 12.2)), DEVICE_COMPILER: ppv((HIPCC, 5.1))}),
+                BashiRow({HOST_COMPILER: ppv((NVCC, 12.2)), DEVICE_COMPILER: ppv((HIPCC, 5.1))}),
                 self.version_relation,
                 reason_msg3,
             )
@@ -97,7 +96,7 @@ class TestNoNvccHostCompiler(unittest.TestCase):
         reason_msg4 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD({HOST_COMPILER: ppv((NVCC, 10.2))}), self.version_relation, reason_msg4
+                BashiRow({HOST_COMPILER: ppv((NVCC, 10.2))}), self.version_relation, reason_msg4
             )
         )
         self.assertEqual(reason_msg4.getvalue(), "nvcc is not allowed as host compiler")
@@ -113,7 +112,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
                 reason_msg = io.StringIO()
                 self.assertFalse(
                     compiler_filter_typechecked(
-                        OD(
+                        BashiRow(
                             {
                                 HOST_COMPILER: ppv((compiler_name, compiler_version)),
                                 DEVICE_COMPILER: ppv((NVCC, "12.3")),
@@ -133,7 +132,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
         reason_msg1 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((HIPCC, "5.3")),
                         DEVICE_COMPILER: ppv((NVCC, "12.3")),
@@ -153,7 +152,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
         reason_msg2 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((HIPCC, "5.3")),
                         ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: ppv(
@@ -176,7 +175,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
             for compiler_version in ["0", "7", "10"]:
                 self.assertTrue(
                     compiler_filter_typechecked(
-                        OD(
+                        BashiRow(
                             {
                                 HOST_COMPILER: ppv((compiler_name, compiler_version)),
                                 DEVICE_COMPILER: ppv((NVCC, "12.3")),
@@ -188,7 +187,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
 
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((GCC, "10")),
                         DEVICE_COMPILER: ppv((NVCC, "11.5")),
@@ -201,7 +200,7 @@ class TestSupportedNvccHostCompiler(unittest.TestCase):
         )
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((CLANG, "7")),
                         ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE: ppv(
@@ -353,7 +352,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertEqual(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((GCC, gcc_version)),
                             DEVICE_COMPILER: ppv((NVCC, nvcc_version)),
@@ -426,7 +425,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertEqual(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((GCC, gcc_version)),
                             DEVICE_COMPILER: ppv((NVCC, nvcc_version)),
@@ -448,7 +447,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
     def test_valid_multi_row_entries_gcc_rule_c5(self):
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((GCC, 10)),
                         DEVICE_COMPILER: ppv((NVCC, 11.2)),
@@ -462,7 +461,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
 
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((GCC, 12)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
@@ -480,7 +479,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
         reason_msg1 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((GCC, 13)),
                         DEVICE_COMPILER: ppv((NVCC, 11.2)),
@@ -500,7 +499,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
         reason_msg2 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((GCC, 12)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
@@ -531,7 +530,7 @@ class TestNvccSupportedGccVersion(unittest.TestCase):
 
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((GCC, 12)),
                         DEVICE_COMPILER: ppv((NVCC, unsupported_nvcc_version)),
@@ -604,7 +603,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
             reason_msg = io.StringIO()
             self.assertEqual(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((CLANG, clang_version)),
                             DEVICE_COMPILER: ppv((NVCC, nvcc_version)),
@@ -636,7 +635,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
     def test_valid_multi_row_entries_clang_rule_c6(self):
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((CLANG, 10)),
                         DEVICE_COMPILER: ppv((NVCC, 11.2)),
@@ -650,7 +649,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
 
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((CLANG, 12)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
@@ -668,7 +667,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
         reason_msg1 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((CLANG, 13)),
                         DEVICE_COMPILER: ppv((NVCC, 11.2)),
@@ -688,7 +687,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
         reason_msg2 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((CLANG, 16)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
@@ -719,7 +718,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
 
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((CLANG, 12)),
                         DEVICE_COMPILER: ppv((NVCC, unsupported_nvcc_version)),
@@ -737,7 +736,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                 reason_msg = io.StringIO()
                 self.assertFalse(
                     compiler_filter_typechecked(
-                        OD(
+                        BashiRow(
                             {
                                 HOST_COMPILER: ppv((CLANG, clang_version)),
                                 DEVICE_COMPILER: ppv((NVCC, nvcc_version)),
@@ -759,7 +758,7 @@ class TestNvccSupportedClangVersion(unittest.TestCase):
                 reason_msg = io.StringIO()
                 self.assertFalse(
                     compiler_filter_typechecked(
-                        OD(
+                        BashiRow(
                             {
                                 HOST_COMPILER: ppv((CLANG, clang_version)),
                                 ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -788,7 +787,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         for version in ("10.1", "11.2", "12.3"):
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((NVCC, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, version)),
@@ -800,7 +799,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((GCC, 7)),
                             DEVICE_COMPILER: ppv((NVCC, version)),
@@ -813,7 +812,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, version)),
                             HOST_COMPILER: ppv((GCC, 7)),
@@ -826,7 +825,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             CMAKE: ppv((CMAKE, 3.18)),
                             HOST_COMPILER: ppv((CLANG, 6)),
@@ -844,7 +843,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
             reason_msg1 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((NVCC, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -861,7 +860,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
             reason_msg2 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((NVCC, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, "11.8")),
@@ -878,7 +877,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
             reason_msg3 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((GCC, 7)),
                             DEVICE_COMPILER: ppv((NVCC, version)),
@@ -896,7 +895,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
             reason_msg4 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
                             HOST_COMPILER: ppv((GCC, 7)),
@@ -914,7 +913,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
             reason_msg5 = io.StringIO()
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             CMAKE: ppv((CMAKE, 3.18)),
                             HOST_COMPILER: ppv((GCC, 7)),
@@ -935,7 +934,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
     def test_nvcc_requires_disabled_hip_backend_c16(self):
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         DEVICE_COMPILER: ppv((NVCC, 11.2)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -948,7 +947,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         reason_msg1 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         DEVICE_COMPILER: ppv((NVCC, 11.3)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
@@ -974,7 +973,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                 ALPAKA_ACC_ONEAPI_FPGA_ENABLE,
             ],
         ]:
-            row: ParameterValueTuple = OD({DEVICE_COMPILER: ppv((NVCC, 11.2))})
+            row = BashiRow({DEVICE_COMPILER: ppv((NVCC, 11.2))})
             for backend_name in comb:
                 row[backend_name] = ppv((backend_name, OFF))
             self.assertTrue(compiler_filter_typechecked(row, self.version_relation), f"{row}")
@@ -1010,7 +1009,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         ]:
             reason_msg = io.StringIO()
 
-            row: ParameterValueTuple = OD({DEVICE_COMPILER: ppv((NVCC, 11.2))})
+            row = BashiRow({DEVICE_COMPILER: ppv((NVCC, 11.2))})
             for backend_name, value in comb:
                 row[backend_name] = ppv((backend_name, value))
             self.assertFalse(
@@ -1022,7 +1021,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         reason_msg1 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         DEVICE_COMPILER: ppv((NVCC, 11.3)),
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
@@ -1038,7 +1037,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         reason_msg1 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         DEVICE_COMPILER: ppv((NVCC, 12.2)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -1053,7 +1052,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         reason_msg2 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((GCC, 9)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -1070,7 +1069,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         for compiler_name in set(COMPILERS) - set([NVCC, CLANG_CUDA]):
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -1083,7 +1082,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
@@ -1096,7 +1095,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((compiler_name, 9999)),
                             DEVICE_COMPILER: ppv((compiler_name, 9999)),
@@ -1110,7 +1109,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             CMAKE: ppv((CMAKE, 3.18)),
                             HOST_COMPILER: ppv((compiler_name, 9999)),
@@ -1133,7 +1132,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         ):
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((host_compiler[0], host_compiler[1])),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((cuda_sdk[0], cuda_sdk[1])),
@@ -1152,7 +1151,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
             self.assertFalse(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((host_compiler[0], host_compiler[1])),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((cuda_sdk[0], cuda_sdk[1])),
@@ -1172,7 +1171,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         for version in (10.1, 11.2, 12.3):
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((NVCC, version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, version)),
@@ -1186,7 +1185,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
             reason_msg1 = io.StringIO()
             self.assertFalse(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((NVCC, version_nvcc)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -1206,7 +1205,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         for gcc_version, version_cuda in ((5, 10.2), (9, 11.8), (11, 12.2)):
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((GCC, gcc_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -1221,7 +1220,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((GCC, gcc_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -1239,7 +1238,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
             reason_msg1 = io.StringIO()
             self.assertFalse(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((GCC, gcc_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -1262,7 +1261,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
                 reason_msg1 = io.StringIO()
                 self.assertFalse(
                     backend_filter_typechecked(
-                        OD(
+                        BashiRow(
                             {
                                 HOST_COMPILER: ppv((CLANG, clang_version)),
                                 ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -1284,7 +1283,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         for clang_version, version_cuda in ((5, 10.2), (9, 11.8), (11, 12.2)):
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((CLANG, clang_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -1299,7 +1298,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
             self.assertTrue(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((CLANG, clang_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -1317,7 +1316,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
             reason_msg1 = io.StringIO()
             self.assertFalse(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             HOST_COMPILER: ppv((CLANG, clang_version)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
@@ -1338,7 +1337,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
     def test_unsupported_cuda_device_compiler_b13(self):
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         DEVICE_COMPILER: ppv((NVCC, 11.2)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1350,7 +1349,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         DEVICE_COMPILER: ppv((CLANG_CUDA, 15)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1364,7 +1363,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
             reason_msg1 = io.StringIO()
             self.assertFalse(
                 backend_filter_typechecked(
-                    OD(
+                    BashiRow(
                         {
                             DEVICE_COMPILER: ppv((device_compiler, 7)),
                             ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -1383,7 +1382,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
     def test_cuda_and_hip_backend_cannot_be_active_at_the_same_time_b14(self):
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -1395,7 +1394,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -1407,7 +1406,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
@@ -1420,7 +1419,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         reason_msg1 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.7)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
@@ -1436,7 +1435,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         CMAKE: ppv((CMAKE, 3.18)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, OFF)),
@@ -1451,7 +1450,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         reason_msg2 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         CMAKE: ppv((CMAKE, 3.18)),
                         ALPAKA_ACC_GPU_HIP_ENABLE: ppv((ALPAKA_ACC_GPU_HIP_ENABLE, ON)),
@@ -1470,7 +1469,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
     def test_cuda_and_sycl_backend_cannot_be_active_at_the_same_time_b15(self):
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
@@ -1482,7 +1481,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
                         ALPAKA_ACC_ONEAPI_CPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_CPU_ENABLE, OFF)),
@@ -1494,7 +1493,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, OFF)),
                         ALPAKA_ACC_ONEAPI_FPGA_ENABLE: ppv((ALPAKA_ACC_ONEAPI_FPGA_ENABLE, ON)),
@@ -1507,7 +1506,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         reason_msg1 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.7)),
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),
@@ -1523,7 +1522,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
 
         self.assertTrue(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         CMAKE: ppv((CMAKE, 3.18)),
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, OFF)),
@@ -1538,7 +1537,7 @@ class TestNvccCompilerFilter(unittest.TestCase):
         reason_msg2 = io.StringIO()
         self.assertFalse(
             backend_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         CMAKE: ppv((CMAKE, 3.18)),
                         ALPAKA_ACC_ONEAPI_GPU_ENABLE: ppv((ALPAKA_ACC_ONEAPI_GPU_ENABLE, ON)),

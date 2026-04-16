@@ -2,7 +2,6 @@
 # pylint: disable=too-many-lines
 import unittest
 import io
-from collections import OrderedDict as OD
 import packaging.version as pkv
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -14,6 +13,7 @@ from bashi.filter_compiler import (
     _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda,
     _get_max_supported_cxx_version_for_cuda_sdk,
 )
+from bashi.row import BashiRow
 
 
 class TestGetMaximumSupportedCXXStandardForCUDASdk(unittest.TestCase):
@@ -189,101 +189,103 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
     def test_ignore_combination_gcc_cxx_support_c21(self):
         self.assertTrue(
-            compiler_filter_typechecked(OD({HOST_COMPILER: ppv((GCC, 10))}), self.version_relation)
-        )
-        self.assertTrue(
             compiler_filter_typechecked(
-                OD({CXX_STANDARD: ppv((CXX_STANDARD, 20))}), self.version_relation
+                BashiRow({HOST_COMPILER: ppv((GCC, 10))}), self.version_relation
             )
         )
         self.assertTrue(
             compiler_filter_typechecked(
-                OD({CXX_STANDARD: ppv((CXX_STANDARD, 20)), CMAKE: ppv((CMAKE, 3.18))}),
+                BashiRow({CXX_STANDARD: ppv((CXX_STANDARD, 20))}), self.version_relation
+            )
+        )
+        self.assertTrue(
+            compiler_filter_typechecked(
+                BashiRow({CXX_STANDARD: ppv((CXX_STANDARD, 20)), CMAKE: ppv((CMAKE, 3.18))}),
                 self.version_relation,
             )
         )
 
     def test_valid_in_range_gcc_cxx_support_c21(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 7)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 0)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 7)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 14)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 7)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 16)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 8)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 16)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 8)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 9)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 14)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 9)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 10)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 14)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 10)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 10)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 11)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 11)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 11)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 9999)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
@@ -294,73 +296,73 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
     def test_invalid_in_range_gcc_cxx_support_c21(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 7)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 9999)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 7)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 7)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((GCC, 8)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 18)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((GCC, 8)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((GCC, 8)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((GCC, 9)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 18)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 10)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 21)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 11)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 24)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 11)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 26)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 13)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 26)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 9999)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 26)),
@@ -387,49 +389,49 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
     def test_valid_in_range_clang_cxx_support_c22(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((CLANG, 7)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 0)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG, 8)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 14)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG, 9)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG, 13)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG, 14)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG, 14)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG, 17)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG, 9999)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
@@ -440,37 +442,37 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
     def test_invalid_in_range_clang_cxx_support_c22(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((CLANG, 7)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 9999)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG, 7)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG, 8)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((CLANG, 13)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((CLANG, 16)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((CLANG, 9999)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 9999)),
@@ -497,43 +499,43 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
     def test_valid_in_range_nvcc_cxx_support_c23(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((NVCC, 10.1)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 0)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((NVCC, 11.0)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 14)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((NVCC, 11.0)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((NVCC, 12.3)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 14)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((NVCC, 12.8)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((NVCC, 12.0)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((NVCC, 99.0)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
@@ -544,25 +546,25 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
     def test_invalid_in_range_nvcc_cxx_support_c23(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((NVCC, 10.2)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 9999)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((NVCC, 10.2)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((NVCC, 11.8)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((NVCC, 12.9)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
@@ -582,33 +584,33 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
     def test_valid_combination_cxx_cuda_backend_host_compiler_c24(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 12)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 12)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((CLANG, 15)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 11)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 14)),
@@ -624,28 +626,28 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
     def test_invalid_combination_cxx_cuda_backend_host_compiler_c24(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 12)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((CLANG, 14)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.5)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((CLANG, 16)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((GCC, 11)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
@@ -668,31 +670,31 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
     def test_valid_in_range_clang_cuda_cxx_support_c25(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG_CUDA, 14)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 14)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG_CUDA, 14)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG_CUDA, 14)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG_CUDA, 17)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((CLANG_CUDA, 9999)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
@@ -703,25 +705,25 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
     def test_invalid_in_range_clang_cuda_cxx_support_c25(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((CLANG_CUDA, 14)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((CLANG_CUDA, 16)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((CLANG_CUDA, 18)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 26)),
                 },
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((CLANG_CUDA, 9999)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 9999)),
@@ -748,43 +750,43 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
     def test_valid_cuda_sdk_max_supported_cxx_c26(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 9)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 11)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 14)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 10.2)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.8)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.5)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.1)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
@@ -795,25 +797,25 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
 
     def test_invalid_cuda_sdk_max_supported_cxx_c26(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 10.1)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.4)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 12.0)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 9999.0)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 99)),
@@ -846,7 +848,7 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
         # case anymore, the test needs to be modified.
         self.assertGreater(max_clang_cuda_support_cxx.cxx, max_nvcc_supported_cxx.cxx)
 
-        valid_row = OD(
+        valid_row = BashiRow(
             {
                 ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
                     (ALPAKA_ACC_GPU_CUDA_ENABLE, str(max_clang_cuda_support_cxx.compiler))
@@ -859,7 +861,7 @@ class TestCompilerCXXSupportFilterRules(unittest.TestCase):
         )
 
         invalid_cuda_sdk_version = float(str(max_clang_cuda_support_cxx.compiler)) + 0.1
-        invalid_row = OD(
+        invalid_row = BashiRow(
             {
                 ALPAKA_ACC_GPU_CUDA_ENABLE: ppv(
                     (
@@ -929,25 +931,25 @@ class TestClangBasedCompilerCXXSupport(unittest.TestCase):
 
     def test_valid_icpx_supported_cxx_c27(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((ICPX, "2025.0")),
                     CXX_STANDARD: ppv((CXX_STANDARD, 14)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((ICPX, "2025.0")),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((ICPX, "2025.0")),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((ICPX, "2025.0")),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
@@ -958,13 +960,13 @@ class TestClangBasedCompilerCXXSupport(unittest.TestCase):
 
     def test_invalid_icpx_supported_cxx_c27(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((ICPX, "2025.0")),
                     CXX_STANDARD: ppv((CXX_STANDARD, 26)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((ICPX, "2025.0")),
                     CXX_STANDARD: ppv((CXX_STANDARD, 99)),
@@ -991,25 +993,25 @@ class TestClangBasedCompilerCXXSupport(unittest.TestCase):
 
     def test_valid_hipcc_supported_cxx_c28(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((HIPCC, 5.7)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 14)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((HIPCC, 6.0)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 17)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((HIPCC, 6.1)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 20)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((HIPCC, 5.7)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 23)),
@@ -1020,13 +1022,13 @@ class TestClangBasedCompilerCXXSupport(unittest.TestCase):
 
     def test_invalid_hipcc_supported_cxx_c28(self):
         for row in [
-            OD(
+            BashiRow(
                 {
                     HOST_COMPILER: ppv((HIPCC, 6.3)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 26)),
                 }
             ),
-            OD(
+            BashiRow(
                 {
                     DEVICE_COMPILER: ppv((HIPCC, 6.8)),
                     CXX_STANDARD: ppv((CXX_STANDARD, 99)),

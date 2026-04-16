@@ -2,16 +2,16 @@
 import unittest
 
 import io
-from collections import OrderedDict as OD
 from utils_test import parse_param_val as ppv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter_compiler import compiler_filter_typechecked
 from bashi.version.relation import VersionRelation
+from bashi.row import BashiRow
 
 
 class TestEmptyRow(unittest.TestCase):
     def test_empty_row_shall_always_pass(self):
-        self.assertTrue(compiler_filter_typechecked(OD(), VersionRelation()))
+        self.assertTrue(compiler_filter_typechecked(BashiRow({}), VersionRelation()))
 
 
 class TestHostDeviceCompilerSameVersion(unittest.TestCase):
@@ -28,14 +28,15 @@ class TestHostDeviceCompilerSameVersion(unittest.TestCase):
         ]:
             self.assertTrue(
                 compiler_filter_typechecked(
-                    OD({HOST_COMPILER: comb[0], DEVICE_COMPILER: comb[1]}), self.version_relation
+                    BashiRow({HOST_COMPILER: comb[0], DEVICE_COMPILER: comb[1]}),
+                    self.version_relation,
                 ),
                 f"host compiler and device compiler version are not the same: {comb[0]} != {comb[1]}",
             )
 
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((CLANG_CUDA, 14)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -49,7 +50,7 @@ class TestHostDeviceCompilerSameVersion(unittest.TestCase):
 
         self.assertTrue(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((CLANG, 14)),
                         DEVICE_COMPILER: ppv((CLANG, 14)),
@@ -76,7 +77,7 @@ class TestHostDeviceCompilerSameVersion(unittest.TestCase):
 
             self.assertFalse(
                 compiler_filter_typechecked(
-                    OD({HOST_COMPILER: comb[0], DEVICE_COMPILER: comb[1]}),
+                    BashiRow({HOST_COMPILER: comb[0], DEVICE_COMPILER: comb[1]}),
                     self.version_relation,
                     reason_msg,
                 ),
@@ -90,7 +91,7 @@ class TestHostDeviceCompilerSameVersion(unittest.TestCase):
         reason_msg_multi1 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((CLANG_CUDA, 10)),
                         ALPAKA_ACC_GPU_CUDA_ENABLE: ppv((ALPAKA_ACC_GPU_CUDA_ENABLE, 11.2)),
@@ -110,7 +111,7 @@ class TestHostDeviceCompilerSameVersion(unittest.TestCase):
         reason_msg_multi2 = io.StringIO()
         self.assertFalse(
             compiler_filter_typechecked(
-                OD(
+                BashiRow(
                     {
                         HOST_COMPILER: ppv((GCC, 15)),
                         DEVICE_COMPILER: ppv((GCC, 10)),

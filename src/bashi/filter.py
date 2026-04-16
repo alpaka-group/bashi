@@ -1,8 +1,8 @@
 """Base class for filter functors."""
 
 from typing import Dict, Callable, Optional, IO
-from bashi.types import ParameterValueTuple
 from bashi.version.relation import VersionRelation
+from bashi.row import BashiRow
 
 
 class FilterBase:
@@ -52,11 +52,11 @@ class FilterBase:
                 end="",
             )
 
-    def __call__(self, _row: ParameterValueTuple) -> bool:
+    def __call__(self, _row: BashiRow) -> bool:
         """Implement the filter rules
 
         Args:
-            _row (ParameterValueTuple): parameter-value-tuple
+            _row (BashiRow): parameter-value-tuple
 
         Returns:
             bool: Return True if parameter-value-tuple passes the filter, otherwise false
