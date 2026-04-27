@@ -5,12 +5,11 @@ from bashi.types import (
     Parameter,
     ParameterValue,
     ParameterValueSingle,
-    ParameterValueTuple,
     ValueName,
     ValueVersion,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
+from bashi.row import BashiRow, NonExistingEntry
 
 # short names for parameter
 PARAMETER_SHORT_NAME: dict[Parameter, str] = {
@@ -105,12 +104,12 @@ def get_str_parameter_value_single(
 
 
 def get_str_row_nice(
-    row: ParameterValueTuple, init: str = "", bashi_validate: bool = False
+    row: BashiRow, init: str = "", bashi_validate: bool = False
 ) -> str:  # pragma: no cover
     """Returns a parameter-value-tuple as string in a short and nice way.
 
     Args:
-        row (ParameterValueTuple): row with parameter-value-tuple
+        row (BashiRow): row with parameter-value-tuple
         init (str, optional): Prefix of the output string. Defaults to "".
         bashi_validate (bool): If it is set to True, the row is printed in a form that can be passed
             directly as arguments to bashi-validate. Defaults to False.
@@ -126,13 +125,11 @@ def get_str_row_nice(
     return s
 
 
-def print_row_nice(
-    row: ParameterValueTuple, init: str = "", bashi_validate: bool = False
-):  # pragma: no cover
+def print_row_nice(row: BashiRow, init: str = "", bashi_validate: bool = False):  # pragma: no cover
     """Prints a parameter-value-tuple in a short and nice way.
 
     Args:
-        row (ParameterValueTuple): row with parameter-value-tuple
+        row (BashiRow): row with parameter-value-tuple
         init (str, optional): Prefix of the output string. Defaults to "".
         bashi_validate (bool): If it is set to True, the row is printed in a form that can be passed
             directly as arguments to bashi-validate. Defaults to False.
@@ -140,7 +137,7 @@ def print_row_nice(
     print(get_str_row_nice(row, init, bashi_validate))
 
 
-def ubuntu_version_to_string(version: ValueVersion) -> str:
+def ubuntu_version_to_string(version: ValueVersion | NonExistingEntry) -> str:
     """Returns the Ubuntu version representation correctly. Ubuntu versions
     use a leading 0 in their version scheme for months before October. pkv.parse()`
     parses e.g. the 04 from 20.04 to 4. Therefore the string representation of
@@ -153,6 +150,8 @@ def ubuntu_version_to_string(version: ValueVersion) -> str:
     Returns:
         str: string representation of the Ubuntu version
     """
+    if isinstance(version, NonExistingEntry):
+        return "NonExistingVersionEntry"
     return f"{version.major}.{version.minor:02}"
 
 

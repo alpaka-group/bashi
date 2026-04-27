@@ -7,19 +7,20 @@ These identifiers are used in the test names, for example, to make it clear whic
 which rule.
 """
 
-from typing import Dict, Optional, IO, List, Callable
+from typing import Dict, Optional, IO, List, Callable, cast
 import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.types import ParameterValueTuple, Parameter, ValueName
+from bashi.types import Parameter, ValueName
 from bashi.version.dependencies.base_version_support import CompilerCxxSupport
 from bashi.version.relation import VersionRelation
 from bashi.filter import FilterBase
 from bashi.utils import reason
+from bashi.row import BashiRow
 
 
 def _remove_unsupported_compiler_cxx_combination(
-    row: ParameterValueTuple,
+    row: BashiRow,
     compiler_name: ValueName,
     compiler_type: Parameter,
     compiler_cxx_list: List[CompilerCxxSupport],
@@ -30,7 +31,7 @@ def _remove_unsupported_compiler_cxx_combination(
     Attention: Because of performance reasons, does not check if CXX_STANDARD is in the row.
 
     Args:
-        row (ParameterValueTuple): current row with parameter value
+        row (BashiRow): current row with parameter value
         compiler_name (ValueName): name of the compiler
         compiler_type (Parameter): HOST_COMPILER or DEVICE_COMPILER
         compiler_cxx_list (List[CompilerCxxSupport]): list containing which compiler version added
@@ -158,12 +159,12 @@ class CompilerFilter(FilterBase):
 
     def __call__(
         self,
-        row: ParameterValueTuple,
+        row: BashiRow,
     ) -> bool:
         """Check if given parameter-value-tuple is valid
 
         Args:
-            row (ParameterValueTuple): parameter-value-tuple to verify.
+            row (BashiRow): parameter-value-tuple to verify.
 
         Returns:
             bool: True, if parameter-value-tuple is valid.
@@ -175,7 +176,7 @@ class CompilerFilter(FilterBase):
         # library
         # it is not possible to add NVCC as HOST_COMPILER and filter out afterwards
         # this rule is only used by bashi-verify
-        if HOST_COMPILER in row and row[HOST_COMPILER].name == NVCC:
+        if row[HOST_COMPILER].name == NVCC:
             self.reason("nvcc is not allowed as host compiler")
             return False
 
@@ -201,8 +202,8 @@ class CompilerFilter(FilterBase):
 
         # now idea, how remove nested blocks without hitting the performance
         # pylint: disable=too-many-nested-blocks
-        if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
-            if HOST_COMPILER in row and row[HOST_COMPILER].name == GCC:
+        if row[DEVICE_COMPILER].name == NVCC:
+            if row[HOST_COMPILER].name == GCC:
                 # Rule: c5
                 # related to rule b10
                 # remove all unsupported nvcc gcc version combinations
@@ -222,7 +223,7 @@ class CompilerFilter(FilterBase):
                                 return False
                             break
 
-            if HOST_COMPILER in row and row[HOST_COMPILER].name == CLANG:
+            if row[HOST_COMPILER].name == CLANG:
                 # Rule: c7
                 # related to rule b11
                 if row[DEVICE_COMPILER].version >= pkv.parse("11.3") and row[
@@ -257,26 +258,20 @@ class CompilerFilter(FilterBase):
 
             # Rule: c15
             # related to rule b9
-            if (
-                ALPAKA_ACC_GPU_CUDA_ENABLE in row
-                and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != row[DEVICE_COMPILER].version
-            ):
+            if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != row[DEVICE_COMPILER].version:
                 self.reason("nvcc and CUDA backend needs to have the same version")
                 return False
 
             # Rule: c16
             # related to rule b14
-            if (
-                ALPAKA_ACC_GPU_HIP_ENABLE in row
-                and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER
-            ):
+            if row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER:
                 self.reason("nvcc does not support the HIP backend.")
                 return False
 
             # Rule: c17
             # related to rule b15
             for one_api_backend in ONE_API_BACKENDS:
-                if one_api_backend in row and row[one_api_backend].version != OFF_VER:
+                if row[one_api_backend].version != OFF_VER:
                     self.reason("nvcc does not support the SYCL backend.")
                     return False
 
@@ -288,38 +283,28 @@ class CompilerFilter(FilterBase):
         # it is not possible to add the clang-cuda versions and filter it out afterwards
         # this rule is only used by bashi-verify
         for compiler in (HOST_COMPILER, DEVICE_COMPILER):
-            if (
-                compiler in row
-                and row[compiler].name == CLANG_CUDA
-                and row[compiler].version < pkv.parse("14")
-            ):
+            if row[compiler].name == CLANG_CUDA and row[compiler].version < pkv.parse("14"):
                 self.reason("all clang versions older than 14 are disabled as CUDA Compiler")
                 return False
 
         for compiler in (HOST_COMPILER, DEVICE_COMPILER):
-            if compiler in row and row[compiler].name == HIPCC:
+            if row[compiler].name == HIPCC:
                 # Rule: c9
                 # related to rule b1
-                if (
-                    ALPAKA_ACC_GPU_HIP_ENABLE in row
-                    and row[ALPAKA_ACC_GPU_HIP_ENABLE].version == OFF_VER
-                ):
+                if row[ALPAKA_ACC_GPU_HIP_ENABLE].version == OFF_VER:
                     self.reason("hipcc requires an enabled HIP backend.")
                     return False
 
                 # Rule: c10
                 # related to rule b2
                 for one_api_backend in ONE_API_BACKENDS:
-                    if one_api_backend in row and row[one_api_backend].version != OFF_VER:
+                    if row[one_api_backend].version != OFF_VER:
                         self.reason("hipcc does not support the SYCL backend.")
                         return False
 
                 # Rule: c11
                 # related to rule b2
-                if (
-                    ALPAKA_ACC_GPU_CUDA_ENABLE in row
-                    and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
-                ):
+                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER:
                     self.reason("hipcc does not support the CUDA backend.")
                     return False
 
@@ -327,44 +312,31 @@ class CompilerFilter(FilterBase):
                 # Rule: c12
                 # related to rule b4
                 if all(
-                    one_api_backend in row and row[one_api_backend].version == OFF_VER
-                    for one_api_backend in ONE_API_BACKENDS
+                    row[one_api_backend].version == OFF_VER for one_api_backend in ONE_API_BACKENDS
                 ):
                     self.reason("icpx requires an enabled SYCL backend.")
                     return False
 
                 # Rule: c13
                 # related to rule b5
-                if (
-                    ALPAKA_ACC_GPU_HIP_ENABLE in row
-                    and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER
-                ):
+                if row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER:
                     self.reason("icpx does not support the HIP backend.")
                     return False
 
                 # Rule: c14
                 # related to rule b6
-                if (
-                    ALPAKA_ACC_GPU_CUDA_ENABLE in row
-                    and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
-                ):
+                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER:
                     self.reason("icpx does not support the CUDA backend.")
                     return False
 
-            if compiler in row and row[compiler].name == CLANG_CUDA:
+            if row[compiler].name == CLANG_CUDA:
                 # Rule: c15
                 # related to rule b16
-                if (
-                    ALPAKA_ACC_GPU_CUDA_ENABLE in row
-                    and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version == OFF_VER
-                ):
+                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version == OFF_VER:
                     self.reason("clang-cuda requires an enabled CUDA backend.")
                     return False
 
-                if (
-                    ALPAKA_ACC_GPU_CUDA_ENABLE in row
-                    and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
-                ):
+                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER:
                     # Rule: c16
                     # related to rule b17
                     # if a clang-cuda version is newer than the latest known clang-cuda version,
@@ -390,17 +362,14 @@ class CompilerFilter(FilterBase):
 
                 # Rule: c30
                 # related to rule b14
-                if (
-                    ALPAKA_ACC_GPU_HIP_ENABLE in row
-                    and row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER
-                ):
+                if row[ALPAKA_ACC_GPU_HIP_ENABLE].version != OFF_VER:
                     self.reason("clang-cuda does not support the HIP backend.")
                     return False
 
                 # Rule: c18
                 # related to rule b15
                 for one_api_backend in ONE_API_BACKENDS:
-                    if one_api_backend in row and row[one_api_backend].version != OFF_VER:
+                    if row[one_api_backend].version != OFF_VER:
                         self.reason("clang-cuda does not support the SYCL backend.")
                         return False
 
@@ -467,17 +436,14 @@ class CompilerFilter(FilterBase):
                     # reason() is inside _remove_unsupported_compiler_cxx_combination
                     return False
 
-                if (
-                    ALPAKA_ACC_GPU_CUDA_ENABLE in row
-                    and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
-                ):
+                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER:
                     # Rule: c26
                     # With the given CUDA backend version we can restrict the possible C++ standard
                     # already. If there is no Nvcc or Clang-CUDA version which supports the given
                     # C++ standard with the given CUDA SDK, we can return false before the host or
                     # device compiler was added to the row.
                     if row[CXX_STANDARD].version > _get_max_supported_cxx_version_for_cuda_sdk(
-                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
+                        cast(ValueVersion, row[ALPAKA_ACC_GPU_CUDA_ENABLE].version),
                         self.version.get_nvcc_cxx_support_version(),
                         self.version.get_max_cuda_sdk_cxx_support(),
                     ):
@@ -500,12 +466,12 @@ class CompilerFilter(FilterBase):
                     if row[
                         CXX_STANDARD
                     ].version > _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(
-                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
+                        cast(ValueVersion, row[ALPAKA_ACC_GPU_CUDA_ENABLE].version),
                         self.version.get_nvcc_cxx_support_version(),
                     ) and row[
                         CXX_STANDARD
                     ].version <= _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
-                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version,
+                        cast(ValueVersion, row[ALPAKA_ACC_GPU_CUDA_ENABLE].version),
                         self.version.get_max_cuda_sdk_cxx_support(),
                     ):
                         if (
@@ -523,7 +489,7 @@ class CompilerFilter(FilterBase):
                     # Clang, the device compiler must be Nvcc.
                     # In this case, we know that the CUDA SDK and Nvcc has the same version number
                     # and therefore we can determine which is the maximum supported C++ standard.
-                    if HOST_COMPILER in row and row[HOST_COMPILER].name in (GCC, CLANG):
+                    if row[HOST_COMPILER].name in (GCC, CLANG):
                         if _remove_unsupported_compiler_cxx_combination(
                             row,
                             ALPAKA_ACC_GPU_CUDA_ENABLE,
@@ -544,7 +510,7 @@ class CompilerFilter(FilterBase):
 
 @typechecked
 def compiler_filter_typechecked(
-    row: ParameterValueTuple,
+    row: BashiRow,
     version_relation: VersionRelation,
     output: Optional[IO[str]] = None,
 ) -> bool:

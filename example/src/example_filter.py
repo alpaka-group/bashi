@@ -2,11 +2,10 @@
 
 from typing import Dict, Callable, IO
 import packaging.version as pkv
-from bashi.types import ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter import FilterBase
 from bashi.version.dependencies.nvcc import NvccHostSupport
-from bashi import VersionRelation
+from bashi import VersionRelation, BashiRow
 
 from .globals import BUILD_TYPE, CMAKE_RELEASE_VER
 
@@ -28,12 +27,12 @@ class ExampleFilter(FilterBase):
     # pylint: disable=too-many-locals
     def __call__(
         self,
-        row: ParameterValueTuple,
+        row: BashiRow,
     ) -> bool:
         """Check if given parameter-value-tuple is valid
 
         Args:
-            row (ParameterValueTuple): parameter-value-tuple to verify.
+            row (BashiRow): parameter-value-tuple to verify.
 
         Returns:
             bool: True, if parameter-value-tuple is valid.
@@ -56,63 +55,54 @@ class ExampleFilter(FilterBase):
         for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
             if compiler_type in row and row[compiler_type].name in gpu_compilers:
                 for cpu_backend in cpu_backends:
-                    if cpu_backend in row and row[cpu_backend].version == ON_VER:
+                    if row[cpu_backend].version == ON_VER:
                         self.reason(
                             f"Enabled CPU backend {cpu_backend} and GPU {compiler_type} "
                             f"{row[compiler_type].name} cannot used together."
                         )
                         return False
 
-        if DEVICE_COMPILER in row:
-            for cpu_compiler in cpu_compilers:
-                if row[DEVICE_COMPILER].name == cpu_compiler:
-                    for cpu_backend in cpu_backends:
-                        if cpu_backend in row and row[cpu_backend].version == OFF_VER:
-                            self.reason(
-                                f"The backend {cpu_backend} cannot be disabled if device compiler "
-                                f"{cpu_compiler} is used"
-                            )
-                            return False
-                    for gpu_backend in gpu_backends:
-                        if gpu_backend in row and row[gpu_backend].version != OFF_VER:
-                            self.reason(
-                                f"The backend {gpu_backend} cannot be enabled if device compiler "
-                                f"{cpu_compiler} is used"
-                            )
-                            return False
+        for cpu_compiler in cpu_compilers:
+            if row[DEVICE_COMPILER].name == cpu_compiler:
+                for cpu_backend in cpu_backends:
+                    if row[cpu_backend].version == OFF_VER:
+                        self.reason(
+                            f"The backend {cpu_backend} cannot be disabled if device compiler "
+                            f"{cpu_compiler} is used"
+                        )
+                        return False
+                for gpu_backend in gpu_backends:
+                    if row[gpu_backend].version != OFF_VER:
+                        self.reason(
+                            f"The backend {gpu_backend} cannot be enabled if device compiler "
+                            f"{cpu_compiler} is used"
+                        )
+                        return False
 
         # pylint: disable=too-many-nested-blocks
         if HOST_COMPILER in row and row[HOST_COMPILER].name in (GCC, CLANG):
-            if ALPAKA_ACC_GPU_CUDA_ENABLE in row:
-                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version == OFF_VER:
-                    for cpu_backend in cpu_backends:
-                        if cpu_backend in row and row[cpu_backend].version == OFF_VER:
-                            self.reason(
-                                "If the host compiler is {row[HOST_COMPILER].name} and "
-                                "the CUDA backend is disable, all CPU backends needs to be enabled."
-                                f" {cpu_backend} is disabled."
-                            )
-                            return False
-                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version == ON_VER:
-                    for cpu_backend in cpu_backends:
-                        if cpu_backend in row and row[cpu_backend].version == ON_VER:
-                            self.reason(
-                                "If the host compiler is {row[HOST_COMPILER].name} and "
-                                "the CUDA backend is disable, all CPU backends needs to be enabled."
-                                f" {cpu_backend} is enabled."
-                            )
-                            return False
-
-            if (
-                CXX_STANDARD in row
-                and not ALPAKA_ACC_GPU_CUDA_ENABLE in row
-                and not (
-                    DEVICE_COMPILER in row
-                    or (DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC)
-                )
-            ):
+            if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version == OFF_VER:
                 for cpu_backend in cpu_backends:
-                    if cpu_backend in row and row[cpu_backend].version == OFF_VER:
+                    if row[cpu_backend].version == OFF_VER:
+                        self.reason(
+                            "If the host compiler is {row[HOST_COMPILER].name} and "
+                            "the CUDA backend is disable, all CPU backends needs to be enabled."
+                            f" {cpu_backend} is disabled."
+                        )
+                        return False
+            if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version == ON_VER:
+                for cpu_backend in cpu_backends:
+                    if row[cpu_backend].version == ON_VER:
+                        self.reason(
+                            "If the host compiler is {row[HOST_COMPILER].name} and "
+                            "the CUDA backend is disable, all CPU backends needs to be enabled."
+                            f" {cpu_backend} is enabled."
+                        )
+                        return False
+
+            if not ALPAKA_ACC_GPU_CUDA_ENABLE in row and not row[DEVICE_COMPILER].name == NVCC:
+                for cpu_backend in cpu_backends:
+                    if row[cpu_backend].version == OFF_VER:
                         nvcc_host_compiler_max_version: List[NvccHostSupport] = []
                         if row[HOST_COMPILER].name == GCC:
                             nvcc_host_compiler_max_version = sorted(
@@ -143,17 +133,17 @@ class ExampleFilter(FilterBase):
                             return False
 
         for cpu_backend in cpu_backends:
-            if cpu_backend in row and row[cpu_backend].version == ON_VER:
+            if row[cpu_backend].version == ON_VER:
                 for cpu_backend2 in cpu_backends:
                     if cpu_backend != cpu_backend2:
-                        if cpu_backend2 in row and row[cpu_backend2].version == OFF_VER:
+                        if row[cpu_backend2].version == OFF_VER:
                             self.reason(
                                 f"All CPU backends needs to be enabled. {cpu_backend} is "
                                 f"enabled, therefore {cpu_backend2} needs to be enabled too."
                             )
                             return False
                 for gpu_backend in gpu_backends:
-                    if gpu_backend in row and row[gpu_backend].version != OFF_VER:
+                    if row[gpu_backend].version != OFF_VER:
                         self.reason(
                             "If a single CPU backend is enabled all other gpu backends needs to be "
                             "disabled."
@@ -169,13 +159,9 @@ class ExampleFilter(FilterBase):
             # the specific Ubuntu version
             if HOST_COMPILER in row and row[HOST_COMPILER].name in (GCC, CLANG):
                 for cpu_backend in cpu_backends:
-                    if (
-                        cpu_backend in row
-                        and row[cpu_backend].version == OFF_VER
-                        and not self.runtime_infos[RT_AVAILABLE_CUDA_SDK_UBUNTU_VER](
-                            row[UBUNTU].version
-                        )
-                    ):
+                    if row[cpu_backend].version == OFF_VER and not self.runtime_infos[
+                        RT_AVAILABLE_CUDA_SDK_UBUNTU_VER
+                    ](row[UBUNTU].version):
                         return False
 
         # if nvcc does not support a gcc/clang version, the gcc/clang compiler can be only used as
@@ -184,20 +170,13 @@ class ExampleFilter(FilterBase):
             (GCC, max(comb.host for comb in self.version.get_nvcc_gcc_max_version())),
             (CLANG, max(comb.host for comb in self.version.get_nvcc_clang_max_version())),
         ):
-            if (
-                HOST_COMPILER in row
-                and row[HOST_COMPILER].name == compiler_name
-                and row[HOST_COMPILER].version > pkv.parse(str(max_supported_version))
+            if row[HOST_COMPILER].name == compiler_name and row[HOST_COMPILER].version > pkv.parse(
+                str(max_supported_version)
             ):
                 for cpu_backend in cpu_backends:
-                    if cpu_backend in row and row[cpu_backend].version == OFF_VER:
+                    if row[cpu_backend].version == OFF_VER:
                         return False
-        if (
-            CMAKE in row
-            and row[CMAKE].version <= pkv.parse("3.25")
-            and BUILD_TYPE in row
-            and row[BUILD_TYPE].version == CMAKE_RELEASE_VER
-        ):
+        if row[CMAKE].version <= pkv.parse("3.25") and row[BUILD_TYPE].version == CMAKE_RELEASE_VER:
             self.reason(
                 "CMake 3.25 does not support CMake Release builds."
                 "Only for demonstration. In reality it is working."

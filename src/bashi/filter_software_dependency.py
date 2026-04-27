@@ -7,14 +7,14 @@ These identifiers are used in the test names, for example, to make it clear whic
 which rule.
 """
 
-from typing import Dict, Optional, IO, Callable
+from typing import Dict, Optional, IO, Callable, cast
 import packaging.version as pkv
 from typeguard import typechecked
-from bashi.types import ParameterValueTuple
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.filter import FilterBase
 from bashi.version.relation import VersionRelation
 from bashi.printer import ubuntu_version_to_string
+from bashi.row import BashiRow
 
 
 def _pretty_name_compiler(constant: str) -> str:
@@ -47,12 +47,12 @@ class SoftwareDependencyFilter(FilterBase):
 
     def __call__(
         self,
-        row: ParameterValueTuple,
+        row: BashiRow,
     ) -> bool:
         """Check if given parameter-value-tuple is valid.
 
         Args:
-            row (ParameterValueTuple): parameter-value-tuple to verify.
+            row (BashiRow): parameter-value-tuple to verify.
 
         Returns:
             bool: True, if parameter-value-tuple is valid.
@@ -64,9 +64,9 @@ class SoftwareDependencyFilter(FilterBase):
         # Rule: d1
         # GCC 6 and older is not available in Ubuntu 20.04 and newer
 
-        if UBUNTU in row and row[UBUNTU].version >= pkv.parse("20.04"):
+        if row[UBUNTU].version >= pkv.parse("20.04"):
             for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-                if compiler_type in row and row[compiler_type].name == GCC:
+                if row[compiler_type].name == GCC:
                     if row[compiler_type].version <= pkv.parse("6"):
                         self.reason(
                             f"{_pretty_name_compiler(compiler_type)} GCC "
@@ -78,9 +78,9 @@ class SoftwareDependencyFilter(FilterBase):
         # Rule: d2
         # CMAKE 3.19 and older is not available with clang-cuda as device and host compiler
 
-        if CMAKE in row and row[CMAKE].version <= pkv.parse("3.18"):
+        if row[CMAKE].version <= pkv.parse("3.18"):
             for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-                if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
+                if row[compiler_type].name == CLANG_CUDA:
                     self.reason(
                         f"{_pretty_name_compiler(compiler_type)} CLANG_CUDA "
                         "is not available in CMAKE "
@@ -92,10 +92,11 @@ class SoftwareDependencyFilter(FilterBase):
             # Rule: d3
             # check if a hipcc version is available on an ubuntu version
             for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-                if compiler_type in row and row[compiler_type].name == HIPCC:
+                if row[compiler_type].name == HIPCC:
                     for ubuntu_hip_range in self.version.get_ubuntu_hip_version_range():
                         if (
-                            row[compiler_type].version in ubuntu_hip_range.sdk_range
+                            cast(ValueVersion, row[compiler_type].version)
+                            in ubuntu_hip_range.sdk_range
                             and row[UBUNTU].version != ubuntu_hip_range.ubuntu
                         ):
                             self.reason(
@@ -106,10 +107,7 @@ class SoftwareDependencyFilter(FilterBase):
                             return False
 
             # Rule: d5
-            if (
-                ALPAKA_ACC_GPU_HIP_ENABLE in row
-                and row[ALPAKA_ACC_GPU_HIP_ENABLE].version == ON_VER
-            ):
+            if row[ALPAKA_ACC_GPU_HIP_ENABLE].version == ON_VER:
                 if RT_AVAILABLE_HIP_SDK_UBUNTU_VER in self.runtime_infos and not self.runtime_infos[
                     RT_AVAILABLE_HIP_SDK_UBUNTU_VER
                 ](row[UBUNTU].version):
@@ -120,10 +118,11 @@ class SoftwareDependencyFilter(FilterBase):
                     return False
 
             # Rule: d6
-            if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
+            if row[DEVICE_COMPILER].name == NVCC:
                 for ubuntu_cuda_range in self.version.get_ubuntu_cuda_version_range():
                     if (
-                        row[DEVICE_COMPILER].version in ubuntu_cuda_range.sdk_range
+                        cast(ValueVersion, row[DEVICE_COMPILER].version)
+                        in ubuntu_cuda_range.sdk_range
                         and row[UBUNTU].version != ubuntu_cuda_range.ubuntu
                     ):
                         self.reason(
@@ -134,13 +133,11 @@ class SoftwareDependencyFilter(FilterBase):
                         return False
 
             # Rule: d7
-            if (
-                ALPAKA_ACC_GPU_CUDA_ENABLE in row
-                and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
-            ):
+            if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER:
                 for ubuntu_cuda_range in self.version.get_ubuntu_cuda_version_range():
                     if (
-                        row[ALPAKA_ACC_GPU_CUDA_ENABLE].version in ubuntu_cuda_range.sdk_range
+                        cast(ValueVersion, row[ALPAKA_ACC_GPU_CUDA_ENABLE].version)
+                        in ubuntu_cuda_range.sdk_range
                         and row[UBUNTU].version != ubuntu_cuda_range.ubuntu
                     ):
                         self.reason(
@@ -152,7 +149,7 @@ class SoftwareDependencyFilter(FilterBase):
 
             # Rule: d8
             for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-                if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
+                if row[compiler_type].name == CLANG_CUDA:
                     if row[UBUNTU].version not in self.version.get_ubuntu_clang_cuda_sdk_support():
                         self.reason(
                             "There is no installable CUDA SDK available for "
@@ -161,8 +158,10 @@ class SoftwareDependencyFilter(FilterBase):
                         return False
 
                     if (
-                        row[compiler_type].version
-                        not in self.version.get_ubuntu_clang_cuda_sdk_support()[row[UBUNTU].version]
+                        cast(ValueVersion, row[compiler_type].version)
+                        not in self.version.get_ubuntu_clang_cuda_sdk_support()[
+                            cast(ValueVersion, row[UBUNTU].version)
+                        ]
                     ):
                         self.reason(
                             "There is no compatible CUDA SDK for Clang-CUDA "
@@ -180,7 +179,7 @@ class SoftwareDependencyFilter(FilterBase):
                 # The case would be, that no Nvcc version and no Clang-CUDA version which supports
                 # the backend.
                 for compiler_type in (HOST_COMPILER, DEVICE_COMPILER):
-                    if compiler_type in row and row[compiler_type].name == CLANG_CUDA:
+                    if row[compiler_type].name == CLANG_CUDA:
                         self.reason(
                             "There is no CUDA SDK in input parameter-value-matrix for "
                             f"{compiler_type} Clang-CUDA {row[compiler_type].version} which can be "
@@ -188,11 +187,7 @@ class SoftwareDependencyFilter(FilterBase):
                         )
                         return False
                 # Rule: d10
-                if (
-                    ALPAKA_ACC_GPU_CUDA_ENABLE in row
-                    and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER
-                ):
-
+                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version != OFF_VER:
                     self.reason(
                         "There is no CUDA SDK for the CUDA backend "
                         f"{row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} in the input "
@@ -201,7 +196,7 @@ class SoftwareDependencyFilter(FilterBase):
                     )
                     return False
                 # Rule: d11
-                if DEVICE_COMPILER in row and row[DEVICE_COMPILER].name == NVCC:
+                if row[DEVICE_COMPILER].name == NVCC:
                     self.reason(
                         "There is no CUDA SDK in input parameter-value-matrix for Nvcc "
                         f"{row[DEVICE_COMPILER].version} which can be installed on Ubuntu "
@@ -213,7 +208,7 @@ class SoftwareDependencyFilter(FilterBase):
 
 @typechecked
 def software_dependency_filter_typechecked(
-    row: ParameterValueTuple,
+    row: BashiRow,
     version_relation: VersionRelation,
     output: Optional[IO[str]] = None,
 ) -> bool:
