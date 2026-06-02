@@ -88,6 +88,11 @@ RT_AVAILABLE_CUDA_SDK_UBUNTU_VER: str = "rt_available_cuda_sdk_ubuntu_ver"
 class FilterDebugMode(Enum):
     """Control which debug information will be displayed if a row passes a filter."""
 
-    OFF = 0  # no information
-    NORMAL = 1  # human readable information
-    VALIDATOR_ARGS = 2  # can be passed to the validator application
+    OFF = "off"  # no information
+    NORMAL = "normal"  # human readable information
+    VALIDATOR_ARGS = "args"  # can be passed to the validator application
+
+    @classmethod
+    def values(cls) -> list[str]:
+        """Return all enum values."""
+        return [v.value for v in cls]
