@@ -47,13 +47,6 @@ from src.globals import (
 )
 
 
-FILTER_MODE_ARGS = {
-    "off": FilterDebugMode.OFF,
-    "normal": FilterDebugMode.NORMAL,
-    "args": FilterDebugMode.VALIDATOR_ARGS,
-}
-
-
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-statements
@@ -398,8 +391,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--debug-print",
-        type=str,
-        choices=FILTER_MODE_ARGS.keys(),
+        type=FilterDebugMode,
+        choices=FilterDebugMode.values(),
         default="off",
         help="Display Indicate which combinations passed through the filter chain and which did "
         "not.Green text indicates that the combination passed through the filter chain; red text"
@@ -433,7 +426,7 @@ if __name__ == "__main__":
         runtime_infos=rt_infos,
         custom_filter=custom_filter,
         version_relation=version_relation,
-        debug_print=FILTER_MODE_ARGS[args.debug_print],
+        debug_print=args.debug_print,
     )
 
     create_yaml(comb_list)
