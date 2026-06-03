@@ -92,7 +92,6 @@ class FilterDebugMode(Enum):
     NORMAL = "normal"  # human readable information
     VALIDATOR_ARGS = "args"  # can be passed to the validator application
 
-    @classmethod
-    def values(cls) -> list[str]:
-        """Return all enum values."""
-        return [v.value for v in cls]
+    def __str__(self):
+        # required that choices=list(FilterDebugMode) is working in a argparse.argument
+        return self.value

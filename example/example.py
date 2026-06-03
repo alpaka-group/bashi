@@ -392,7 +392,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--debug-print",
         type=FilterDebugMode,
-        choices=FilterDebugMode.values(),
+        choices=list(FilterDebugMode),
         default="off",
         help="Display Indicate which combinations passed through the filter chain and which did "
         "not.Green text indicates that the combination passed through the filter chain; red text"
