@@ -1,7 +1,3 @@
-# ⚠️ Disclaimer ⚠️
-
-This project will be the successor to the [alpaka-job-matrix-library](https://github.com/alpaka-group/alpaka-job-matrix-library). We have decided that several fundamental changes are needed in the [alpaka-job-matrix-library](https://github.com/alpaka-group/alpaka-job-matrix-library), including renaming. Therefore, rewriting large parts of the code base would be necessary. Based on this, we have decided that a new project means less work. Until this project is officially released, please use the [alpaka-job-matrix-library](https://github.com/alpaka-group/alpaka-job-matrix-library). The project is already public due to the use of CI features.
-
 # bashi
 
 [![codecov](https://codecov.io/github/alpaka-group/bashi/graph/badge.svg?token=QEF8G02ZST)](https://codecov.io/github/alpaka-group/bashi)
@@ -26,15 +22,13 @@ An example of the use of the `bashi` library can be found in [example/example.py
 
 # Installation
 
-⚠️ Disclaimer ⚠️ Not working yet -> needs to be registered.
-
 Install via pip:
 
 ```bash
-pip install bashi
+pip install bashi-ci
 ```
 
-See [pypi.org](https://pypi.org/project/bashi/)
+See [pypi.org](https://pypi.org/project/bashi-ci/)
 
 # bashi-validate
 
