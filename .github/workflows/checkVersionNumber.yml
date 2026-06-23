@@ -1,0 +1,24 @@
+name: check-version-number
+on: [push, pull_request]
+jobs:
+  check-version:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    name: checks if the version.txt is different compare to the main branch
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: pr
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          path: main
+      - name: check version.txt
+        run: |
+          if ! diff pr/version.txt main/version.txt >> /dev/null ; then
+            echo "the versions are different"
+            exit 0
+          else
+            echo "the same version as in the main branch"
+            exit 1
+          fi

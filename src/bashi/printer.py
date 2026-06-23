@@ -5,6 +5,7 @@ from bashi.types import (
     Parameter,
     ParameterValue,
     ParameterValueSingle,
+    ParameterValueTuple,
     ValueName,
     ValueVersion,
 )
@@ -104,12 +105,12 @@ def get_str_parameter_value_single(
 
 
 def get_str_row_nice(
-    row: BashiRow, init: str = "", bashi_validate: bool = False
+    row: ParameterValueTuple | BashiRow, init: str = "", bashi_validate: bool = False
 ) -> str:  # pragma: no cover
     """Returns a parameter-value-tuple as string in a short and nice way.
 
     Args:
-        row (BashiRow): row with parameter-value-tuple
+        row (ParameterValueTuple | BashiRow): row with parameter-value-tuple
         init (str, optional): Prefix of the output string. Defaults to "".
         bashi_validate (bool): If it is set to True, the row is printed in a form that can be passed
             directly as arguments to bashi-validate. Defaults to False.
@@ -125,11 +126,13 @@ def get_str_row_nice(
     return s
 
 
-def print_row_nice(row: BashiRow, init: str = "", bashi_validate: bool = False):  # pragma: no cover
+def print_row_nice(
+    row: ParameterValueTuple | BashiRow, init: str = "", bashi_validate: bool = False
+):  # pragma: no cover
     """Prints a parameter-value-tuple in a short and nice way.
 
     Args:
-        row (BashiRow): row with parameter-value-tuple
+        row (ParameterValueTuple | BashiRow): row with parameter-value-tuple
         init (str, optional): Prefix of the output string. Defaults to "".
         bashi_validate (bool): If it is set to True, the row is printed in a form that can be passed
             directly as arguments to bashi-validate. Defaults to False.
