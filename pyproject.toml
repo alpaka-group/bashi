@@ -3,13 +3,13 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bashi"
+name = "bashi-ci"
 maintainers = [
-    {name = "Simeon Ehrig", email = "s.ehrig@hzdr.de"}, 
+    {name = "Simeon Ehrig", email = "s.ehrig@hzdr.de"},
 ]
 authors = [
-    {name = "Simeon Ehrig", email = "s.ehrig@hzdr.de"}, 
-    {name = "Jan Stephan", email = "j.stephan@hzdr.de"}, 
+    {name = "Simeon Ehrig", email = "s.ehrig@hzdr.de"},
+    {name = "Jan Stephan", email = "j.stephan@hzdr.de"},
 ]
 readme = "README.md"
 requires-python = ">=3.10"
