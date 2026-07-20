@@ -75,7 +75,7 @@ from bashi.printer import (
     ubuntu_version_to_string,
     on_off_ver_to_str,
 )
-from bashi.filter import FilterBase
+from bashi.filter_base import FilterBase
 from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.row import BashiRow
 

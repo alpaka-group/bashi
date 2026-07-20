@@ -14,7 +14,7 @@ from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-i
 from bashi.types import Parameter, ValueName
 from bashi.version.dependencies.base_version_support import CompilerCxxSupport
 from bashi.version.relation import VersionRelation
-from bashi.filter import FilterBase
+from bashi.filter_base import FilterBase
 from bashi.utils import reason
 from bashi.row import BashiRow
 

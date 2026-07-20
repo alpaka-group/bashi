@@ -3,7 +3,7 @@
 from typing import Dict, Callable, IO
 import packaging.version as pkv
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.filter import FilterBase
+from bashi.filter_base import FilterBase
 from bashi.version.dependencies.nvcc import NvccHostSupport
 from bashi import VersionRelation, BashiRow
 

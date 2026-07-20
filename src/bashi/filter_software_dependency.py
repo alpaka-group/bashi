@@ -11,7 +11,7 @@ from typing import Dict, Optional, IO, Callable, cast
 import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.filter import FilterBase
+from bashi.filter_base import FilterBase
 from bashi.version.relation import VersionRelation
 from bashi.printer import ubuntu_version_to_string
 from bashi.row import BashiRow
