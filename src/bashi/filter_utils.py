@@ -5,7 +5,7 @@ reduce the number of generated CI jobs."""
 from typing import List
 
 from bashi.row import BashiRow
-from bashi.types import ValueName
+from bashi.types import ValueName, CompilerBackendCombination
 from bashi.globals import DEVICE_COMPILER, HOST_COMPILER, OFF_VER
 
 
@@ -37,3 +37,33 @@ def all_backends_fine(
                     return False
 
     return True
+
+
+def get_valid_compiler_backend_combinations(
+    row: BashiRow,
+    allowed_backend_combinations: List[CompilerBackendCombination],
+    all_available_backends: List[str],
+) -> List[CompilerBackendCombination]:
+    """Return a list of all possible compiler and backend combinations, which are still possible
+    for the given row.
+
+    Args:
+        row (BashiRow): parameter-value-tuple
+        backends (List[ValueName]): Backends which needs to be enabled.
+        all_available_backends (List[ValueName]): All available backends. If a backend is not in the
+            backends list, but in this list, it needs to be disabled.
+
+    Returns:
+        List[CompilerBackendComb]: List if possible backends combinations
+    """
+    valid_combs: List[CompilerBackendCombination] = []
+    for comb in allowed_backend_combinations:
+        host_compiler, device_compiler, backends = comb
+        if row[HOST_COMPILER].name != host_compiler:
+            continue
+        if row[DEVICE_COMPILER].name != device_compiler:
+            continue
+        if all_backends_fine(row, backends, all_available_backends):
+            valid_combs.append(comb)
+
+    return valid_combs

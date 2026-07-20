@@ -2,4 +2,7 @@ words = [
     "alpaka",
     "bashi",
     "cuda",
+    "hipcc",
+    "icpx",
+    "nvcc",
 ]

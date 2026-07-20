@@ -15,6 +15,7 @@ from bashi.types import (
     RegularParsableParameterSingle,
     CompilerParsableParameterSingle,
     ParsableParameterSingle,
+    CompilerBackendCombination,
 )
 from bashi.globals import (
     HOST_COMPILER,
@@ -78,7 +79,7 @@ from bashi.printer import (
 from bashi.filter_base import FilterBase
 from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.row import BashiRow
-from bashi.filter_utils import all_backends_fine
+from bashi.filter_utils import all_backends_fine, get_valid_compiler_backend_combinations
 
 __all__ = [
     "Parameter",
@@ -95,6 +96,7 @@ __all__ = [
     "RegularParsableParameterSingle",
     "CompilerParsableParameterSingle",
     "ParsableParameterSingle",
+    "CompilerBackendCombination",
     "HOST_COMPILER",
     "DEVICE_COMPILER",
     "GCC",
@@ -153,4 +155,5 @@ __all__ = [
     "BashiRow",
     "FilterDebugMode",
     "all_backends_fine",
+    "get_valid_compiler_backend_combinations",
 ]
