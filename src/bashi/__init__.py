@@ -78,6 +78,7 @@ from bashi.printer import (
 from bashi.filter_base import FilterBase
 from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.row import BashiRow
+from bashi.filter_utils import all_backends_fine
 
 __all__ = [
     "Parameter",
@@ -151,4 +152,5 @@ __all__ = [
     "get_expected_bashi_parameter_value_pairs",
     "BashiRow",
     "FilterDebugMode",
+    "all_backends_fine",
 ]
