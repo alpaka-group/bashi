@@ -3,7 +3,7 @@ import unittest
 from typing import IO, Dict, List, Callable
 import packaging.version as pkv
 from bashi.types import ParameterValue
-from bashi.filter import FilterBase
+from bashi.filter_base import FilterBase
 from bashi.filter_chain import get_default_filter_chain
 from bashi.version.relation import VersionRelation
 from bashi.row import BashiRow

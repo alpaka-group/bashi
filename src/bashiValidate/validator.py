@@ -8,7 +8,7 @@ import packaging.version
 from typeguard import typechecked
 from bashi.types import ParameterValue
 from bashi.version.utils import is_supported_version
-from bashi.filter import FilterBase
+from bashi.filter_base import FilterBase
 from bashi.filter_compiler import CompilerFilter
 from bashi.filter_backend import BackendFilter
 from bashi.filter_software_dependency import SoftwareDependencyFilter

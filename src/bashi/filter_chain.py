@@ -6,7 +6,7 @@ import covertable  # type: ignore
 import termcolor
 from bashi.globals import FilterDebugMode
 
-from bashi.filter import FilterBase
+from bashi.filter_base import FilterBase
 from bashi.filter_compiler import CompilerFilter
 from bashi.filter_backend import BackendFilter
 from bashi.filter_software_dependency import SoftwareDependencyFilter

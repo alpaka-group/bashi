@@ -13,7 +13,7 @@ from bashi.types import (
     CombinationList,
 )
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from bashi.filter import FilterBase
+from bashi.filter_base import FilterBase
 from bashi.filter_chain import get_default_filter_chain, FilterChain
 from bashi.runtime_info import get_sdk_supporting_ubuntus
 from bashi.version.relation import VersionRelation

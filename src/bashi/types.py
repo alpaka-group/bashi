@@ -28,3 +28,9 @@ CompilerParsableParameterSingle: TypeAlias = Tuple[str, str, ParsableValueVersio
 ParsableParameterSingle: TypeAlias = Union[
     RegularParsableParameterSingle, CompilerParsableParameterSingle
 ]
+
+# A valid backend combinations contains an host and device compiler and several enabled backends.
+CompilerBackendCombination = NamedTuple(
+    "CompilerBackendCombination",
+    [("host", ValueName), ("device", ValueName), ("backends", List[ValueName])],
+)

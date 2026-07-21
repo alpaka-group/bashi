@@ -2,12 +2,16 @@
 
 import unittest
 from typing import List, Union, Tuple, Callable, TypeAlias, Dict
+from collections import OrderedDict
+from bashi.row import BashiRow
 import packaging.version as pkv
 from typeguard import typechecked
 from bashi.types import (
+    Parameter,
     ParameterValue,
     ParameterValuePair,
     ValueName,
+    ParameterValueTuple,
 )
 from bashi.utils import create_parameter_value_pair
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -248,3 +252,51 @@ def parse_value_version(input_list: List[Union[str, int, float]]) -> List[ValueV
         List[ValueVersion]: List of parsed versions.
     """
     return [pkv.parse(str(v)) for v in input_list]
+
+
+def parse_param_value_tuples(input_list: List[ParsableParameterValue]) -> ParameterValueTuple:
+    """Parse a list of tuples to a parameter-value-tuple.
+
+    Args:
+        input_list (List[Tuple[ParsableParameterValue, ParsableParameterValue]]):
+            e.g.:
+            parse_param_value_tuples(
+            [
+                (HOST_COMPILER, GCC, 12), (UBUNTU, 22.04), (DEVICE_COMPILER, GCC, 12),
+                (CMAKE, "3.19"), (ALPAKA_ACC_GPU_CUDA_ENABLE, "10.1"),
+                (ALPAKA_ACC_ONEAPI_CPU_ENABLE, ON)
+            ])
+
+    Raises:
+        TypeError: If a host or device compiler has no ValueName and ValueVersion
+        TypeError: If a parameter which is not host or device compiler has no ValueVersion
+
+    Returns:
+        bashi.ParameterValueTuple: parameter-value-tuple
+    """
+    row: ParameterValueTuple = OrderedDict()
+    for entry in input_list:
+        param_name: Parameter = entry[0]
+        if param_name in (HOST_COMPILER, DEVICE_COMPILER):
+            if len(entry) < 3:
+                raise TypeError(f"Parameter is {param_name}. Has not 3 values: {entry}")
+            value_name = entry[1]
+            value_version = entry[2]
+        else:
+            if len(entry) < 2:
+                raise TypeError(f"Has not 2 values: {entry}")
+            value_name = param_name
+            value_version = entry[1]
+        row[param_name] = parse_param_val((value_name, value_version))
+
+    return row
+
+
+def parse_bashi_row(input_list: List[ParsableParameterValue]) -> BashiRow:
+    """Parse a list of tuples to a BashiRow. See parse_param_value_tuples()
+
+    Returns:
+        bashi.BashiRow: parameter-value-tuple
+    """
+
+    return BashiRow(parse_param_value_tuples(input_list))

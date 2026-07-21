@@ -12,7 +12,7 @@ import packaging.version as pkv
 from typeguard import typechecked
 from bashi.globals import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from bashi.version.relation import VersionRelation
-from bashi.filter import FilterBase
+from bashi.filter_base import FilterBase
 from bashi.row import BashiRow
 
 
