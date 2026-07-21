@@ -80,6 +80,7 @@ from bashi.filter_base import FilterBase
 from bashi.results import get_expected_bashi_parameter_value_pairs
 from bashi.row import BashiRow
 from bashi.filter_utils import all_backends_fine, get_valid_compiler_backend_combinations
+from bashi.result_modules.custom_verifier import remove_unsupported_compiler_backend_combinations
 
 __all__ = [
     "Parameter",
@@ -156,4 +157,5 @@ __all__ = [
     "FilterDebugMode",
     "all_backends_fine",
     "get_valid_compiler_backend_combinations",
+    "remove_unsupported_compiler_backend_combinations",
 ]
