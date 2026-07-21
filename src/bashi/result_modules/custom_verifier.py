@@ -48,3 +48,46 @@ def remove_unsupported_compiler_backend_combinations(
                     parameter2=unsupported_backend,
                     value_min_version2=ON,
                 )
+
+
+def remove_unsupported_backend_combinations(
+    parameter_value_pairs: List[ParameterValuePair],
+    removed_parameter_value_pairs: List[ParameterValuePair],
+    all_used_backends: List[ValueName],
+    allowed_backend_combinations: List[CompilerBackendCombination],
+):
+    """
+    For a given list of valid compiler backend combinations, removes all parameter-value-pairs in
+    which two backends are specified as parameters. Both backends must be enabled and must not be
+    part of any compiler backend combination that shares the same host or device compiler.
+
+    Args:
+        parameter_value_pairs (List[ParameterValuePair]): List of parameter-value pairs.
+        removed_parameter_value_pairs (List[ParameterValuePair]): list with removed
+            parameter-value-pairs
+        all_used_backends (List[ValueName]): List of all used backends.
+        allowed_compiler_backend_combinations (List[CompilerBackendCombination]): List of all
+            allowed compiler backend combinations.
+    """
+    for current_backend in all_used_backends:
+        # list of backends which are enabled in at least combination together with the current backend
+        partner_backends: list[ValueName] = []
+        for allow_compiler_backend_compination in allowed_backend_combinations:
+            if current_backend in allow_compiler_backend_compination.backends:
+                partner_backends += [
+                    b
+                    for b in allow_compiler_backend_compination.backends
+                    if b not in partner_backends and b != current_backend
+                ]
+
+        for unsupported_backend in (
+            set(all_used_backends) - set(partner_backends) - set(current_backend)
+        ):
+            remove_parameter_value_pairs_ranges(
+                parameter_value_pairs,
+                removed_parameter_value_pairs,
+                parameter1=current_backend,
+                value_min_version1=ON,
+                parameter2=unsupported_backend,
+                value_min_version2=ON,
+            )
