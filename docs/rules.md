@@ -6,9 +6,9 @@
 # filters all parameter-value-tuples where the host and device compiler do not have the same name
 # bashiRow implements the parameter-value-tuple
 def example_filter(row : BashiRow) -> bool:
-    if (HOST_COMPILER and row
-        and DEVICE_COMPILER in row
-        and row[HOST_COMPILER].name != row[DEVICE].name):
+    if (row[HOST_COMPILER].name != row[DEVICE].name):
+            # This message will be displayed in the validator tool, if a combination does not pass the check.
+            self.reason("The host and device compiler name needs to be the same.")
             return False
 
     return True
@@ -30,6 +30,23 @@ host=gcc@13 bTBB=OFF cmake=3.24 ubuntu=20.4 device=gcc@11 # not valid because if
 host=gcc@13 bTBB=OFF cmake=3.24 ubuntu=20.4 device=gcc@12
 host=gcc@13 bTBB=OFF cmake=3.24 ubuntu=20.4 device=gcc@13 # valid combination
 host=gcc@13 bTBB=OFF cmake=3.24 ubuntu=20.4 device=gcc@13 bSeq=ON # valid combination
+```
+
+**Note:** Please follow the existing rules for a good practice guidelines.
+For example, a version relationship between two value versions should be stored in the `VersionRelation` object.
+An example of this is determining which CUDA version supports which GCC version.
+
+```python
+    # ...
+    for nvcc_gcc_comb in self.version.get_nvcc_gcc_max_version():
+        if row[DEVICE_COMPILER].version >= nvcc_gcc_comb.nvcc:
+            if row[HOST_COMPILER].version > nvcc_gcc_comb.host:
+                self.reason(
+                    f"nvcc {row[DEVICE_COMPILER].version} "
+                    f"does not support gcc {row[HOST_COMPILER].version}",
+                )
+                return False
+            break
 ```
 
 # Writing a New Rule
