@@ -201,7 +201,7 @@ def _remove_unsupported_nvcc_cuda_host_compiler_versions(
                 if inklusiv_min_version.host == exklusiv_max_version.host:
                     self.host_specifier_set = SpecifierSet(f">{exklusiv_max_version.host}")
                 else:
-                    self.host_specifier_set = SpecifierSet(f">={exklusiv_max_version.host}")
+                    self.host_specifier_set = SpecifierSet(f">{inklusiv_min_version.host}")
                 self.nvcc_specifier_set = SpecifierSet(
                     f">={inklusiv_min_version.nvcc},<{exklusiv_max_version.nvcc}"
                 )
