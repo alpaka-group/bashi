@@ -17,7 +17,6 @@ from bashi.version import VERSIONS
 from bashi.version.relation import VersionRelation
 from bashi.version.dependencies.clang_cuda import CLANG_CUDA_MAX_CUDA_VERSION
 
-
 # pyright: reportPrivateUsage=false
 from bashi.results import (
     _remove_different_compiler_names,
@@ -886,6 +885,55 @@ class TestExpectedBashiParameterValuesPairsNvccHostCompilerVersions(unittest.Tes
             expected_results,
             self,
             version_relation=VersionRelation(),
+        )
+
+    def test_remove_nvcc_unsupported_clang_versions_2(self):
+        supported_nvcc_versions: List[NvccHostSupport] = [
+            NvccHostSupport("13.4", "22"),
+            NvccHostSupport("13.0", "20"),
+            NvccHostSupport("12.9", "19"),
+            NvccHostSupport("12.6", "18"),
+            NvccHostSupport("12.4", "17"),
+        ]
+
+        test_param_value_pairs = parse_expected_val_pairs(
+            [
+                ((HOST_COMPILER, CLANG, 18), (DEVICE_COMPILER, NVCC, 12.9)),
+                ((HOST_COMPILER, CLANG, 19), (DEVICE_COMPILER, NVCC, 12.9)),
+                ((HOST_COMPILER, CLANG, 20), (DEVICE_COMPILER, NVCC, 12.9)),
+                ((HOST_COMPILER, CLANG, 20), (DEVICE_COMPILER, NVCC, 13.0)),
+                ((HOST_COMPILER, CLANG, 21), (DEVICE_COMPILER, NVCC, 13.0)),
+                ((HOST_COMPILER, CLANG, 20), (DEVICE_COMPILER, NVCC, 13.1)),
+                ((HOST_COMPILER, CLANG, 21), (DEVICE_COMPILER, NVCC, 13.1)),
+                ((HOST_COMPILER, CLANG, 22), (DEVICE_COMPILER, NVCC, 13.1)),
+                ((HOST_COMPILER, CLANG, 21), (DEVICE_COMPILER, NVCC, 13.3)),
+                ((HOST_COMPILER, CLANG, 22), (DEVICE_COMPILER, NVCC, 13.3)),
+                ((HOST_COMPILER, CLANG, 22), (DEVICE_COMPILER, NVCC, 13.4)),
+            ]
+        )
+
+        expected_results = parse_expected_val_pairs(
+            [
+                ((HOST_COMPILER, CLANG, 18), (DEVICE_COMPILER, NVCC, 12.9)),
+                ((HOST_COMPILER, CLANG, 19), (DEVICE_COMPILER, NVCC, 12.9)),
+                # ((HOST_COMPILER, CLANG, 20), (DEVICE_COMPILER, NVCC, 12.9)),
+                ((HOST_COMPILER, CLANG, 20), (DEVICE_COMPILER, NVCC, 13.0)),
+                # ((HOST_COMPILER, CLANG, 21), (DEVICE_COMPILER, NVCC, 13.0)),
+                ((HOST_COMPILER, CLANG, 20), (DEVICE_COMPILER, NVCC, 13.1)),
+                # ((HOST_COMPILER, CLANG, 21), (DEVICE_COMPILER, NVCC, 13.1)),
+                # ((HOST_COMPILER, CLANG, 22), (DEVICE_COMPILER, NVCC, 13.1)),
+                # ((HOST_COMPILER, CLANG, 21), (DEVICE_COMPILER, NVCC, 13.3)),
+                # ((HOST_COMPILER, CLANG, 22), (DEVICE_COMPILER, NVCC, 13.3)),
+                ((HOST_COMPILER, CLANG, 22), (DEVICE_COMPILER, NVCC, 13.4)),
+            ]
+        )
+
+        default_remove_test(
+            _remove_nvcc_unsupported_clang_versions,
+            test_param_value_pairs,
+            expected_results,
+            self,
+            version_relation=VersionRelation(nvcc_clang_max_version=supported_nvcc_versions),
         )
 
 
