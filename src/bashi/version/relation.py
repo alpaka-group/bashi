@@ -4,6 +4,7 @@ from typing import List, Dict
 from operator import attrgetter
 import packaging.version
 import packaging.specifiers
+from bashi.types import ValueVersion
 from bashi.version.dependencies.nvcc import (
     NvccHostSupport,
     NVCC_GCC_MAX_VERSION,
@@ -63,11 +64,13 @@ class VersionRelation:
             NVCC_GCC_MAX_VERSION if nvcc_gcc_max_version is None else nvcc_gcc_max_version
         )
         self._nvcc_gcc_max_version.sort(reverse=True)
+        self._nvcc_gcc_max_supported_host_compiler_version = self._nvcc_gcc_max_version[0].host
 
         self._nvcc_clang_max_version = (
             NVCC_CLANG_MAX_VERSION if nvcc_clang_max_version is None else nvcc_clang_max_version
         )
         self._nvcc_clang_max_version.sort(reverse=True)
+        self._nvcc_clang_max_supported_host_compiler_version = self._nvcc_clang_max_version[0].host
 
         self._nvcc_cxx_support_version = (
             NVCC_CXX_SUPPORT_VERSION
@@ -277,9 +280,17 @@ class VersionRelation:
         """Return what is the maximum supported GCC versions for various NVCC versions."""
         return self._nvcc_gcc_max_version
 
+    def get_nvcc_gcc_max_supported_host_compiler_version(self) -> ValueVersion:
+        """Return the maximum clang version, which is supported by any nvcc version."""
+        return self._nvcc_gcc_max_supported_host_compiler_version
+
     def get_nvcc_clang_max_version(self) -> List[NvccHostSupport]:
         """Return what is the maximum supported Clang versions for various NVCC versions."""
         return self._nvcc_clang_max_version
+
+    def get_nvcc_clang_max_supported_host_compiler_version(self) -> ValueVersion:
+        """Return the maximum clang version, which is supported by any nvcc version."""
+        return self._nvcc_clang_max_supported_host_compiler_version
 
     def get_nvcc_cxx_support_version(self) -> List[CompilerCxxSupport]:
         """Return what is the maximum supported C++ standard for various NVCC versions."""
