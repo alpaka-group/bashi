@@ -53,7 +53,8 @@ class FilterChain:
             runtime_infos=runtime_infos, version_relation=version_relation
         )
         self.custom_filter = custom_filter
-        self.version = version_relation
+        if version_relation:
+            self.custom_filter.version = version_relation
         if runtime_infos:
             self.custom_filter.runtime_infos = runtime_infos
         self.debug_print = debug_print
