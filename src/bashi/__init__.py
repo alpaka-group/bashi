@@ -67,6 +67,8 @@ from bashi.utils import (
     parse_value_version,
     parse_parameter_single,
     parse_combination,
+    print_warn,
+    print_error,
 )
 from bashi.printer import (
     get_str_row_nice,
@@ -148,6 +150,8 @@ __all__ = [
     "parse_value_version",
     "parse_parameter_single",
     "parse_combination",
+    "print_warn",
+    "print_error",
     "get_str_row_nice",
     "print_row_nice",
     "add_print_row_nice_parameter_alias",
