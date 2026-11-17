@@ -226,9 +226,7 @@ class CompilerFilter(FilterBase):
             if row[HOST_COMPILER].name == CLANG:
                 # Rule: c7
                 # related to rule b11
-                if row[DEVICE_COMPILER].version >= pkv.parse("11.3") and row[
-                    DEVICE_COMPILER
-                ].version <= pkv.parse("11.5"):
+                if pkv.parse("11.3") <= row[DEVICE_COMPILER].version <= pkv.parse("11.5"):
                     self.reason(
                         "clang as host compiler is disabled for nvcc 11.3 to 11.5",
                     )
@@ -463,27 +461,26 @@ class CompilerFilter(FilterBase):
                     # Example: Clang-CUDA 17 supports CUDA 12.1 and C++ 23. Therefore CUDA 12.1 and
                     # C++ 23 is possible. But Clang-CUDA 17 does not support CUDA 12.2. Therefore
                     # CUDA 12.2 can be only compiled with Nvcc and the maximum standard is C++20.
-                    if row[
-                        CXX_STANDARD
-                    ].version > _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(
-                        cast(ValueVersion, row[ALPAKA_ACC_GPU_CUDA_ENABLE].version),
-                        self.version.get_nvcc_cxx_support_version(),
-                    ) and row[
-                        CXX_STANDARD
-                    ].version <= _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
-                        cast(ValueVersion, row[ALPAKA_ACC_GPU_CUDA_ENABLE].version),
-                        self.version.get_max_cuda_sdk_cxx_support(),
+                    if (
+                        _get_max_supported_cxx_version_for_cuda_sdk_for_nvcc(
+                            cast(ValueVersion, row[ALPAKA_ACC_GPU_CUDA_ENABLE].version),
+                            self.version.get_nvcc_cxx_support_version(),
+                        )
+                        < row[CXX_STANDARD].version
+                        <= _get_max_supported_cxx_version_for_cuda_sdk_for_clang_cuda(
+                            cast(ValueVersion, row[ALPAKA_ACC_GPU_CUDA_ENABLE].version),
+                            self.version.get_max_cuda_sdk_cxx_support(),
+                        )
+                        and row[ALPAKA_ACC_GPU_CUDA_ENABLE].version
+                        > self.version.get_clang_cuda_max_cuda_version()[0].cuda
                     ):
-                        if (
-                            row[ALPAKA_ACC_GPU_CUDA_ENABLE].version
-                            > self.version.get_clang_cuda_max_cuda_version()[0].cuda
-                        ):
-                            self.reason(
-                                f"For the potential combination of C++-{row[CXX_STANDARD].version} "
-                                f"+ CUDA {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} there is no "
-                                f"Clang-CUDA compiler which support this.",
-                            )
-                            return False
+
+                        self.reason(
+                            f"For the potential combination of C++-{row[CXX_STANDARD].version} "
+                            f"+ CUDA {row[ALPAKA_ACC_GPU_CUDA_ENABLE].version} there is no "
+                            f"Clang-CUDA compiler which support this.",
+                        )
+                        return False
                     # Rule: c24
                     # If we know that the CUDA backend is enabled and the host compiler is GCC or
                     # Clang, the device compiler must be Nvcc.
