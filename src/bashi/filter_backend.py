@@ -151,9 +151,11 @@ class BackendFilter(FilterBase):
             if row[HOST_COMPILER].name == CLANG:
                 # Rule: b11
                 # related to rule c8
-                if row[ALPAKA_ACC_GPU_CUDA_ENABLE].version >= pkv.parse("11.3") and row[
-                    ALPAKA_ACC_GPU_CUDA_ENABLE
-                ].version <= pkv.parse("11.5"):
+                if (
+                    pkv.parse("11.3")
+                    <= row[ALPAKA_ACC_GPU_CUDA_ENABLE].version
+                    <= pkv.parse("11.5")
+                ):
                     self.reason("clang as host compiler is disabled for CUDA 11.3 to 11.5")
                     return False
 
