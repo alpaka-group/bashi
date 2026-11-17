@@ -3,9 +3,9 @@
 import sys
 from typing import IO, Dict, List, Optional, Union
 
-import termcolor
 import subprocess
 from collections.abc import Callable
+import termcolor
 from packaging.specifiers import SpecifierSet
 from typeguard import typechecked
 

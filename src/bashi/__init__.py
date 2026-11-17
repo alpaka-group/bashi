@@ -86,6 +86,18 @@ from bashi.result_modules.custom_verifier import (
     remove_unsupported_compiler_backend_combinations,
     remove_unsupported_backend_combinations,
 )
+from bashi.spack import (
+    SpackAlias,
+    SpackAliasDict,
+    SpackPackagesList,
+    SpackBuilder,
+    OsPackageList,
+    pkg_iter,
+    os_pkg_iter,
+    get_spack_alias,
+)
+from bashi.ci_yaml.image import get_spack_build_image_name
+from bashi.ci_yaml.script import get_spack_build_cache_url, get_spack_build_script
 
 __all__ = [
     "Parameter",
@@ -166,4 +178,15 @@ __all__ = [
     "get_valid_compiler_backend_combinations",
     "remove_unsupported_compiler_backend_combinations",
     "remove_unsupported_backend_combinations",
+    "SpackAlias",
+    "SpackAliasDict",
+    "SpackPackagesList",
+    "SpackBuilder",
+    "OsPackageList",
+    "pkg_iter",
+    "os_pkg_iter",
+    "get_spack_alias",
+    "get_spack_build_image_name",
+    "get_spack_build_cache_url",
+    "get_spack_build_script",
 ]
