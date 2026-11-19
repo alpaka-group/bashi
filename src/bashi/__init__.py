@@ -62,11 +62,14 @@ from bashi.generator import get_runtime_infos, generate_combination_list
 from bashi.utils import (
     check_parameter_value_pair_in_combination_list,
     check_unexpected_parameter_value_pair_in_combination_list,
+    exit_error,
     remove_parameter_value_pairs,
     remove_parameter_value_pairs_ranges,
     parse_value_version,
     parse_parameter_single,
     parse_combination,
+    print_warn,
+    print_error,
 )
 from bashi.printer import (
     get_str_row_nice,
@@ -84,6 +87,20 @@ from bashi.result_modules.custom_verifier import (
     remove_unsupported_compiler_backend_combinations,
     remove_unsupported_backend_combinations,
 )
+from bashi.spack.types import (
+    SpackAlias,
+    SpackAliasDict,
+    SpackPackagesList,
+    OsPackageList,
+    pkg_iter,
+    os_pkg_iter,
+)
+from bashi.spack.builder import (
+    get_spack_alias,
+    SpackBuilder,
+)
+from bashi.ci_yaml.image import get_spack_build_image_name
+from bashi.ci_yaml.script import get_spack_build_cache_url, get_spack_build_script
 
 __all__ = [
     "Parameter",
@@ -143,11 +160,14 @@ __all__ = [
     "generate_combination_list",
     "check_parameter_value_pair_in_combination_list",
     "check_unexpected_parameter_value_pair_in_combination_list",
+    "exit_error",
     "remove_parameter_value_pairs",
     "remove_parameter_value_pairs_ranges",
     "parse_value_version",
     "parse_parameter_single",
     "parse_combination",
+    "print_warn",
+    "print_error",
     "get_str_row_nice",
     "print_row_nice",
     "add_print_row_nice_parameter_alias",
@@ -162,4 +182,15 @@ __all__ = [
     "get_valid_compiler_backend_combinations",
     "remove_unsupported_compiler_backend_combinations",
     "remove_unsupported_backend_combinations",
+    "SpackAlias",
+    "SpackAliasDict",
+    "SpackPackagesList",
+    "SpackBuilder",
+    "OsPackageList",
+    "pkg_iter",
+    "os_pkg_iter",
+    "get_spack_alias",
+    "get_spack_build_image_name",
+    "get_spack_build_cache_url",
+    "get_spack_build_script",
 ]
