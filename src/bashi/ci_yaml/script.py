@@ -55,7 +55,7 @@ def get_spack_build_script(
     build_push_instructions = get_spack_install_string(
         software_name, software_version, spack_alias_dict
     )
-    script: list[str] = []
+    script: list[str] = [". /opt/spack/share/spack/setup-env.sh"]
 
     if build_cache_url_func:
         build_cache_url = build_cache_url_func(ubuntu_version)
@@ -70,8 +70,8 @@ def get_spack_build_script(
 
     script.append(
         "spack mirror add "
-        "--oci-username-variable REGISTRY_USER "
-        "--oci-password-variable REGISTRY_TOKEN "
+        "--oci-username-variable AP_REGISTRY_USER "
+        "--oci-password-variable AP_REGISTRY_TOKEN "
         "gitlabci "
         f"{build_cache_url}"
     )
