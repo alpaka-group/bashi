@@ -62,6 +62,7 @@ from bashi.generator import get_runtime_infos, generate_combination_list
 from bashi.utils import (
     check_parameter_value_pair_in_combination_list,
     check_unexpected_parameter_value_pair_in_combination_list,
+    exit_error,
     remove_parameter_value_pairs,
     remove_parameter_value_pairs_ranges,
     parse_value_version,
@@ -86,15 +87,17 @@ from bashi.result_modules.custom_verifier import (
     remove_unsupported_compiler_backend_combinations,
     remove_unsupported_backend_combinations,
 )
-from bashi.spack import (
+from bashi.spack.types import (
     SpackAlias,
     SpackAliasDict,
     SpackPackagesList,
-    SpackBuilder,
     OsPackageList,
     pkg_iter,
     os_pkg_iter,
+)
+from bashi.spack.builder import (
     get_spack_alias,
+    SpackBuilder,
 )
 from bashi.ci_yaml.image import get_spack_build_image_name
 from bashi.ci_yaml.script import get_spack_build_cache_url, get_spack_build_script
@@ -157,6 +160,7 @@ __all__ = [
     "generate_combination_list",
     "check_parameter_value_pair_in_combination_list",
     "check_unexpected_parameter_value_pair_in_combination_list",
+    "exit_error",
     "remove_parameter_value_pairs",
     "remove_parameter_value_pairs_ranges",
     "parse_value_version",

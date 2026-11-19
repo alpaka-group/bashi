@@ -1,10 +1,8 @@
 """Provide functionality to check if spack packages are available in a build cache for the given
 required software versions."""
 
-import re
 import subprocess
-from collections.abc import Callable, Iterator
-from itertools import chain
+from collections.abc import Callable
 
 import bashi
 from bashi.globals import (
@@ -18,146 +16,13 @@ from bashi.globals import (
     GCC,
     HIPCC,
     HOST_COMPILER,
-    ICPX,
     OFF_VER,
     UBUNTU,
 )
 
+from bashi.spack.types import OsPackageList, SpackAlias, SpackAliasDict, SpackPackagesList, pkg_iter
 from bashi.utils import run_subprocess
 from bashi.types import ValueVersion
-
-
-# pylint: disable=too-few-public-methods
-class SpackAlias:
-    """Stores the spack package name which is related to a bashi value-name. For example if the
-    bashi.HOST_COMPILER bashi.CLANG is required, the required spack package is llvm.
-
-    Is used mainly with a SpackAliasDict.
-    """
-
-    def __init__(
-        self,
-        spack_package_name: str,
-        version_alias_functor: Callable[[ValueVersion], ValueVersion] | None = None,
-    ):
-        """
-        Setup spack package names and an optional version alias.
-
-        Args:
-            spack_package_name (str): Spack package name.
-            version_alias_functor (Callable[[ValueVersion], ValueVersion] | None): The functor
-                takes a version number as input and returns a different version based on that. For
-                example, if the Intel TBB backend is enabled (ON_VER → Version 1.0.0), version
-                2023.10 is returned to install the intel-oneapi-tbb@2023.10 package. If the value
-                is `None,` the input version is retained.
-        """
-        self.package_name = spack_package_name
-        self.version_alias_functor = version_alias_functor
-
-    def version_alias(self, version: ValueVersion) -> ValueVersion:
-        """
-        Depending on the version, return the same version or another version.
-
-        Args:
-            version (ValueVersion): Input version
-
-        Returns:
-            ValueVersion: Correct version
-        """
-        if self.version_alias_functor:
-            return self.version_alias_functor(version)
-        return version
-
-
-# Maps a value-version to a related spack package name
-SpackAliasDict = dict[bashi.ValueName, SpackAlias]
-
-# For each Ubuntu version, store a list of software package versions
-OsPackageList = dict[bashi.ValueVersion, dict[bashi.ValueName, list[bashi.ValueVersion]]]
-
-
-def pkg_iter(
-    data: dict[bashi.ValueName, list[bashi.ValueVersion]],
-) -> Iterator[tuple[bashi.ValueName, bashi.ValueVersion]]:
-    """
-    Creates an iterator, which iterates over all value-version of each value-name.
-
-    Args:
-        data (dict[bashi.ValueName, list[bashi.ValueVersion]]): Data
-
-    Returns:
-        Iterator[tuple[bashi.ValueName, bashi.ValueVersion]]: Iterator
-    """
-    return chain.from_iterable(
-        ((name, version) for version in versions) for name, versions in data.items()
-    )
-
-
-def os_pkg_iter(
-    data: OsPackageList,
-) -> Iterator[tuple[bashi.ValueVersion, bashi.ValueName, bashi.ValueVersion]]:
-    """
-    Creates an iterator, which iterates over ubuntu versions first and the over all value-version
-    of each value-name.
-
-    Args:
-        data (dict[bashi.ValueName, list[bashi.ValueVersion]]): Data
-
-    Returns:
-        Iterator[tuple[bashi.ValueName, bashi.ValueVersion]]: Iterator
-    """
-    return chain.from_iterable(
-        ((ubuntu, pkg_name, pkg_version) for pkg_version in pkg_versions)
-        for ubuntu, pkgs in data.items()
-        for pkg_name, pkg_versions in pkgs.items()
-    )
-
-
-# pylint: disable=too-few-public-methods
-class SpackBuildPushInstructions:
-    """Stores all spack package build instructions for a value-name. If a combination includes, for
-    example, a HIP DEVICE_COMPILER, the required SPACK packages are hip, hiprand, and hipcub. It
-    also stores additional spack build flags for the corresponding package. It further includes the
-    appropriate commands to transfer the packages to the build cache in the correct order."""
-
-    def __init__(
-        self, build_instructions: list[str] | None, push_instructions: list[str] | None
-    ) -> None:
-        """
-        Set build and push instructions.
-
-        Args:
-            build_instructions (list[str] | None): Build instructions. If set None, a empty list is
-                setup.
-            push_instructions (list[str] | None): Push instructions. If set None, a empty list is
-                setup.
-        """
-        self.build: list[str] = []
-        if build_instructions:
-            self.build = build_instructions
-        self.push: list[str] = []
-        if push_instructions:
-            self.push = push_instructions
-
-
-# pylint: disable=too-few-public-methods
-class SpackPackagesList:
-    """Support object to store, if a spack package is existing and missing for a specific Ubuntu
-    version. Can be used in different contexts."""
-
-    def __init__(self) -> None:
-        """Initialize with empty dicts."""
-        self.existing_packages: OsPackageList = {}
-        self.missing_packages: OsPackageList = {}
-
-    def __bool__(self) -> bool:
-        """
-        Check if object is empty.
-
-        Returns:
-            bool: If all dicts are empty, return false.
-        """
-        return bool(self.existing_packages) and bool(self.missing_packages)
 
 
 def get_spack_alias() -> SpackAliasDict:
@@ -442,96 +307,3 @@ class SpackBuilder:
             self._run_process(["spack", "mirror", "rm", mirror_name])
 
         return self.cached_buildcache_packages
-
-
-def get_spack_install_string(
-    name: bashi.ValueName,
-    version: bashi.ValueVersion,
-    spack_alias: SpackAliasDict,
-    run_process: Callable[[list[str]], subprocess.CompletedProcess[str]] = run_subprocess,
-) -> SpackBuildPushInstructions:
-    """
-    Returns a list of spack instructions for a specific value-name and value-version, which can be
-    used to build a package and push it to the build cache. Some value-names require more than one
-    spack package. The build instructions also include build flags to optimize the build process,
-    such as reducing the package size.
-
-    The build instructions can placed in the spack install command:
-        spack install <build_instruction>
-    The push instructions can placed in the spack buildcache push command:
-        spack buildcache push mirror_name <push_instruction>
-
-    Args:
-        name (bashi.ValueName): value-name
-        version (bashi.ValueVersion): value-name
-        spack_alias (SpackAliasDict): Alias dict to map value-name and value-version to a spack
-            package.
-        run_process (Callable[[list[str]], subprocess.CompletedProcess[str]]): Function hook to run
-        external process. Is used to call spack executable (default: run_subprocess).
-
-    Returns:
-        SpackBuildPushInstructions: Object which contains build and push instructions.
-
-    Raises:
-        RuntimeError: value-name ICPX is not supported because of License issues of OneApi.
-    """
-    spack_package_name = f"{spack_alias[name].package_name}@{version}"
-    if name == GCC:
-        return SpackBuildPushInstructions(
-            build_instructions=[f"{spack_package_name} +strip"],
-            push_instructions=[spack_package_name],
-        )
-
-    if name == CLANG:
-        return SpackBuildPushInstructions(
-            build_instructions=[f"{spack_package_name} +link_llvm_dylib targets=x86,nvptx,amdgpu"],
-            push_instructions=[spack_package_name],
-        )
-
-    if name == HIPCC:
-        hip_dependencies = run_process(["spack", "spec", f"hip@{version}"]).stdout
-
-        match = re.search(r"\^llvm@(\d+)\.", hip_dependencies)
-        if match:
-            llvm_version = match.group(1)
-        else:
-            raise RuntimeError(f"Cannot found llvm dependency of hip@{version}")
-
-        build_instructions: list[str] = []
-        push_instructions: list[str] = []
-
-        build_instructions.append(f"llvm@{llvm_version} +link_llvm_dylib targets=x86,nvptx,amdgpu")
-        build_instructions.append(f"hip@{version}")
-        push_instructions.append(f"hip@{version}")
-
-        build_instructions.append(f"hiprand@{version}")
-        push_instructions.append(f"hiprand@{version}")
-
-        build_instructions.append(f"hipcub@{version}")
-        push_instructions.append(f"hipcub@{version}")
-
-        # By default, hiprand is build for all GPU architecture.
-        # A build of hiprand for all architecture has a size of about 500 MB.
-        # A build for a single architecture has a size of about 80 MB.
-        # Therefore build specific versions for the architectures, which we use in the CI.
-        # The CI job will check, if a specific build is available and fall bak to the big package
-        # in the case, the specific build does not exist.
-        for gpu_arch in ["gfx90a", "gfx1030", "gfx1100"]:
-            build_instructions.append(f"hiprand@{version} amdgpu_target={gpu_arch}")
-            push_instructions.append(f"hiprand@{version} amdgpu_target={gpu_arch}")
-            build_instructions.append(f"hipcub@{version} amdgpu_target={gpu_arch}")
-            push_instructions.append(f"hipcub@{version} amdgpu_target={gpu_arch}")
-
-        return SpackBuildPushInstructions(
-            build_instructions=build_instructions, push_instructions=push_instructions
-        )
-
-    if name == ICPX:
-        raise RuntimeError(
-            "Cannot push OneAPI package (ICPX) to build cache.\n"
-            "See: https://github.com/spack/spack/issues/53257"
-        )
-
-    return SpackBuildPushInstructions(
-        build_instructions=[spack_package_name], push_instructions=[spack_package_name]
-    )

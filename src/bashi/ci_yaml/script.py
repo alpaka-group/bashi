@@ -5,7 +5,8 @@ from collections.abc import Callable
 from typeguard import typechecked
 from bashi import ValueName
 from bashi.printer import ubuntu_version_to_string
-from bashi.spack import SpackAliasDict, get_spack_install_string
+from bashi.spack.types import SpackAliasDict
+from bashi.spack.instructions import get_spack_install_string
 from bashi.types import ValueVersion
 
 
