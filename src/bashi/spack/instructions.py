@@ -4,7 +4,7 @@ from collections.abc import Callable
 import re
 import subprocess
 from bashi import ICPX, ValueName, ValueVersion
-from bashi.globals import CLANG, GCC, HIPCC
+from bashi.globals import ALPAKA_ACC_GPU_CUDA_ENABLE, CLANG, GCC, HIPCC
 from bashi.spack.types import SpackAliasDict, SpackBuildPushInstructions
 from bashi.utils import run_subprocess
 
@@ -86,6 +86,15 @@ def get_spack_install_string(
             push_instructions.append(f"hiprand@{version} amdgpu_target={gpu_arch}")
             build_instructions.append(f"hipcub@{version} amdgpu_target={gpu_arch}")
             push_instructions.append(f"hipcub@{version} amdgpu_target={gpu_arch}")
+
+        return SpackBuildPushInstructions(
+            build_instructions=build_instructions, push_instructions=push_instructions
+        )
+
+    if name == ALPAKA_ACC_GPU_CUDA_ENABLE:
+        # Workaround until this PR is merged: https://github.com/spack/spack-packages/pull/6692
+        build_instructions = [f"{spack_package_name} %libxml2@2.13"]
+        push_instructions = [spack_package_name]
 
         return SpackBuildPushInstructions(
             build_instructions=build_instructions, push_instructions=push_instructions
