@@ -8,6 +8,7 @@ from bashi.printer import ubuntu_version_to_string
 from bashi.spack.types import SpackAliasDict
 from bashi.spack.instructions import get_spack_install_string
 from bashi.types import ValueVersion
+from bashi.ci_yaml.dumper import MultilineYamlString
 
 
 @typechecked
@@ -57,6 +58,28 @@ def get_spack_build_script(
     )
     script: list[str] = [". /opt/spack/share/spack/setup-env.sh"]
 
+    script.append(
+        MultilineYamlString(
+            "retry_cmd() {\n"
+            "   (\n"
+            "       set +euo pipefail\n"
+            "       i=0\n"
+            '       while [ "$i" -lt 3 ]; do\n'
+            '           "$@"\n'
+            '           result="$?"\n'
+            '           if [[ "$result" -eq 0 ]]; then\n'
+            "               return 0\n"
+            "           fi\n"
+            "           echo \"[WARNING]: Attempt #${i} to run '$*' failed\"\n"
+            "           sleep 3\n"
+            "           i=$(( i + 1 ))\n"
+            "       done\n"
+            '       return "$result"\n'
+            "   )\n"
+            "}"
+        )
+    )
+
     if build_cache_url_func:
         build_cache_url = build_cache_url_func(ubuntu_version)
     else:
@@ -77,8 +100,8 @@ def get_spack_build_script(
     )
 
     for push_instr in build_push_instructions.push:
-        script.append(f"spack buildcache push gitlabci {push_instr}")
+        script.append(f"retry_cmd spack buildcache push gitlabci {push_instr}")
 
-    script.append(f"spack buildcache update-index {build_cache_url}")
+    script.append(f"retry_cmd spack buildcache update-index {build_cache_url}")
 
     return script

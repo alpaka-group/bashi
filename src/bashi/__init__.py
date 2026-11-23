@@ -101,6 +101,7 @@ from bashi.spack.builder import (
 )
 from bashi.ci_yaml.image import get_spack_build_image_name
 from bashi.ci_yaml.script import get_spack_build_cache_url, get_spack_build_script
+from bashi.ci_yaml.dumper import MultilineYamlString, MultilineDumper
 
 __all__ = [
     "Parameter",
@@ -193,4 +194,6 @@ __all__ = [
     "get_spack_build_image_name",
     "get_spack_build_cache_url",
     "get_spack_build_script",
+    "MultilineYamlString",
+    "MultilineDumper",
 ]
