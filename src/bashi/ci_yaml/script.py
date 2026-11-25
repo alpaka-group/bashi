@@ -82,7 +82,7 @@ def get_spack_build_script(
             "   (\n"
             "       set +euo pipefail\n"
             "       i=0\n"
-            '       while [ "$i" -lt 3 ]; do\n'
+            '       while [ "$i" -lt 20 ]; do\n'
             '           "$@"\n'
             '           result="$?"\n'
             '           if [[ "$result" -eq 0 ]]; then\n'
