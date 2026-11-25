@@ -34,6 +34,7 @@ def get_spack_build_script(
     software_name: ValueName,
     software_version: ValueVersion,
     spack_alias_dict: SpackAliasDict,
+    spack_package_repository_sha: str,
     build_cache_url_func: Callable[[ValueVersion], str] | None = None,
 ) -> list[str]:
     """
@@ -46,6 +47,9 @@ def get_spack_build_script(
         software_version (ValueVersion): Value-version of the spack package to be build.
         spack_alias_dict (SpackAliasDict): The spack alias dict maps the value-name and
             value-version to a spack package name and version.
+        spack_package_repository_sha (str): Git commit hash of the builtin spack package
+            repository. If empty, does not update spack package repository and use
+            preinstalled version.
         build_cache_url_func (Callable[[ValueVersion], str] | None): Functor to obtain the build
             cache URL depending on the given Ubuntu version. If it None, use
             bashi.get_spack_build_cache_url().
@@ -57,6 +61,20 @@ def get_spack_build_script(
         software_name, software_version, spack_alias_dict
     )
     script: list[str] = [". /opt/spack/share/spack/setup-env.sh"]
+
+    if spack_package_repository_sha != "":
+        script += [
+            "_spack_packages_repo_path=$(spack repo list | awk '$2 == \"builtin\" {print $NF}')",
+            '_spack_packages_repo_commit_hash=$(git -C "${_spack_packages_repo_path}" rev-parse HEAD)',
+            MultilineYamlString(
+                'if [[ "${_spack_packages_repo_commit_hash}" '
+                f'!= "{spack_package_repository_sha}" ]]; then\n'
+                '   echo -e "\\e[1;33mUpdate to spack package repository to git commit hash '
+                '${_spack_packages_repo_commit_hash}\\e[0m"\n'
+                '   spack repo update -c "${ACPI_SPACK_PACKAGES_REPO_HASH}" builtin\n'
+                "fi"
+            ),
+        ]
 
     script.append(
         MultilineYamlString(
