@@ -1,8 +1,11 @@
 """Different helper functions for bashi"""
 
 import sys
-from typing import IO, Dict, List, Optional, Union, Callable
+from typing import IO, Dict, List, Optional, Union
 
+import subprocess
+from collections.abc import Callable
+import termcolor
 from packaging.specifiers import SpecifierSet
 from typeguard import typechecked
 
@@ -590,3 +593,51 @@ def parse_combination(parsable_parameter_singles: List[ParsableParameterSingle])
             )
 
     return comb
+
+
+@typechecked
+def print_warn(msg: str):
+    """Print message in yellow with a [WARNING] prefix.
+
+    Args:
+        msg (str): warning text
+    """
+    print(termcolor.colored(f"[WARNING]: {msg}", "yellow"), file=sys.stderr)
+
+
+@typechecked
+def print_error(msg: str):
+    """Print message in red with a [ERROR] prefix.
+
+    Args:
+        msg (str): error text
+    """
+    print(termcolor.colored(f"[ERROR]: {msg}", "red"), file=sys.stderr)
+
+
+@typechecked
+def exit_error(msg: str, error_code=1):
+    """Print message in red with a [ERROR] prefix and exit applications.
+
+    Args:
+        msg (str): error text
+    """
+    print_error(msg)
+    sys.exit(error_code)
+
+
+def run_subprocess(cmd: list[str]) -> subprocess.CompletedProcess[str]:
+    """
+    Run a sub process and capture the output.
+
+    Args:
+        cmd (list[str]): List of executable and arguments.
+
+    Returns:
+        subprocess.CompletedProcess[str]: Contains stdout, stderr and the return code.
+    """
+    process = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if process.returncode != 0:
+        exit_error(f"{' '.join(cmd)} {process.stderr}")
+
+    return process
